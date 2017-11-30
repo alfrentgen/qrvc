@@ -1,5 +1,4 @@
 #include <stdint.h>
-//#include <Magick++.h>
 
 #include <iostream>
 #include <istream>
