@@ -1,0 +1,25 @@
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v mpeg2video -pix_fmt yuv420p ../out.avi
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v mpeg2video -pix_fmt gray ../out.avi
+
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v mpeg4 -pix_fmt gray  ../out.avi
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v libxvid -pix_fmt gray  ../out.avi
+
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v libx264 -preset -pix_fmt gray  ../out.avi
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.qr -c:v libx264 -preset veryslow -pix_fmt gray  ../546841.avi
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.y -c:v libx264 -preset veryslow -q 69 -pix_fmt gray  ../out.avi
+ffmpeg -f rawvideo -pix_fmt gray -s:v 640x480 -i ../546841.qr -c:v libx264 -preset veryslow -pix_fmt gray  ../546841.avi
+
+ffmpeg  -i 546841_yt_480p.mp4 -c:v rawvideo -pix_fmt gray  ../out.y
+ffmpeg  -i 100003[720p].mp4 -c:v rawvideo -pix_fmt gray  ../100003_yt.qr
+
+ffmpeg -f rawvideo -pix_fmt gray -s:v 1280x720 -i 100003.yuv -c:v libx264 -preset veryslow -pix_fmt gray  100003.avi
+
+#doesn't work properly because of putting log to stdout, need to stream logs to stderr(FIXED)
+./qvsenc -i 100003.bin -f 1280x720 -s 8 -r 2 -t 10 | ffmpeg -f rawvideo -pix_fmt gray -s:v 1280x720 -i - -c:v libx264 -preset veryslow 100003.avi
+./qvsenc -i 100M.bin -f 1280x720 -s 8 -r 2 -t 10 | ffmpeg -y -f rawvideo -pix_fmt gray -s:v 1280x720 -i - -c:v libx264 -preset veryslow 100M.avi
+
+./qvsenc -i 100M.bin -f 1280x720 -s 8 -r 2 -t 10 | stdbuf -i 100M ffmpeg -y -f rawvideo -pix_fmt gray -s:v 1280x720 -i - -c:v libx264 -preset veryslow 100M.avi
+./qvsenc -i 1M.bin -f 1280x720 -s 8 -r 1 -t 10 | stdbuf -i 100M ffmpeg -y -f rawvideo -pix_fmt gray -s:v 1280x720 -i - -c:v libx264 -preset medium 1M.avi
+
+-x264opts keyint=1
+date && ./qvsenc -i 1M.bin -f 1280x720 -s 8 -r 1 -t 10 2>/dev/null | stdbuf -i 100M ffmpeg -y -f rawvideo -pix_fmt gray -s:v 1280x720 -i - -c:v libx264 -x264opts keyint=1 -preset faster 1M.avi 2>/dev/null && date

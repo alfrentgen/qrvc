@@ -1,0 +1,28 @@
+vlc --no-audio --yuv-file 100003.yuv  https://www.youtube.com/watch?v=ftF2DqsAApY
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#duplicate{dst="transcode{vcodec=l422}:std{access=file,mux=raw,dst=100003.yuv", select="noaudio"}' --noaudio
+
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#duplicate{dst="transcode{venc=ffmpeg,vcodec=rawvideo}:std{access=file,mux=raw,dst=100003.yuv", select="noaudio"}' --noaudio
+
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#duplicate{dst="transcode{vcodec=h264}:std{access=file,mux=ts,dst=dump.ts}"'
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#duplicate{:std{access=file,mux=ts,dst=dump.ts}"'
+ffmpeg -i dump.ts -c:v rawvideo -pix_fmt gray dump.yuv
+
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#std{access=file,mux=ts,dst=-}"' 1> dst.ts
+
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#std{access=file,mux=ts,dst=-}"' | ffmpeg -i - -f mpegts -c:v rawvideo -pix_fmt gray dump.yuv
+
+vlc https://www.youtube.com/watch?v=ftF2DqsAApY --sout '#std{access=file,mux=avi,dst=dump.avi}"' --no-audio
+ffmpeg -i dump.avi -c:v rawvideo -pix_fmt gray - | ./qvsdec -f 1280x720 -o dump.dec
+
+vlc https://youtu.be/jGY_j8SNx-k --sout '#std{access=file,mux=avi,dst=-}' --no-audio 1> dump.avi
+ffmpeg -i dump.avi -c:v rawvideo -pix_fmt gray dump.yuv
+./qvsdec -i dump.yuv -f 1280x720 -o dump.dec -l quirc
+vlc https://youtu.be/jGY_j8SNx-k --sout '#std{access=file,mux=avi,dst=-}"' --no-audio | ffmpeg -i - -f rawvideo -c:v rawvideo -pix_fmt gray dump.yuv
+
+vlc https://youtu.be/jGY_j8SNx-k --sout '#std{access=file,mux=avi,dst=-}"' --no-audio | ffmpeg -i - -f rawvideo -c:v rawvideo -pix_fmt gray - | ./qvsdec -f 1280x720 -o dump.dec -l quirc
+
+vlc https://youtu.be/jGY_j8SNx-k --sout '#std{access=file,mux=avi,dst=-}"' --no-audio vlc://quit | ffmpeg -i - -f rawvideo -c:v rawvideo -pix_fmt gray - | ./qvsdec -f 1280x720 -o dump.dec -l quirc
+
+vlc https://youtu.be/jGY_j8SNx-k --sout '#std{access=file,mux=avi,dst=-}"' --no-audio vlc://quit | ffmpeg -i - -f rawvideo -c:v rawvideo -pix_fmt gray - | ./qvsdec -f 1280x720 -o dump.dec -l quirc -p 99
+
+date && ffmpeg -i 1M.avi -f rawvideo -c:v rawvideo -pix_fmt gray - 2> /dev/null | ./qvsdec -f 1280x720 -o 1M.dec -l quirc -p 99 2> /dev/null && date
