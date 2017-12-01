@@ -3,7 +3,18 @@
 using namespace std;
 
 ArgsParserDec::ArgsParserDec() :
-    m_options({string("-i"), string("-o"), string("-f"), string("-c"), string("-p"), string("-t"), string("-l")})
+    m_options({ string("-i"),
+                string("-o"),
+                string("-f"),
+                string("-c"),
+                string("-p"),
+                string("-w"),
+                string("-m"),
+                string("-e"),
+                string("-t"),
+                string("-s"),
+                string("-r")
+                })
 {
     //ctor
 }
@@ -21,8 +32,12 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     string& sizeOpt = m_options[2];//frame size -s NxN
     string& counterOpt = m_options[3];//counter on/off
     string& chunksPerThOpt = m_options[4];//chunks per thread
-    string& threadsNumberOpt = m_options[5];//number of threads
-    string& decLibraryOpt = m_options[6];//decode library
+    string& workersNumberOpt = m_options[5];//number of threads
+    string& decModeOpt = m_options[6];//decode library
+    string& errorLevelOpt = m_options[7];//error correction level
+    string& tailOpt = m_options[8];//number of tail frames
+    string& qrScaleOpt = m_options[9];//qr scale
+    string& repeatOpt = m_options[10];//frame repetition
 
     string optionVal;
     string option;
@@ -70,7 +85,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
                 cerr << "Bad file name. Terminated.\n";
                 return FAIL;
             }
-        }else if(option == threadsNumberOpt){
+        }else if(option == workersNumberOpt){
             pattern = "\\d{1,2}";
             if(CheckOptionVal() == OK){
                 m_parsedOptions[option] = optionVal;
@@ -87,15 +102,114 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
                 cerr << "Bad chunks per thread number. Can be 1-99. Terminate.\n";
                 return FAIL;
             }
-        }else if(option == decLibraryOpt){
-            pattern = "(^quirc$|^zbar$){1}";
+        }else if(option == decModeOpt){
+            pattern = "(^quick$|^normal$){1}";
             if(CheckOptionVal() == OK){
                 cerr << "Library to use: " + optionVal << ". OK!\n";
             }else{
-                cerr << "Bad decode library name. Terminate.\n";
+                cerr << "Bad decode mode. Terminate.\n";
                 return FAIL;
             }
-        }else{
+        }else
+        if(option == errorLevelOpt){
+            pattern = "[0123]";
+            if(CheckOptionVal() == OK){
+                cerr << "level pattern matches! Level string: " + optionVal << endl;
+            }else{
+                cerr << "level can be 0-3. Terminated." << endl;
+                return FAIL;
+            }
+            /*if(argc == n+1){
+                cerr << "No level string was found" << endl;
+                return -1;
+            }else{
+                string optionVal = string(argv[n+1]);
+                if(regex_match(optionVal, bytesPattern)){
+                    m_parsed[option] = optionVal;
+                    cerr << "level pattern matches! Level string: " + optionVal << endl;
+                    ++n;
+                }else{
+                    cerr << "level can be 0-3. Terminated." << endl;
+                    return -1;
+                }
+            }
+            cerr << "Level - OK!\n";*/
+        }else
+        if(option == tailOpt){
+            pattern = "\\d{1,2}";
+            if(CheckOptionVal() == OK){
+                cerr << "Tail pattern matches! Number of trailing frames: " + optionVal << endl;
+            }else{
+                cerr << "Number of repeats should be in rage 0-99. Terminated." << endl;
+                return FAIL;
+            }
+            /*regex tailPattern = regex("\\d{1,2}");
+            if(argc == n+1){
+                cerr << "No tail string found" << endl;
+                return -1;
+            }else{
+                string optionVal = string(argv[n+1]);
+                if(regex_match(optionVal, tailPattern)){
+                    m_parsed[option] = optionVal;
+                    cerr << "Tail pattern matches! Number of trailing frames: " + optionVal << endl;
+                    ++n;
+                }else{
+                    cerr << "Number of repeats should be in rage 0-99. Terminated." << endl;
+                    return -1;
+                }
+            }*/
+        } else
+        if(option == qrScaleOpt){
+            pattern = "[1-3]?\\d{1}";
+            if(CheckOptionVal() == OK){
+                cerr << "Scale pattern matches! Scale string: " + optionVal << endl;
+            }else{
+                cerr << "Scale string should be an integer from 1 to 4. Terminated." << endl;
+                return FAIL;
+            }
+
+            /*regex scalePattern = regex("[1-3]?\\d{1}");
+            if(argc == n+1){
+                cerr << "No scale string found" << endl;
+                return -1;
+            }else{
+                string optionVal = string(argv[n+1]);
+                if(regex_match(optionVal, scalePattern)){
+                    m_parsed[option] = optionVal;
+                    cerr << "Scale pattern matches! Scale string: " + optionVal << endl;
+                    ++n;
+                }else{
+                    cerr << "Scale string should be an integer from 1 to 4. Terminated." << endl;
+                    return -1;
+                }
+            }
+            cerr << "Scale - OK!\n";*/
+        }else
+        if(option == repeatOpt){
+            pattern = "\\d{1,1}";
+            if(CheckOptionVal() == OK){
+                cerr << "Repeat counter pattern matches! Number of repeats: " + optionVal << endl;
+            }else{
+                cerr << "Number of repeats should be in rage 0-9. Terminated." << endl;
+                return FAIL;
+            }
+            /*regex repeatPattern = regex("\\d{1,1}");
+            if(argc == n+1){
+                cerr << "No repeat string found" << endl;
+                return -1;
+            }else{
+                string optionVal = string(argv[n+1]);
+                if(regex_match(optionVal, repeatPattern)){
+                    m_parsed[option] = optionVal;
+                    cerr << "Repeat counter pattern matches! Number of repeats: " + optionVal << endl;
+                    ++n;
+                }else{
+                    cerr << "Number of repeats should be in rage 0-9. Terminated." << endl;
+                    return -1;
+                }
+            }*/
+        }
+        else{
             cerr << "Wrong option. Terminated!\n";
             return FAIL;
         }

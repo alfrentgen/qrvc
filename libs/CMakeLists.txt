@@ -7,7 +7,7 @@ add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 
 set(ZBAR_LIB_PATH  ./zbar-0.10)
 
-set(ZBAR_HDR 
+set(ZBAR_HDR
 ${ZBAR_LIB_PATH}/include/zbar.h
 ${ZBAR_LIB_PATH}/zbar/error.h
 ${ZBAR_LIB_PATH}/zbar/image.h
@@ -15,7 +15,7 @@ ${ZBAR_LIB_PATH}/zbar/img_scanner.h
 ${ZBAR_LIB_PATH}/zbar/qrcode.h
 ${ZBAR_LIB_PATH}/zbar/qrcode/qrdec.h
 ${ZBAR_LIB_PATH}/zbar/qrcode/util.h
-../include/config.h
+${CMAKE_CURRENT_SOURCE_DIR}/config.h
 )
 
 set(ZBAR_SRC
@@ -33,27 +33,36 @@ ${ZBAR_LIB_PATH}/zbar/qrcode/util.c
 ${ZBAR_LIB_PATH}/zbar/refcnt.c
 ${ZBAR_LIB_PATH}/zbar/scanner.c
 ${ZBAR_LIB_PATH}/zbar/symbol.c
-../src/qrdectxt_m.c #modified zbar/qrcode/qrdectxt.c
+${CMAKE_CURRENT_SOURCE_DIR}/qrdectxt_m.c #modified zbar/qrcode/qrdectxt.c
 )
 
 add_library(zbar_cut STATIC ${ZBAR_SRC} ${ZBAR_HDR})
 set_target_properties(zbar_cut PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(zbar_cut PUBLIC ${ZBAR_LIB_PATH}/zbar ${ZBAR_LIB_PATH}/include ${ZBAR_LIB_PATH}/include/zbar ../include)
+target_include_directories(zbar_cut PUBLIC
+${ZBAR_LIB_PATH}/zbar
+${ZBAR_LIB_PATH}/include
+${ZBAR_LIB_PATH}/include/zbar
+${CMAKE_CURRENT_SOURCE_DIR})
+
 if(WIN32)
 	target_link_libraries(zbar_cut iconv)
 endif()
 set_target_properties(zbar_cut PROPERTIES FOLDER "libraries")
+target_compile_definitions(zbar_cut PRIVATE
+ZBAR_VERSION_MAJOR=0
+ZBAR_VERSION_MINOR=10
+)
 endif(USE_ZBAR)
 
 if(USE_QUIRC)
 set(QUIRC_LIB_PATH  quirc)
 
-set(QUIRC_HDR 
+set(QUIRC_HDR
 ${QUIRC_LIB_PATH}/lib/quirc.h
 ${QUIRC_LIB_PATH}/lib/quirc_internal.h
 )
 
-set(QUIRC_SRC 
+set(QUIRC_SRC
 ${QUIRC_LIB_PATH}/lib/version_db.c
 ${QUIRC_LIB_PATH}/lib/decode.c
 ${QUIRC_LIB_PATH}/lib/identify.c
@@ -73,7 +82,6 @@ ${QRENC_LIB_PATH}/bitstream.h
 ${QRENC_LIB_PATH}/mask.h
 ${QRENC_LIB_PATH}/mmask.h
 ${QRENC_LIB_PATH}/mqrspec.h
-#${QRENC_LIB_PATH}/qrenc.h
 ${QRENC_LIB_PATH}/qrencode.h
 ${QRENC_LIB_PATH}/qrinput.h
 ${QRENC_LIB_PATH}/qrspec.h
@@ -98,8 +106,8 @@ add_library(qrenc STATIC ${QRENC_SRC} ${QRENC_HDR})
 set_target_properties(qrenc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qrenc PUBLIC ${QRENC_LIB_PATH})
 set_target_properties(qrenc PROPERTIES FOLDER "libraries")
-
-target_compile_definitions(qrenc PRIVATE STATIC_IN_RELEASE=static
+target_compile_definitions(qrenc PRIVATE
+STATIC_IN_RELEASE=static
 MAJOR_VERSION=3
 MINOR_VERSION=9
 MICRO_VERSION=0
@@ -107,5 +115,7 @@ MICRO_VERSION=0
 #if(WIN32)
 #target_compile_definitions(qrenc PRIVATE VERSION="\\"3.9.0\\"")
 #else()*/
-target_compile_definitions(qrenc PRIVATE VERSION="3.9.0")
+target_compile_definitions(qrenc PRIVATE
+VERSION="3.9.0"
+)
 #endif()

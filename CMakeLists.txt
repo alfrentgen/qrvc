@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 message(STATUS ${GENERATOR})
 
-project("QR video decoder" C CXX)
+project("QR video codec" C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(USE_ZBAR "Enable zbar library usage."	ON)
@@ -37,10 +37,7 @@ message(STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
-
-add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 add_subdirectory(libs)
-add_subdirectory(encoder)
 
 set(DEC_HDR
 include/pch.h
@@ -74,6 +71,23 @@ add_dependencies(qvsdec zbar_cut)
 endif()
 set_target_properties(qvsdec PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qvsdec PUBLIC include)
+
+SET(ENC_SRC
+src/ArgsParser.cpp
+src/encoder.cpp
+)
+
+SET(ENC_HDR
+include/pch.h
+include/ArgsParser.h
+include/encoder.h
+)
+
+add_executable(qvsenc ${ENC_HDR} ${ENC_SRC})
+target_link_libraries(qvsenc qrenc)
+add_dependencies(qvsenc qrenc)
+set_target_properties(qvsenc PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(qvsenc PUBLIC include)
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)

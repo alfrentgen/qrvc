@@ -1,5 +1,4 @@
 #include "MTDecoder.h"
-#include <stdlib.h>
 
 MTDecoder::MTDecoder()
 {
@@ -175,20 +174,20 @@ int main(int argc, char** argv){
         framesPerThread = stoi(it->second);
     }
 
-    key = string("-t");
+    key = string("-w");
     it = optionsMap.find(key);
     if(it != optionsMap.end()){
         nThreads = stoi(it->second);
     }
 
-    key = string("-l");
+    key = string("-m");
     it = optionsMap.find(key);
     if(it != optionsMap.end()){
-        if(it->second == string("zbar")){
-            lib = ZBAR;
-        }
-        else{
+        if(it->second == string("quick")){
             lib = QUIRC;
+        }
+        else {
+            lib = ZBAR;
         }
     }
 
