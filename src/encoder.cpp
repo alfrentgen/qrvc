@@ -197,6 +197,8 @@ int main (int argc, char **argv)
     if(!chunkSize || !version){
         cerr << "Frame size does not fit any possible qr code. Try smaller scale, ECC  level or bigger frame.\n";
         return 0;
+    }else{
+        cerr << "QR version: " << version << endl;
     }
 
     int32_t nBytesToRead = chunkSize - 8 - 4;
@@ -264,7 +266,7 @@ int main (int argc, char **argv)
         }
 
         outputStream->flush();
-        cerr << chunkCounter << endl;
+        //cerr << chunkCounter << endl;
         chunkCounter++;
         //delete pQR;
 

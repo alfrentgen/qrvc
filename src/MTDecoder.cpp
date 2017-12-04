@@ -1,4 +1,6 @@
 #include "MTDecoder.h"
+#include "utilities.h"
+
 
 MTDecoder::MTDecoder()
 {
@@ -91,7 +93,7 @@ uint32_t MTDecoder::Stop(){
 
 int main(int argc, char** argv){
 
-    system("pwd");
+    //system("pwd");
     //parse arguments
     ArgsParserDec ap = ArgsParserDec();
     if(ap.parseOptions(argc, argv) == FAIL){
@@ -179,6 +181,7 @@ int main(int argc, char** argv){
     if(it != optionsMap.end()){
         nThreads = stoi(it->second);
     }
+    LOG("Number of working threads is: %d\n", nThreads);
 
     key = string("-m");
     it = optionsMap.find(key);

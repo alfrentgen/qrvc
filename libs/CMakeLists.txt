@@ -73,6 +73,7 @@ add_library(quirc STATIC ${QUIRC_SRC} ${QUIRC_HDR})
 set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
 set_target_properties(quirc PROPERTIES FOLDER "libraries")
+target_compile_definitions(quirc PRIVATE QUIRC_MAX_REGIONS=65534)
 endif(USE_QUIRC)
 
 set(QRENC_LIB_PATH  ./libqrencode)
