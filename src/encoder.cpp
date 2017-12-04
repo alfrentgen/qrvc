@@ -233,7 +233,7 @@ int main (int argc, char **argv)
             pInData[i] = (uint8_t)((hashsum >> shift) & (uint32_t)0xff);
         }
 
-        cerr << "bytesRead = " << bytesRead << endl;
+        //cerr << "bytesRead = " << bytesRead << endl;
         if(bytesRead < nBytesToRead){
             cerr << "Incomplete frame have been received! Proceeding with input chunk of:" << inputStream->gcount() << " bytes.\n";
         }

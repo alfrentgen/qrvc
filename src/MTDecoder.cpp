@@ -18,7 +18,10 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     if(nThreads == 0){
         m_nThreads = std::thread::hardware_concurrency();
         m_nThreads = (m_nThreads == 0) ? 2 : m_nThreads;
+    }else{
+        m_nThreads = nThreads;
     }
+
     int32_t queueSize;
     if(framesPerThread == 0){
         framesPerThread = 8;
@@ -33,7 +36,6 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
 
     m_jobs.resize(m_nThreads);
 
-
     switch(m_decLib){
     case QUIRC:
         for(int i =0; i < m_nThreads; i++){
@@ -47,6 +49,7 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
         }
         break;
     }
+    LOG("Number of working threads is: %d\n", m_nThreads);
 
     return OK;
 }
@@ -181,7 +184,6 @@ int main(int argc, char** argv){
     if(it != optionsMap.end()){
         nThreads = stoi(it->second);
     }
-    LOG("Number of working threads is: %d\n", nThreads);
 
     key = string("-m");
     it = optionsMap.find(key);

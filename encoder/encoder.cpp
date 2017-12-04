@@ -138,7 +138,7 @@ int main (int argc, char **argv)
 
     }
 
-    key = string("-l");
+    key = string("-e");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
         cerr << "No ECC level was specified, using the lowest!\n";
