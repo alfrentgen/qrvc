@@ -20,6 +20,7 @@
 #include <string>
 #include <regex>
 #include <exception>
+#include <utilities.h>
 
 #define OK 0
 #define FAIL -1

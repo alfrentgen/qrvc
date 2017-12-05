@@ -13,7 +13,7 @@ extern "C" {
 
 using namespace std;
 
-uint32_t CalcHashsum(uint8_t* pBuffer, uint32_t bufSize){
+uint32_t CalcHashsum(uint8_t* pBuffer, int32_t bufSize){
     uint32_t hash = bufSize;
     for(uint32_t i = 0; i < bufSize; i++){
         hash = hash + (hash << 2);

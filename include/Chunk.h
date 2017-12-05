@@ -24,7 +24,7 @@ public:
     vector<uint8_t>& GetOutBuffer();
     void FreeOutBuffer();
 
-    uint32_t CalcHashsum(uint8_t* pBuffer, uint32_t bufSize);
+    uint32_t CalcHashsum(uint8_t* pBuffer, int32_t bufSize);
 
 public:
 
