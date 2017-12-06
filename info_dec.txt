@@ -1,22 +1,17 @@
 1) In qrdectxt.c in function qr_code_data_list_extract_text() in section QR_MODE_BYTE we must do nothing, just put decoded bytes as is from in to out(but saving iconv() function logic for pointers shifts).
 2) fstream should be used with buffer!!! https://stackoverflow.com/questions/26095160/why-are-stdfstreams-so-slow
-3) optimize sync scheme so that it be more granular, particularly syncing only counter increment/decrement while putting/getting to/from queues
-4) QUIRC doesn't recognize QR codes with blocksize less than 8x8
-5) add decode lib switching if can't decode with quirc, try zbar.
 
-checklist:
-1) InputQueue - DONE
-1) OutputQueue - 
-2) Chunk - DONE
-3) MTDecoder -
-4) Worker -
-5) Decode - 
 
-26112017 TODO
-1) Merge decoder and incoder into the one project.
-2) Make encoder multithread.
-3) Write OpenCL code for decoder.
-4) Add options: enable/disable frame counter for encoder and decoder,
+06122017 TODO
+1) Make input and output queues asynch (make workers place jobs in the same slots)
+(Syncing only chunk counter decrementation and index pointer change
+while getting from an input queue. Then worker must put results into output 
+queue using the same index, syncing only the incrementation of chunks counter).
+2) Move hashsum calculations from put stage to decode stage.
+3) Find out why large QR codes are not supported by zbar and quirc.
+(QUIRC - DONE, ZBAR - still has an issue with 40 QR version)
+4) Make encoder multithread.
+5) Write OpenCL code for decoder.
+6) Add options: enable/disable frame counter for encoder and decoder,
 enable/disable hashsum for frame encoder/decoder, 
 enable/disable hashsum check for skipping duplicated frames in decoder.
-5) Find out why large QR codes are not supported by zbar and quirc.
