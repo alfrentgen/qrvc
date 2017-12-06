@@ -10,7 +10,8 @@
 
 enum DecodeMode{
     QUICK = 0,
-    MIXED = 1
+    MIXED = 1,
+    SLOW = 2,
 };
 
 using namespace std;

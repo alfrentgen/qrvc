@@ -92,6 +92,8 @@ int32_t Decode::Do(){
 
         if(m_decMode == QUICK){
             decRes = DecodeDataQuick();
+        }else if(m_decMode == SLOW){
+            decRes = DecodeData();
         }else{
             decRes = DecodeDataQuick();
             if(decRes){

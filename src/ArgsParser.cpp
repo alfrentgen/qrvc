@@ -63,16 +63,16 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     for(n = 1; n < argc; n++){
 
         option = string(argv[n]);
-        cerr << "On option: " << option << "\n";
+        //cerr << "On option: " << option << "\n";
 
         if(option == counterOpt){
             m_parsedOptions[option] = string("1");
-            cerr << "Counter is on! OK!\n";
+            cerr << "Counter is on!\n";
 
         }else if(option == sizeOpt){
             pattern = "\\d{1,4}x\\d{1,4}";
             if(CheckOptionVal() == OK){
-                cerr << "Size pattern matches! Size string: " + optionVal << ". OK!\n";;
+                cerr << "Frame size: " + optionVal << ".\n";;
             }else{
                 cerr << "Bad size format. Terminated.\n";
                 return FAIL;
@@ -80,7 +80,13 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         }else if(option == inFileOpt || option == outFileOpt){
             pattern = ".*";
             if(CheckOptionVal() == OK){
-                cerr << "File name: " + optionVal << " - OK!\n";
+                string direction;
+                if(option == inFileOpt){
+                    direction = "Input";
+                }else{
+                    direction = "Output";
+                }
+                cerr << direction << " file name: " + optionVal << ".\n";
             }else{
                 cerr << "Bad file name. Terminated.\n";
                 return FAIL;
@@ -89,7 +95,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
             pattern = "\\d{1,2}";
             if(CheckOptionVal() == OK){
                 m_parsedOptions[option] = optionVal;
-                cerr << "Size pattern matches! Size string: " + optionVal << ". OK!\n";
+                cerr << "Number of working threads: " + optionVal << ".\n";
             }else{
                 cerr << "Bad number of threads. Terminate.\n";
                 return FAIL;
@@ -97,15 +103,15 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         }else if(option == chunksPerThOpt){
             pattern = "\\d{1,2}";
             if(CheckOptionVal() == OK){
-                cerr << "Size pattern matches! Size string: " + optionVal << ". OK!\n";
+                cerr << "Chunks per thread: " + optionVal << ".\n";
             }else{
                 cerr << "Bad chunks per thread number. Can be 1-99. Terminate.\n";
                 return FAIL;
             }
         }else if(option == decModeOpt){
-            pattern = "(^quick$|^normal$){1}";
+            pattern = "(^quick$|^slow$|^mixed$){1}";
             if(CheckOptionVal() == OK){
-                cerr << "Library to use: " + optionVal << ". OK!\n";
+                cerr << "Decode mode: " + optionVal << ".\n";
             }else{
                 cerr << "Bad decode mode. Terminate.\n";
                 return FAIL;
@@ -114,100 +120,38 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         if(option == errorLevelOpt){
             pattern = "[0123]";
             if(CheckOptionVal() == OK){
-                cerr << "level pattern matches! Level string: " + optionVal << endl;
+                cerr << "ECC level: " + optionVal << ".\n" << endl;
             }else{
-                cerr << "level can be 0-3. Terminated." << endl;
+                cerr << "ECC level can be 0-3. Terminated." << endl;
                 return FAIL;
             }
-            /*if(argc == n+1){
-                cerr << "No level string was found" << endl;
-                return -1;
-            }else{
-                string optionVal = string(argv[n+1]);
-                if(regex_match(optionVal, bytesPattern)){
-                    m_parsed[option] = optionVal;
-                    cerr << "level pattern matches! Level string: " + optionVal << endl;
-                    ++n;
-                }else{
-                    cerr << "level can be 0-3. Terminated." << endl;
-                    return -1;
-                }
-            }
-            cerr << "Level - OK!\n";*/
         }else
         if(option == tailOpt){
             pattern = "\\d{1,2}";
             if(CheckOptionVal() == OK){
-                cerr << "Tail pattern matches! Number of trailing frames: " + optionVal << endl;
+                cerr << "Number of trailing frames: " + optionVal << ".\n" << endl;
             }else{
-                cerr << "Number of repeats should be in rage 0-99. Terminated." << endl;
+                cerr << "Number of trailing frames should be in rage 0-99. Terminated." << endl;
                 return FAIL;
             }
-            /*regex tailPattern = regex("\\d{1,2}");
-            if(argc == n+1){
-                cerr << "No tail string found" << endl;
-                return -1;
-            }else{
-                string optionVal = string(argv[n+1]);
-                if(regex_match(optionVal, tailPattern)){
-                    m_parsed[option] = optionVal;
-                    cerr << "Tail pattern matches! Number of trailing frames: " + optionVal << endl;
-                    ++n;
-                }else{
-                    cerr << "Number of repeats should be in rage 0-99. Terminated." << endl;
-                    return -1;
-                }
-            }*/
         } else
         if(option == qrScaleOpt){
             pattern = "[1-3]?\\d{1}";
             if(CheckOptionVal() == OK){
-                cerr << "Scale pattern matches! Scale string: " + optionVal << endl;
+                cerr << "QR element scaling factor is: " + optionVal << ".\n" << endl;
             }else{
-                cerr << "Scale string should be an integer from 1 to 4. Terminated." << endl;
+                cerr << "Scaling factor should be an integer from 1 to 4. Terminated." << endl;
                 return FAIL;
             }
-
-            /*regex scalePattern = regex("[1-3]?\\d{1}");
-            if(argc == n+1){
-                cerr << "No scale string found" << endl;
-                return -1;
-            }else{
-                string optionVal = string(argv[n+1]);
-                if(regex_match(optionVal, scalePattern)){
-                    m_parsed[option] = optionVal;
-                    cerr << "Scale pattern matches! Scale string: " + optionVal << endl;
-                    ++n;
-                }else{
-                    cerr << "Scale string should be an integer from 1 to 4. Terminated." << endl;
-                    return -1;
-                }
-            }
-            cerr << "Scale - OK!\n";*/
         }else
         if(option == repeatOpt){
             pattern = "\\d{1,1}";
             if(CheckOptionVal() == OK){
-                cerr << "Repeat counter pattern matches! Number of repeats: " + optionVal << endl;
+                cerr << "Number of frame repeats: " + optionVal << ".\n" << endl;
             }else{
-                cerr << "Number of repeats should be in rage 0-9. Terminated." << endl;
+                cerr << "Number of frame repeats should be in rage 0-9. Terminated." << endl;
                 return FAIL;
             }
-            /*regex repeatPattern = regex("\\d{1,1}");
-            if(argc == n+1){
-                cerr << "No repeat string found" << endl;
-                return -1;
-            }else{
-                string optionVal = string(argv[n+1]);
-                if(regex_match(optionVal, repeatPattern)){
-                    m_parsed[option] = optionVal;
-                    cerr << "Repeat counter pattern matches! Number of repeats: " + optionVal << endl;
-                    ++n;
-                }else{
-                    cerr << "Number of repeats should be in rage 0-9. Terminated." << endl;
-                    return -1;
-                }
-            }*/
         }
         else{
             cerr << "Wrong option. Terminated!\n";

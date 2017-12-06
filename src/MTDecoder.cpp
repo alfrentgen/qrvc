@@ -36,19 +36,6 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
 
     m_jobs.resize(m_nThreads);
 
-    /*switch(m_decLib){
-    case QUICK:
-        for(int i =0; i < m_nThreads; i++){
-            m_jobs[i] = new DecodeQ(frameWidth, frameHeight, m_inQ, m_outQ);
-        }
-        break;
-    case MIXED:
-    default:
-        for(int i =0; i < m_nThreads; i++){
-            m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ);
-        }
-        break;
-    }*/
     for(int i =0; i < m_nThreads; i++){
         m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode);
     }
@@ -62,8 +49,8 @@ uint32_t MTDecoder::Start(bool join){
 
     m_threads.clear();
     try{
+        LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_nThreads; i++){
-            //m_threads[i] = thread(&Decode::Do, m_jobs[i]);
             m_threads.push_back(thread(&Decode::Do, m_jobs[i]));
         }
 
@@ -189,13 +176,15 @@ int main(int argc, char** argv){
         nThreads = stoi(it->second);
     }
 
+    decMode = MIXED;
     key = string("-m");
     it = optionsMap.find(key);
     if(it != optionsMap.end()){
         if(it->second == string("quick")){
             decMode = QUICK;
-        }
-        else {
+        }else if(it->second == string("slow")){
+            decMode = SLOW;
+        }else if(it->second == string("mixed")){
             decMode = MIXED;
         }
     }
