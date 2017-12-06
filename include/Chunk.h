@@ -4,9 +4,9 @@
 
 using namespace std;
 
-struct decodeResults {
+/*struct decodeResults {
     int32_t decodedBytes;
-};
+};*/
 
 class Chunk{
 public:
@@ -32,7 +32,7 @@ public:
     uint64_t m_frameID;
     uint32_t m_hashsum;
     bool m_rendered;
-    decodeResults m_decResults;
+    //decodeResults m_decResults;
 
     vector<uint8_t> m_inBuffer;
     vector<uint8_t> m_outBuffer;

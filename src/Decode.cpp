@@ -5,17 +5,28 @@
 using namespace std;
 using namespace zbar;
 
-Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ):
+Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true)
+    m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true), m_decMode(decMode)
 {
     //ctor
     m_scanner.set_config(ZBAR_QRCODE, ZBAR_CFG_ENABLE, 1);
+
+    m_qr = quirc_new();
+    if (!m_qr) {
+	    perror("Failed to allocate memory");
+	    abort();
+    }
+    if (quirc_resize(m_qr, fWidth, fHeight) < 0) {
+	    perror("Failed to allocate video memory");
+	    abort();
+    }
 }
 
 Decode::~Decode()
 {
     //dtor
+    quirc_destroy(m_qr);
 }
 
 static auto tp1 = chrono::steady_clock::now();
@@ -77,7 +88,16 @@ int32_t Decode::Do(){
 
         //DecodeData();
         //MEASURE_OPTIME(milliseconds,
-        DecodeData();
+        int32_t decRes;
+
+        if(m_decMode == QUICK){
+            decRes = DecodeDataQuick();
+        }else{
+            decRes = DecodeDataQuick();
+            if(decRes){
+                decRes = DecodeData();
+            }
+        }
         //);
 
         //START_TIME_MEASURING;
@@ -124,6 +144,7 @@ uint32_t Decode::DecodeData(){
 
     if(decodeResult < 0){
         fprintf(stderr, "Decoding chunk #%llu, errors (code = %d) have occured during decoding!\n", m_data.m_frameID, decodeResult);
+        m_data.m_rendered = false;
         return -1;
     }else if(decodeResult == 0){
         fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, decodeResult);
@@ -139,17 +160,18 @@ uint32_t Decode::DecodeData(){
         decodedData += symbol->get_data();
     }
 
-    m_data.m_decResults.decodedBytes = decodedData.size();
+    //m_data.m_decResults.decodedBytes = decodedData.size();
+    m_data.m_outBuffer.resize(decodedData.size());
 
     if(decodedData.size() < 12 ){
         fprintf(stderr, "Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", decodedData.size());
-        m_data.m_outBuffer.resize(decodedData.size());
+        //m_data.m_outBuffer.resize(decodedData.size());
         m_data.m_rendered = false;
         return -1;
     }
 
     //fprintf(stderr, "Decoded data size %llu bytes.\n", decodedData.size());
-    m_data.m_outBuffer.resize(decodedData.size());
+    //m_data.m_outBuffer.resize(decodedData.size());
     decodedData.copy((char*)m_data.m_outBuffer.data(), decodedData.size());
 
     //extracting chunk ID
@@ -167,12 +189,79 @@ uint32_t Decode::DecodeData(){
         m_data.m_hashsum |= (uint32_t)outBuffer[i] << shift;
     }
 
+    m_data.m_rendered = true;
     if(decodedData.size() == 12 ){
         fprintf(stderr, "Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", decodedData.size());
         m_data.m_rendered = false;
     }
 
+    return 0;
+}
+
+uint32_t Decode::DecodeDataQuick(){
+    //cerr << "In Decode::DecodeData():\n";
+    //cerr << "m_data.m_frameID = " << m_data.m_frameID << endl;
+
+    uint8_t* pImage = quirc_begin(m_qr, &m_frameWidth, &m_frameHeight);
+    m_qr->image = m_data.m_inBuffer.data();
+    quirc_end(m_qr);
+    int32_t num_codes = quirc_count(m_qr);
+
+    if(num_codes == 0){
+        fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
+        m_data.m_rendered = false;
+        return -1;
+    }
+
+    m_data.m_outBuffer.clear();
+    for (int32_t i = 0; i < num_codes; i++) {
+	    struct quirc_code code;
+	    struct quirc_data data;
+	    quirc_decode_error_t err;
+
+	    quirc_extract(m_qr, i, &code);
+
+	    /* Decoding stage */
+	    err = quirc_decode(&code, &data);
+	    if (err){
+		    fprintf(stderr, "DECODE FAILED: %s\n", quirc_strerror(err));
+		    return -1;
+	    }
+	    else{
+		    //fprintf(stderr, "Data: %s\n", data.payload);
+		    int32_t outBufferSize = m_data.m_outBuffer.size();
+            m_data.m_outBuffer.resize(outBufferSize + data.payload_len);
+            uint8_t* curPosition = m_data.m_outBuffer.data() + outBufferSize;
+            copy_n(data.payload, data.payload_len, curPosition);
+	    }
+    }
+
+    if(m_data.m_outBuffer.size() < 12 ){
+        fprintf(stderr, "Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
+        m_data.m_rendered = false;
+        return -1;
+    }
+
+    //extracting chunk ID
+    m_data.m_chunkID = 0;
+    for(int i = 0; i < 8; i++){
+        int32_t shift = 8 * i;
+        m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
+    }
+
+    //extracting hashsum
+    m_data.m_hashsum = 0;
+    uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
+    for(int i = 0; i < 4; i++){
+        int32_t shift = 8 * i;
+        m_data.m_hashsum |= (uint32_t)outBuffer[i] << shift;
+    }
+
     m_data.m_rendered = true;
+    if(m_data.m_outBuffer.size() == 12 ){
+        fprintf(stderr, "Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", m_data.m_outBuffer.size());
+        m_data.m_rendered = false;
+    }
 
     return 0;
 }
@@ -186,7 +275,7 @@ uint32_t Decode::DecodeData_mock(){
 }
 */
 
-DecodeQ::DecodeQ(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ)
+/*DecodeQ::DecodeQ(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ)
 : Decode(fWidth, fHeight, inQ, outQ)
 {
     //ctor
@@ -226,7 +315,7 @@ uint32_t DecodeQ::DecodeData(){
 
 	    quirc_extract(m_qr, i, &code);
 
-	    /* Decoding stage */
+	    // Decoding stage
 	    err = quirc_decode(&code, &data);
 	    if (err){
 		    fprintf(stderr, "DECODE FAILED: %s\n", quirc_strerror(err));
@@ -276,3 +365,4 @@ DecodeQ::~DecodeQ()
     //dtor
     quirc_destroy(m_qr);
 }
+*/

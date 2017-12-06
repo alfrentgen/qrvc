@@ -20,7 +20,7 @@ Chunk::~Chunk()
 }
 
 void Chunk::Init(uint8_t val){
-    m_decResults.decodedBytes = 0;
+    //m_decResults.decodedBytes = 0;
     m_chunkID = 0;
     m_frameID = 0;
     m_hashsum = 0;

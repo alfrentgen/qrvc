@@ -13,7 +13,7 @@ MTDecoder::~MTDecoder()
     Stop();
 }
 
-uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeLib decLib, uint32_t framesPerThread, uint32_t nThreads){
+uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads){
     //calculate number of threads and input queue size
     if(nThreads == 0){
         m_nThreads = std::thread::hardware_concurrency();
@@ -31,24 +31,28 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     m_inQ = new InputQueue(is, queueSize, frameWidth * frameHeight);
     m_outQ = new OutputQueue(os, queueSize, frameWidth * frameHeight);
 
-    m_decLib = decLib;
+    m_decMode = decMode;
     m_threads.clear();
 
     m_jobs.resize(m_nThreads);
 
-    switch(m_decLib){
-    case QUIRC:
+    /*switch(m_decLib){
+    case QUICK:
         for(int i =0; i < m_nThreads; i++){
             m_jobs[i] = new DecodeQ(frameWidth, frameHeight, m_inQ, m_outQ);
         }
         break;
-    case ZBAR:
+    case MIXED:
     default:
         for(int i =0; i < m_nThreads; i++){
             m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ);
         }
         break;
+    }*/
+    for(int i =0; i < m_nThreads; i++){
+        m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode);
     }
+
     LOG("Number of working threads is: %d\n", m_nThreads);
 
     return OK;
@@ -105,7 +109,7 @@ int main(int argc, char** argv){
 
     map<string, string>& optionsMap = ap.getOptions();
 
-    DecodeLib lib = ZBAR;
+    DecodeMode decMode = MIXED;
     uint32_t frameWidth = 0;
     uint32_t frameHeight = 0;
     bool frameCounter = 0;
@@ -189,17 +193,17 @@ int main(int argc, char** argv){
     it = optionsMap.find(key);
     if(it != optionsMap.end()){
         if(it->second == string("quick")){
-            lib = QUIRC;
+            decMode = QUICK;
         }
         else {
-            lib = ZBAR;
+            decMode = MIXED;
         }
     }
 
     //create MTDecoder instance and Init
     MTDecoder decoder;
 
-    decoder.Init(inputStream, outputStream, frameWidth, frameHeight, lib, framesPerThread, nThreads);
+    decoder.Init(inputStream, outputStream, frameWidth, frameHeight, decMode, framesPerThread, nThreads);
     decoder.Start(true);
 
     /*if(ifs && inputStream != &cin){
