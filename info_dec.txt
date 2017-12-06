@@ -9,7 +9,8 @@ while getting from an input queue. Then worker must put results into output
 queue using the same index, syncing only the incrementation of chunks counter).
 2) Move hashsum calculations from put stage to decode stage.
 3) Find out why large QR codes are not supported by zbar and quirc.
-(QUIRC - DONE, ZBAR - still has an issue with 40 QR version)
+(QUIRC - DONE, ZBAR - DONE). Zbar should be taken from github, Quick needs
+QUIRC_MAX_REGION=65534 definition
 4) Make encoder multithread.
 5) Write OpenCL code for decoder.
 6) Add options: enable/disable frame counter for encoder and decoder,

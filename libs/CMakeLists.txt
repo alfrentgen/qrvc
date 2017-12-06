@@ -5,7 +5,7 @@ project("QR libraries" C CXX)
 if(USE_ZBAR)
 add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 
-set(ZBAR_LIB_PATH  ./zbar-0.10)
+set(ZBAR_LIB_PATH  ./zbar)
 
 set(ZBAR_HDR
 ${ZBAR_LIB_PATH}/include/zbar.h
