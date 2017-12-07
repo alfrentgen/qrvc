@@ -5,6 +5,8 @@
 using namespace std;
 using namespace zbar;
 
+static int32_t g_idCounter = 0;
+
 Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true), m_decMode(decMode)
@@ -21,6 +23,7 @@ Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* ou
 	    perror("Failed to allocate video memory");
 	    abort();
     }
+    m_ID = g_idCounter++;
 }
 
 Decode::~Decode()
@@ -39,13 +42,17 @@ int32_t Decode::Do(){
 
     m_isWorking.test_and_set();
     while(m_isWorking.test_and_set()){
+        m_t1 = chrono::steady_clock::now();
         lckInQ.lock();
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
 
         result = m_inQ->GetChunk(m_data);
-        //cerr << "getting chunk, result: " << result << endl;
+        m_t2 = chrono::steady_clock::now();
+        //chrono::duration<chrono::microseconds>
+        long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
+        LOG("Job #%d wait time: %d\n", m_ID, delta);
 
         if(result == INQ_EMPTY_AND_DEPLETED){
             return 0;
