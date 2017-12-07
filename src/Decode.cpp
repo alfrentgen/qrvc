@@ -48,11 +48,12 @@ int32_t Decode::Do(){
             m_inQ->m_cv.wait(lckInQ);
         }
 
-        result = m_inQ->GetChunk(m_data);
         m_t2 = chrono::steady_clock::now();
-        //chrono::duration<chrono::microseconds>
+        result = m_inQ->GetChunk(m_data);
         long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        LOG("Job #%d wait time: %d\n", m_ID, delta);
+        if(delta > 0){
+            LOG("Job #%d get chunk wait time: %d\n", m_ID, delta);
+        }
 
         if(result == INQ_EMPTY_AND_DEPLETED){
             return 0;
@@ -62,8 +63,7 @@ int32_t Decode::Do(){
             //MEASURE_OPTIME(milliseconds,
             int32_t loaded = m_inQ->Load();
             //);
-
-            cerr << "Loading queue, loaded: " << loaded << " frame(s)" << endl;
+            LOG("Job #%d is loading queue... %d frame(s) has been loaded.\n", m_ID, loaded);
 
             m_inQ->m_waitForFlush = true;
             lckInQ.unlock();
@@ -93,7 +93,6 @@ int32_t Decode::Do(){
         }
         lckInQ.unlock();
 
-        //DecodeData();
         //MEASURE_OPTIME(milliseconds,
         int32_t decRes;
 
@@ -110,11 +109,18 @@ int32_t Decode::Do(){
         //);
 
         //START_TIME_MEASURING;
+        m_t1 = chrono::steady_clock::now();
         lckOutQ.lock();
+        m_t2 = chrono::steady_clock::now();
+        delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
+        if(delta > 0){
+            LOG("Job #%d put chunk wait time: %d\n", m_ID, delta);
+        }
+
         m_outQ->Put(m_data);
         if(m_outQ->IsFull()){
             tp2 = chrono::steady_clock::now();
-            cerr << "Time of decode stage is : " << chrono::duration_cast<chrono::milliseconds>(tp2 - tp1).count() << endl;
+            LOG("Time of decode stage is: %d\n", chrono::duration_cast<chrono::milliseconds>(tp2 - tp1).count());
 
             //MEASURE_OPTIME(milliseconds,
             m_outQ->PrepareFlush();
@@ -144,24 +150,20 @@ void Decode::Stop(){
 }
 
 uint32_t Decode::DecodeData(){
-    //cerr << "In Decode::DecodeData():\n";
-    //cerr << "m_data.m_frameID = " << m_data.m_frameID << endl;
     m_image.set_data((void*)m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
     //MEASURE_OPTIME(milliseconds,
     int32_t decodeResult = m_scanner.scan(m_image);
     //);
 
     if(decodeResult < 0){
-        fprintf(stderr, "Decoding chunk #%llu, errors (code = %d) have occured during decoding!\n", m_data.m_frameID, decodeResult);
+        LOG("Decoding chunk #%llu, errors (code = %d) have occured during decoding!\n", m_data.m_frameID, decodeResult);
         m_data.m_rendered = false;
         return -1;
     }else if(decodeResult == 0){
-        fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, decodeResult);
+        LOG("Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, decodeResult);
         m_data.m_rendered = false;
         return -1;
     }
-
-    //fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols.\n", m_data.m_frameID, decodeResult);
 
     string decodedData = string();
     //Iterate over all symbols!!! Not sure if it is correct, due to only one symbol(QR code) should be found.
@@ -169,18 +171,15 @@ uint32_t Decode::DecodeData(){
         decodedData += symbol->get_data();
     }
 
-    //m_data.m_decResults.decodedBytes = decodedData.size();
     m_data.m_outBuffer.resize(decodedData.size());
 
     if(decodedData.size() < 12 ){
-        fprintf(stderr, "Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", decodedData.size());
+        LOG("Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", decodedData.size());
         //m_data.m_outBuffer.resize(decodedData.size());
         m_data.m_rendered = false;
         return -1;
     }
 
-    //fprintf(stderr, "Decoded data size %llu bytes.\n", decodedData.size());
-    //m_data.m_outBuffer.resize(decodedData.size());
     decodedData.copy((char*)m_data.m_outBuffer.data(), decodedData.size());
 
     //extracting chunk ID
@@ -200,7 +199,7 @@ uint32_t Decode::DecodeData(){
 
     m_data.m_rendered = true;
     if(decodedData.size() == 12 ){
-        fprintf(stderr, "Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", decodedData.size());
+        LOG("Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", decodedData.size());
         m_data.m_rendered = false;
     }
 
@@ -208,16 +207,13 @@ uint32_t Decode::DecodeData(){
 }
 
 uint32_t Decode::DecodeDataQuick(){
-    //cerr << "In Decode::DecodeData():\n";
-    //cerr << "m_data.m_frameID = " << m_data.m_frameID << endl;
-
     uint8_t* pImage = quirc_begin(m_qr, &m_frameWidth, &m_frameHeight);
     m_qr->image = m_data.m_inBuffer.data();
     quirc_end(m_qr);
     int32_t num_codes = quirc_count(m_qr);
 
     if(num_codes == 0){
-        fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
+        LOG("Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
         m_data.m_rendered = false;
         return -1;
     }
@@ -233,11 +229,10 @@ uint32_t Decode::DecodeDataQuick(){
 	    /* Decoding stage */
 	    err = quirc_decode(&code, &data);
 	    if (err){
-		    fprintf(stderr, "DECODE FAILED: %s\n", quirc_strerror(err));
+		    LOG("Quick decode failed: %s\n", quirc_strerror(err));
 		    return -1;
 	    }
 	    else{
-		    //fprintf(stderr, "Data: %s\n", data.payload);
 		    int32_t outBufferSize = m_data.m_outBuffer.size();
             m_data.m_outBuffer.resize(outBufferSize + data.payload_len);
             uint8_t* curPosition = m_data.m_outBuffer.data() + outBufferSize;
@@ -246,7 +241,7 @@ uint32_t Decode::DecodeDataQuick(){
     }
 
     if(m_data.m_outBuffer.size() < 12 ){
-        fprintf(stderr, "Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
+        LOG("Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
         m_data.m_rendered = false;
         return -1;
     }
@@ -268,7 +263,7 @@ uint32_t Decode::DecodeDataQuick(){
 
     m_data.m_rendered = true;
     if(m_data.m_outBuffer.size() == 12 ){
-        fprintf(stderr, "Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", m_data.m_outBuffer.size());
+        LOG("Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", m_data.m_outBuffer.size());
         m_data.m_rendered = false;
     }
 

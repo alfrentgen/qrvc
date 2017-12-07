@@ -37,8 +37,8 @@ class Decode : public Job
         zbar::Image m_image;
         struct quirc *m_qr;
         DecodeMode m_decMode;
-        chrono::time_point<chrono::steady_clock> m_t1;// chrono::steady_clock::now();
-        chrono::time_point<chrono::steady_clock> m_t2;// chrono::steady_clock::now();
+        chrono::time_point<chrono::steady_clock> m_t1;
+        chrono::time_point<chrono::steady_clock> m_t2;
         int32_t m_ID;
 
     protected:

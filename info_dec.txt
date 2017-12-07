@@ -1,18 +1,24 @@
 1) In qrdectxt.c in function qr_code_data_list_extract_text() in section QR_MODE_BYTE we must do nothing, just put decoded bytes as is from in to out(but saving iconv() function logic for pointers shifts).
 2) fstream should be used with buffer!!! https://stackoverflow.com/questions/26095160/why-are-stdfstreams-so-slow
 
+07122017 TODO
+1) Make encoder multithread.
+2) Introduce frame hashsum(not decoded data hashsum!), to skip decoding of
+duplicated frames if they occur in the input bunch of frames.
+3) Write OpenCL code for decoder.
+4) Add options: enable/disable frame counter for encoder and decoder,
+enable/disable hashsum for frame encoder/decoder,
+enable/disable hashsum check for skipping duplicated frames in decoder.
 
-06122017 TODO
-1) Make input and output queues asynch (make workers place jobs in the same slots)
+DONE or not very urgent:
+5) Move hashsum calculations from put stage to decode stage.
+NOT URGENT: single thread spends about 1 microsecond on hashsum calculation.
+6) Make input and output queues asynch (make workers place jobs in the same slots)
 (Syncing only chunk counter decrementation and index pointer change
-while getting from an input queue. Then worker must put results into output 
+while getting from an input queue. Then worker must put results into output
 queue using the same index, syncing only the incrementation of chunks counter).
-2) Move hashsum calculations from put stage to decode stage.
-3) Find out why large QR codes are not supported by zbar and quirc.
+NOT URGENT: It seems that threads spend around 0-100 microseconds on waiting 
+for chunk put/get operation VERY RARELY!
+7) Find out why large QR codes are not supported by zbar and quirc.
 (QUIRC - DONE, ZBAR - DONE). Zbar should be taken from github, Quick needs
 QUIRC_MAX_REGION=65534 definition
-4) Make encoder multithread.
-5) Write OpenCL code for decoder.
-6) Add options: enable/disable frame counter for encoder and decoder,
-enable/disable hashsum for frame encoder/decoder, 
-enable/disable hashsum check for skipping duplicated frames in decoder.

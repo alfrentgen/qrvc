@@ -54,7 +54,7 @@ int32_t OutputQueue::PrepareFlush(){
     vector<uint8_t>::iterator flushIterator= m_flushBuffer.begin();
     char* inPtr = NULL;
 
-
+    long long delta = 0;
     for(int32_t i = 0; i < m_chunksLoaded; i++){
 
         Chunk& chunk = m_queue[i];
@@ -66,7 +66,10 @@ int32_t OutputQueue::PrepareFlush(){
             continue;
         }
 
+        chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
         uint32_t hashsum = chunk.CalcHashsum(chunk.m_outBuffer.data(), chunk.m_outBuffer.size() - 4);
+        chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
+        delta += chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
 
         if(chunk.m_chunkID == m_nextID){
             if(chunk.m_hashsum == hashsum){
@@ -94,6 +97,8 @@ int32_t OutputQueue::PrepareFlush(){
             }
         }
     }
+    LOG("Hashsum calculation time in out queue: %d\n", delta);
+
     m_flushSize = flushIterator - m_flushBuffer.begin();
     m_chunksLoaded = 0;
     return OK;
