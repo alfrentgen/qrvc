@@ -42,18 +42,18 @@ int32_t Decode::Do(){
 
     m_isWorking.test_and_set();
     while(m_isWorking.test_and_set()){
-        m_t1 = chrono::steady_clock::now();
+        //m_t1 = chrono::steady_clock::now();
         lckInQ.lock();
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
 
-        m_t2 = chrono::steady_clock::now();
+        //m_t2 = chrono::steady_clock::now();
         result = m_inQ->GetChunk(m_data);
-        long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
+        /*long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
         if(delta > 0){
             LOG("Job #%d get chunk wait time: %d\n", m_ID, delta);
-        }
+        }*/
 
         if(result == INQ_EMPTY_AND_DEPLETED){
             return 0;
@@ -109,13 +109,13 @@ int32_t Decode::Do(){
         //);
 
         //START_TIME_MEASURING;
-        m_t1 = chrono::steady_clock::now();
+        //m_t1 = chrono::steady_clock::now();
         lckOutQ.lock();
-        m_t2 = chrono::steady_clock::now();
+        /*m_t2 = chrono::steady_clock::now();
         delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
         if(delta > 0){
             LOG("Job #%d put chunk wait time: %d\n", m_ID, delta);
-        }
+        }*/
 
         m_outQ->Put(m_data);
         if(m_outQ->IsFull()){

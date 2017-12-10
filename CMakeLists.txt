@@ -89,5 +89,34 @@ add_dependencies(qvsenc qrenc)
 set_target_properties(qvsenc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qvsenc PUBLIC include)
 
+SET(MTENC_HDR
+include/pch.h
+include/ArgsParser.h
+include/Chunk.h
+include/Job.h
+include/Encode.h
+include/inputQueue.h
+include/OutputQueue.h
+include/MTEncoder.h
+include/utilities.h
+include/utilities_c.h
+)
+
+SET(MTENC_SRC
+src/ArgsParser.cpp
+src/Chunk.cpp
+src/Job.cpp
+src/Encode.cpp
+src/inputQueue.cpp
+src/OutputQueue.cpp
+src/MTEncoder.cpp
+)
+
+add_executable(mtqvsenc ${MTENC_HDR} ${MTENC_SRC})
+target_link_libraries(mtqvsenc qrenc)
+add_dependencies(mtqvsenc qrenc)
+set_target_properties(mtqvsenc PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(mtqvsenc PUBLIC include)
+
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
