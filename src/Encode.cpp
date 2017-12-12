@@ -3,11 +3,10 @@
 #include "utilities.h"
 
 using namespace std;
-using namespace zbar;
 
 static int32_t g_idCounter = 0;
 
-Encode::Encode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode):
+Encode::Encode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_isWorking(true)
 {
