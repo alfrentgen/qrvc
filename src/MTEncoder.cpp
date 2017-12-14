@@ -85,7 +85,7 @@ uint32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     }
     queueSize = framesPerThread * m_nThreads;
 
-    m_inQ = new InputQueue(is, queueSize, chunkSize);
+    m_inQ = new InputQueue(is, queueSize, nBytesToRead);
     m_outQ = new OutputQueue(os, queueSize, frameWidth * frameHeight);
 
     m_threads.clear();

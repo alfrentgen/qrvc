@@ -15,7 +15,7 @@ class InputQueue
         virtual ~InputQueue();
 
         int32_t GetChunk(Chunk& chunkTo);
-        int32_t Load();
+        int32_t Load(bool dropTail);
 
     public:
         bool m_waitForFlush;

@@ -33,6 +33,9 @@ class Encode : public Job
         chrono::time_point<chrono::steady_clock> m_t1;
         chrono::time_point<chrono::steady_clock> m_t2;
         int32_t m_ID;
+        QRecLevel m_eccLevel;
+        int32_t m_version;
+        int32_t m_qrScale;
 
     protected:
         virtual uint32_t EncodeData();

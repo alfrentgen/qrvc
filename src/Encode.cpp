@@ -2,6 +2,8 @@
 #include <chrono>
 #include "utilities.h"
 
+#define DONT_DROP_TAIL false
+
 using namespace std;
 
 static int32_t g_idCounter = 0;
@@ -46,7 +48,7 @@ int32_t Encode::Do(){
             return 0;
         }else
         if(result == INQ_EMPTY){
-            int32_t loaded = m_inQ->Load();
+            int32_t loaded = m_inQ->Load(DONT_DROP_TAIL);
             LOG("Job #%d is loading queue... %d frame(s) has been loaded.\n", m_ID, loaded);
 
             m_inQ->m_waitForFlush = true;
@@ -118,6 +120,54 @@ void Encode::Stop(){
 }
 
 uint32_t Encode::EncodeData(){
+
+        vector<uint8_t>& inChunk = m_data.m_inBuffer;
+        vector<uint8_t>& rawFrame = m_data.m_outBuffer;
+        uint8_t arrFrameID[8] = {0};
+        uint8_t arrHashSum[4] = {0};
+        //uint8_t* pInData = m_data.m_inBuffer.data();
+
+        //put frame ID in data to encode little endian(lesser byte first)
+        for(int i = 0; i < 8; i++){
+            int32_t shift = 8 * i;
+            arrFrameID[i] = (uint8_t)((m_data.m_chunkID >> shift) & (uint64_t)0xff);
+        }
+        inChunk.insert(inChunk.begin(), arrFrameID, arrFrameID + sizeof(arrFrameID));
+
+        //calc and put hashsum in data to encode little endian(lesser byte first)
+        uint32_t hashsum = m_data.CalcHashsum(inChunk.data(), inChunk.size());
+        for(int i = 0; i < 4; i++){
+            int32_t shift = 8 * i;
+            arrHashSum[i] = (uint8_t)((hashsum >> shift) & (uint32_t)0xff);
+        }
+        inChunk.insert(inChunk.end(), arrHashSum, arrHashSum + sizeof(arrHashSum));
+
+        //encode data
+        QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
+
+        rawFrame.resize(m_frameWidth * m_frameHeight);
+        //currently only black on white codes are supported
+        rawFrame.assign(rawFrame.size(), 255);
+
+        //put scaled code in the center of rawFrame
+        //positioning
+        uint8_t* pQRData = pQR->data;
+        int32_t qrWidth = pQR->width;
+        uint32_t xOffset = (m_frameWidth - m_qrScale * qrWidth)/2;
+        uint32_t yOffset = (m_frameHeight - m_qrScale * qrWidth)/2;
+        vector<uint8_t>::iterator frameIt = rawFrame.begin() + yOffset * m_frameWidth;
+
+        for(int32_t y = 0; y < qrWidth; y++){
+            for(int32_t x = 0; x < qrWidth; x++){
+                uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? 0 : 255;
+                fill_n(frameIt + xOffset + x * m_qrScale, m_qrScale, val);
+            }
+            frameIt += m_frameWidth;
+            for(uint32_t cnt = 1; cnt < m_qrScale; ++cnt){
+                copy_n(frameIt - m_frameWidth, m_frameWidth, frameIt);
+                frameIt += m_frameWidth;
+            }
+        }
     return 0;
 }
 

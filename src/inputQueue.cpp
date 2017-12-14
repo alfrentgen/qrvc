@@ -22,7 +22,7 @@ InputQueue::~InputQueue()
     }
 }
 
-int32_t InputQueue::Load(){
+int32_t InputQueue::Load(bool dropTail){
      while(m_chunksAvailable < m_capacity && !m_depleted){
         int32_t bytesRead = 0;
         vector<uint8_t>& buffer = m_storage[m_chunksAvailable].GetInBuffer();
@@ -44,19 +44,30 @@ int32_t InputQueue::Load(){
             m_queue.push_back(&m_storage[m_chunksAvailable]);
             ++m_chunksAvailable;
         }else {
-            //input stream is broken
-            if(bytesRead == m_chunkSize){
+            if(dropTail){
+                //input stream is broken
+                if(bytesRead == m_chunkSize){
+                    m_storage[m_chunksAvailable].m_frameID = m_frameCounter++;
+                    m_queue.push_back(&m_storage[m_chunksAvailable]);
+                    ++m_chunksAvailable;
+                }else{
+                    m_storage[m_chunksAvailable].FreeInBuffer();
+                    m_storage[m_chunksAvailable].FreeOutBuffer();
+                }
+                m_capacity = m_chunksAvailable;
+                m_storage.resize(m_chunksAvailable);
+                m_depleted = true;
+                break;
+            }else {
                 m_storage[m_chunksAvailable].m_frameID = m_frameCounter++;
+                m_storage[m_chunksAvailable].m_inBuffer.resize(bytesRead);
                 m_queue.push_back(&m_storage[m_chunksAvailable]);
                 ++m_chunksAvailable;
-            }else{
-                m_storage[m_chunksAvailable].FreeInBuffer();
-                m_storage[m_chunksAvailable].FreeOutBuffer();
+                m_capacity = m_chunksAvailable;
+                m_storage.resize(m_chunksAvailable);
+                m_depleted = true;
+                break;
             }
-            m_capacity = m_chunksAvailable;
-            m_storage.resize(m_chunksAvailable);
-            m_depleted = true;
-            break;
         }
     }
     return m_chunksAvailable;

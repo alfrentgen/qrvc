@@ -2,6 +2,8 @@
 #include <chrono>
 #include "utilities.h"
 
+#define DROP_TAIL true
+
 using namespace std;
 using namespace zbar;
 
@@ -61,7 +63,7 @@ int32_t Decode::Do(){
         if(result == INQ_EMPTY){
 
             //MEASURE_OPTIME(milliseconds,
-            int32_t loaded = m_inQ->Load();
+            int32_t loaded = m_inQ->Load(DROP_TAIL);
             //);
             LOG("Job #%d is loading queue... %d frame(s) has been loaded.\n", m_ID, loaded);
 
