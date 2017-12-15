@@ -2,7 +2,7 @@
 2) fstream should be used with buffer!!! https://stackoverflow.com/questions/26095160/why-are-stdfstreams-so-slow
 
 14122017 TODO
-1) Make encoder multithread(in progress)
+1) add -r and -t options support in mtenc
 2) Add config structure for enc/dec init and filling function in ArgsParser
 3) Add inverse colours QR code support
 4) Introduce frame hashsum(not decoded data hashsum!), to skip decoding of
@@ -13,14 +13,15 @@ enable/disable hashsum for frame encoder/decoder,
 enable/disable hashsum check for skipping duplicated frames in decoder.
 
 DONE or not very urgent:
-5) Move hashsum calculations from put stage to decode stage.
+1) Make encoder multithread(in progress) DONE
+2) Move hashsum calculations from put stage to decode stage.
 NOT URGENT: single thread spends about 1 microsecond on hashsum calculation.
-6) Make input and output queues asynch (make workers place jobs in the same slots)
+3) Make input and output queues asynch (make workers place jobs in the same slots)
 (Syncing only chunk counter decrementation and index pointer change
 while getting from an input queue. Then worker must put results into output
 queue using the same index, syncing only the incrementation of chunks counter).
 NOT URGENT: It seems that threads spend around 0-100 microseconds on waiting 
 for chunk put/get operation VERY RARELY!
-7) Find out why large QR codes are not supported by zbar and quirc.
+4) Find out why large QR codes are not supported by zbar and quirc.
 (QUIRC - DONE, ZBAR - DONE). Zbar should be taken from github, Quick needs
 QUIRC_MAX_REGION=65534 definition
