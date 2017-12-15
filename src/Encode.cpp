@@ -101,7 +101,7 @@ uint32_t Encode::EncodeData(){
     //put frame ID in data to encode little endian(lesser byte first)
     for(int i = 0; i < 8; i++){
         int32_t shift = 8 * i;
-        arrFrameID[i] = (uint8_t)((m_data.m_chunkID >> shift) & (uint64_t)0xff);
+        arrFrameID[i] = (uint8_t)((m_data.m_frameID >> shift) & (uint64_t)0xff);
     }
     inChunk.insert(inChunk.begin(), arrFrameID, arrFrameID + sizeof(arrFrameID));
     //calc and put hashsum in data to encode little endian(lesser byte first)

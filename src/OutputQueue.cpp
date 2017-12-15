@@ -75,7 +75,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         Chunk& chunk = m_queue[i];
         int32_t dataSize = chunk.m_outBuffer.size();
         dataSize = ((dataSize - 12) > 0) ? (dataSize - 12) : 0;
-
+        //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
         if(!chunk.m_rendered){
             LOG("LOG: frame #%lu is not rendered!\n", chunk.m_frameID);
             continue;
