@@ -32,26 +32,18 @@ int32_t Encode::Do(){
 
     m_isWorking.test_and_set();
     while(m_isWorking.test_and_set()){
-        //m_t1 = chrono::steady_clock::now();
         lckInQ.lock();
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
-        //LOG("Job #%d is about to get a chunk.\n", m_ID);
-        //m_t2 = chrono::steady_clock::now();
         result = m_inQ->GetChunk(m_data);
-        /*long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        if(delta > 0){
-            LOG("Job #%d get chunk wait time: %d\n", m_ID, delta);
-        }*/
-        //LOG("Job #%d has got a chunk.\n", m_ID);
+
         if(result == INQ_EMPTY_AND_DEPLETED){
+            lckInQ.unlock();
             return 0;
         }else
         if(result == INQ_EMPTY){
             int32_t loaded = m_inQ->Load(!DROP_TAIL);
-            //LOG("Job #%d is loading queue... %d frame(s) has been loaded.\n", m_ID, loaded);
-
             m_inQ->m_waitForFlush = true;
             lckInQ.unlock();
 
@@ -73,45 +65,21 @@ int32_t Encode::Do(){
             m_inQ->m_waitForFlush = false;
             m_inQ->m_cv.notify_all();
             lckInQ.unlock();
-
-            tp1 = chrono::steady_clock::now();
-            //LOG("Queue loading cycle has been succeded.");
-
             continue;
         }
         lckInQ.unlock();
 
-        //MEASURE_OPTIME(milliseconds,
-        int32_t decRes;
-        //LOG("Job #%d his about to encode data.\n", m_ID);
-        EncodeData();//);
+        EncodeData();
 
-        //START_TIME_MEASURING;
-        //m_t1 = chrono::steady_clock::now();
         lckOutQ.lock();
-        /*m_t2 = chrono::steady_clock::now();
-        delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        if(delta > 0){
-            LOG("Job #%d put chunk wait time: %d\n", m_ID, delta);
-        }*/
-
         m_outQ->Put(m_data);
         if(m_outQ->IsFull()){
-            tp2 = chrono::steady_clock::now();
-            LOG("Time of encode stage is: %d\n", chrono::duration_cast<chrono::milliseconds>(tp2 - tp1).count());
-
             m_outQ->PrepareFlush(SIMPLE_FLUSH);
-            {
-                lock_guard<std::mutex> lck (m_outQ->m_flushMtx);
-                m_outQ->m_flushed = true;
-                m_outQ->m_cv.notify_all();
-                lckOutQ.unlock();
-
-                m_outQ->Flush();
-            }
-        }else{
-            lckOutQ.unlock();
+            m_outQ->Flush();
+            m_outQ->m_flushed = true;
+            m_outQ->m_cv.notify_all();
         }
+        lckOutQ.unlock();
     }
     m_isWorking.clear();
     return 0;
@@ -121,6 +89,7 @@ void Encode::Stop(){
     m_isWorking.clear();
 }
 
+#if 1
 uint32_t Encode::EncodeData(){
 
     vector<uint8_t>& inChunk = m_data.m_inBuffer;
@@ -178,4 +147,12 @@ uint32_t Encode::EncodeData(){
     QRcode_free(pQR);
     return 0;
 }
+#else
+uint32_t Encode::EncodeData(){
 
+    vector<uint8_t>& inChunk = m_data.m_inBuffer;
+    vector<uint8_t>& rawFrame = m_data.m_outBuffer;
+    inChunk.swap(rawFrame);
+    return 0;
+}
+#endif

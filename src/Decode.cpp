@@ -42,29 +42,19 @@ int32_t Decode::Do(){
 
     m_isWorking.test_and_set();
     while(m_isWorking.test_and_set()){
-        //m_t1 = chrono::steady_clock::now();
+
         lckInQ.lock();
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
-
-        //m_t2 = chrono::steady_clock::now();
         result = m_inQ->GetChunk(m_data);
-        /*long long delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        if(delta > 0){
-            LOG("Job #%d get chunk wait time: %d\n", m_ID, delta);
-        }*/
 
         if(result == INQ_EMPTY_AND_DEPLETED){
+            lckInQ.unlock();
             return 0;
         }else
         if(result == INQ_EMPTY){
-
-            //MEASURE_OPTIME(milliseconds,
             int32_t loaded = m_inQ->Load(DROP_TAIL);
-            //);
-            LOG("Job #%d is loading queue... %d frame(s) has been loaded.\n", m_ID, loaded);
-
             m_inQ->m_waitForFlush = true;
             lckInQ.unlock();
 
@@ -93,9 +83,7 @@ int32_t Decode::Do(){
         }
         lckInQ.unlock();
 
-        //MEASURE_OPTIME(milliseconds,
         int32_t decRes;
-
         if(m_decMode == QUICK){
             decRes = DecodeDataQuick();
         }else if(m_decMode == SLOW){
@@ -106,40 +94,16 @@ int32_t Decode::Do(){
                 decRes = DecodeData();
             }
         }
-        //);
 
-        //START_TIME_MEASURING;
-        //m_t1 = chrono::steady_clock::now();
         lckOutQ.lock();
-        /*m_t2 = chrono::steady_clock::now();
-        delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        if(delta > 0){
-            LOG("Job #%d put chunk wait time: %d\n", m_ID, delta);
-        }*/
-
         m_outQ->Put(m_data);
         if(m_outQ->IsFull()){
-            tp2 = chrono::steady_clock::now();
-            LOG("Time of decode stage is: %d\n", chrono::duration_cast<chrono::milliseconds>(tp2 - tp1).count());
-
-            //MEASURE_OPTIME(milliseconds,
             m_outQ->PrepareFlush(!SIMPLE_FLUSH);
-            //);
-            {
-                lock_guard<std::mutex> lck (m_outQ->m_flushMtx);
-                m_outQ->m_flushed = true;
-                m_outQ->m_cv.notify_all();
-                lckOutQ.unlock();
-
-                m_outQ->Flush();
-            }
-        }else{
-            lckOutQ.unlock();
+            m_outQ->Flush();
+            m_outQ->m_flushed = true;
+            m_outQ->m_cv.notify_all();
         }
-        /*STOP_TIME_MEASURING(milliseconds);
-        if(delta > 0){
-            PRINT_MEASURED_TIME("Put()", milliseconds);
-        }*/
+        lckOutQ.unlock();
     }
     m_isWorking.clear();
     return 0;

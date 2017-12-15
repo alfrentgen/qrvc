@@ -42,7 +42,7 @@ int32_t OutputQueue::EstimateFlushingBufferSize(){
 
 //flush output queue if it has at leastNChunks
 int32_t OutputQueue::PrepareFlush(bool simple){
-    LOG("%s", "In OutputQueue::PrepareFlush()\n");
+    //LOG("%s", "In OutputQueue::PrepareFlush()\n");
     function<bool(Chunk, Chunk)> compareChunks = [] (Chunk ch1, Chunk ch2) -> bool{
         return ch1.m_frameID < ch2.m_frameID;
     };
@@ -50,9 +50,12 @@ int32_t OutputQueue::PrepareFlush(bool simple){
 
     if(simple){
         m_flushSize = 0;
+        //LOG("m_flushSize = 0; threadID = %d\n", this_thread::get_id());
         m_flushBuffer.clear();
         for(int i = 0; i < m_chunksLoaded; i++){
             Chunk& chunk = m_queue[i];
+            //LOG("chunk #%d, out size = %d, threadID = %d\n", chunk.m_frameID, chunk.m_outBuffer.size(),
+            //this_thread::get_id());
             m_flushSize += chunk.m_outBuffer.size();
             m_flushBuffer.insert(m_flushBuffer.end(), chunk.m_outBuffer.begin(), chunk.m_outBuffer.end());
         }
@@ -112,14 +115,15 @@ int32_t OutputQueue::PrepareFlush(bool simple){
     LOG("Hashsum calculation time in out queue: %d\n", delta);
 
     m_flushSize = flushIterator - m_flushBuffer.begin();
+    m_flushBuffer.resize(m_flushSize);
     m_chunksLoaded = 0;
     return OK;
 }
 
 int32_t OutputQueue::Flush(){
-    LOG("%s%d\n", "Flush size = ", m_flushSize);
+    //LOG("In Flush(): Flush size = %d, threadID = %d\n", m_flushSize, this_thread::get_id());
     //LOG("%s%d\n", "m_flushBuffer.size() = ", m_flushBuffer.size());
-    m_outStream->write(m_flushBuffer.data(), m_flushSize);
+    m_outStream->write(m_flushBuffer.data(), m_flushBuffer.size()/*m_flushSize*/);
     m_outStream->flush();
     m_flushSize = 0;
 }

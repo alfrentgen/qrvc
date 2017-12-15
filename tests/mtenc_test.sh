@@ -1,3 +1,3 @@
 date
-../build/mtqvsenc -f $1 -s 4 -i ./$2.bin -o ./$2_$1_mt.yuv -w 1
+../build/mtqvsenc -f $1 -s 4 -i ./$2.bin -o ./$2_$1_mt.yuv -w 4
 date
