@@ -2,8 +2,6 @@
 #include <chrono>
 #include "utilities.h"
 
-#define DROP_TAIL true
-
 using namespace std;
 using namespace zbar;
 
@@ -125,7 +123,7 @@ int32_t Decode::Do(){
             LOG("Time of decode stage is: %d\n", chrono::duration_cast<chrono::milliseconds>(tp2 - tp1).count());
 
             //MEASURE_OPTIME(milliseconds,
-            m_outQ->PrepareFlush();
+            m_outQ->PrepareFlush(!SIMPLE_FLUSH);
             //);
             {
                 lock_guard<std::mutex> lck (m_outQ->m_flushMtx);

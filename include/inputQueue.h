@@ -5,6 +5,7 @@
 
 #define INQ_EMPTY_AND_DEPLETED -2
 #define INQ_EMPTY -1
+#define DROP_TAIL true
 
 using namespace std;
 

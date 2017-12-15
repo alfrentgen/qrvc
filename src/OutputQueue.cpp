@@ -41,13 +41,25 @@ int32_t OutputQueue::EstimateFlushingBufferSize(){
 }
 
 //flush output queue if it has at leastNChunks
-int32_t OutputQueue::PrepareFlush(){
+int32_t OutputQueue::PrepareFlush(bool simple){
     LOG("%s", "In OutputQueue::PrepareFlush()\n");
     function<bool(Chunk, Chunk)> compareChunks = [] (Chunk ch1, Chunk ch2) -> bool{
         return ch1.m_frameID < ch2.m_frameID;
     };
-
     sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
+
+    if(simple){
+        m_flushSize = 0;
+        m_flushBuffer.clear();
+        for(int i = 0; i < m_chunksLoaded; i++){
+            Chunk& chunk = m_queue[i];
+            m_flushSize += chunk.m_outBuffer.size();
+            m_flushBuffer.insert(m_flushBuffer.end(), chunk.m_outBuffer.begin(), chunk.m_outBuffer.end());
+        }
+        m_chunksLoaded = 0;
+        return OK;
+    }
+
     int32_t newSize = EstimateFlushingBufferSize();
     newSize = (m_flushBuffer.size() < newSize) ? newSize : m_flushBuffer.size();
     m_flushBuffer.resize(newSize);

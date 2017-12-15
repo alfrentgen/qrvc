@@ -59,7 +59,7 @@ uint32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     //check if frame size fits QR code size
     uint32_t version = 0;
     int32_t chunkSize = getChunkSize(frameWidth, frameHeight, eccLevel, qrScale, &version);
-    if(!chunkSize || !version){
+    if(!chunkSize || !version || version > 40 || version < 0){
         cerr << "Frame size does not fit any possible qr code. Try smaller scale, ECC  level or bigger frame.\n";
         return FAIL;
     }else{
@@ -93,7 +93,7 @@ uint32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     m_jobs.resize(m_nThreads);
 
     for(int i =0; i < m_nThreads; i++){
-        m_jobs[i] = new Encode(frameWidth, frameHeight, m_inQ, m_outQ);
+        m_jobs[i] = new Encode(frameWidth, frameHeight, m_inQ, m_outQ, m_qrVersion, eccLevel, qrScale);
     }
 
     LOG("Number of working threads is: %d\n", m_nThreads);

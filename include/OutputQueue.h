@@ -6,6 +6,7 @@
 
 #define DROPPED 1
 #define NOT_ENOUGH_CHUNKS -1
+#define SIMPLE_FLUSH true
 
 using namespace std;
 
@@ -15,7 +16,7 @@ class OutputQueue
         OutputQueue(ostream* os, int32_t capacity = 2, int32_t chunkSize = 512);
         virtual ~OutputQueue();
         int32_t Put(Chunk& ch);
-        int32_t PrepareFlush();
+        int32_t PrepareFlush(bool simple);
         int32_t Flush();
         void SetCapacity(uint32_t newCap);
         bool IsFull();
