@@ -174,3 +174,9 @@ bool ArgsParserDec::IsOptionName(string& str){
     }
     return false;
 }
+
+Config* ArgsParserDec::GetConfig(){
+    Config* config = new Config;
+    memset(config, 0, sizeof(Config));
+    return config;
+}

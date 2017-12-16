@@ -5,6 +5,26 @@
 
 using namespace std;
 
+typedef struct Config {
+    bool    m_counterOn;
+    bool    m_inverseFrame;
+    int32_t m_frameWidth;
+    int32_t m_frameHeight;
+    int32_t m_frameRepeats;
+    int32_t m_nTailingFrames;
+
+    int32_t m_nWorkingThreads;
+    int32_t m_framesPerThread;
+
+    int32_t m_qrScale;
+    int32_t m_eccLevel;
+
+    int32_t m_decMode;
+
+    char*   m_ifName;
+    char*   m_ofName;
+} Config;
+
 class ArgsParserDec
 {
     public:
@@ -15,6 +35,7 @@ class ArgsParserDec
         ArgsParserDec();
         virtual ~ArgsParserDec();
         virtual int parseOptions(int argc, char **argv);
+        virtual Config* GetConfig();
         virtual map<string, string>& getOptions();
 
     protected:
