@@ -11,7 +11,7 @@ typedef struct Config {
     int32_t m_frameWidth;
     int32_t m_frameHeight;
     int32_t m_frameRepeats;
-    int32_t m_nTailingFrames;
+    int32_t m_nTrailingFrames;
 
     int32_t m_nWorkingThreads;
     int32_t m_framesPerThread;
@@ -21,8 +21,8 @@ typedef struct Config {
 
     int32_t m_decMode;
 
-    char*   m_ifName;
-    char*   m_ofName;
+    string  m_ifName;
+    string  m_ofName;
 } Config;
 
 class ArgsParserDec

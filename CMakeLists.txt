@@ -39,6 +39,17 @@ message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
 add_subdirectory(libs)
 
+#[[set(PARSER_FILES
+src/ArgsParser.cpp
+include/ArgsParser.h
+include/Decode.h
+include/Encode.h)
+
+add_library(parser STATIC ${PARSER_FILES})
+target_include_directories(parser PUBLIC include)
+add_dependencies(parser quirc zbar_cut qrenc)
+target_link_libraries(parser PRIVATE quirc zbar_cut qrenc)]]
+
 set(DEC_HDR
 include/pch.h
 include/ArgsParser.h
@@ -63,12 +74,8 @@ src/MTDecoder.cpp
 )
 
 add_executable(qvsdec ${DEC_HDR} ${DEC_SRC})
-target_link_libraries(qvsdec quirc)
-add_dependencies(qvsdec quirc)
-if(USE_ZBAR)
-target_link_libraries(qvsdec zbar_cut)
-add_dependencies(qvsdec zbar_cut)
-endif()
+target_link_libraries(qvsdec quirc zbar_cut)
+add_dependencies(qvsdec quirc zbar_cut)
 set_target_properties(qvsdec PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qvsdec PUBLIC include)
 
