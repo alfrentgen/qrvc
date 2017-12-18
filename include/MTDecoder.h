@@ -17,9 +17,10 @@ class MTDecoder
         MTDecoder();
         virtual ~MTDecoder();
 
-        uint32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED, uint32_t framesPerThread = 0, uint32_t nThreads = 0);
-        uint32_t Start(bool join);
-        uint32_t Stop();
+        int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED, uint32_t framesPerThread = 0, uint32_t nThreads = 0);
+        int32_t Init(Config& config);
+        int32_t Start(bool join);
+        int32_t Stop();
 
     private:
         int32_t m_nThreads;

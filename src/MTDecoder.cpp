@@ -13,7 +13,81 @@ MTDecoder::~MTDecoder()
     Stop();
 }
 
-uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads){
+int32_t MTDecoder::Init(Config& config){
+    istream* inputStream = &cin;
+    ostream* outputStream = &cout;
+
+    ifstream* ifs = NULL;
+    ofstream* ofs = NULL;
+
+    if(config.m_ifName.size() == 0){
+        cerr << "Input filename is not specified, reading from stdin.\n";
+    }else{
+        ifs = new ifstream(config.m_ifName, ios_base::in | ios_base::binary);
+        if (!ifs || !ifs->is_open()){
+            ifs = NULL;
+            cerr << "Failed to open input stream.";
+            return FAIL;
+        }
+        inputStream = ifs;
+    }
+
+    if(config.m_ofName.size() == 0){
+        cerr << "Output filename is not specified, writing to stdout.\n";
+    }else{
+        ofs = new ofstream(config.m_ofName, ios_base::out | ios_base::binary);
+        if (!ofs || !ofs->is_open()){
+            ofs = NULL;
+            cerr << "Failed to open output stream.";
+            return FAIL;
+        }
+        outputStream = ofs;
+    }
+
+
+    //calculate number of threads and input queue size
+    int32_t& nThreads = config.m_nWorkingThreads;
+    if(nThreads == 0){
+        m_nThreads = std::thread::hardware_concurrency();
+        m_nThreads = (m_nThreads == 0) ? 2 : m_nThreads;
+    }else{
+        m_nThreads = nThreads;
+    }
+
+    int32_t queueSize;
+    int32_t& framesPerThread = config.m_framesPerThread;
+    if(framesPerThread == 0){
+        framesPerThread = 8;
+    }
+    queueSize = framesPerThread * m_nThreads;
+
+    int32_t& frameWidth = config.m_frameWidth;
+    int32_t& frameHeight = config.m_frameHeight;
+    if(frameWidth <= 0 || frameHeight <= 0){
+        return FAIL;
+    }
+    m_inQ = new InputQueue(inputStream, queueSize, frameWidth * frameHeight);
+    m_outQ = new OutputQueue(outputStream, queueSize, frameWidth * frameHeight);
+
+    if(config.m_decMode < 0 || config.m_decMode > 2){
+        return FAIL;
+    }
+
+    m_decMode = (DecodeMode)config.m_decMode;
+    m_threads.clear();
+
+    m_jobs.resize(m_nThreads);
+
+    for(int i =0; i < m_nThreads; i++){
+        m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode);
+    }
+
+    LOG("Number of working threads is: %d\n", m_nThreads);
+
+    return OK;
+}
+
+int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads){
     //calculate number of threads and input queue size
     if(nThreads == 0){
         m_nThreads = std::thread::hardware_concurrency();
@@ -45,7 +119,7 @@ uint32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     return OK;
 }
 
-uint32_t MTDecoder::Start(bool join){
+int32_t MTDecoder::Start(bool join){
 
     m_threads.clear();
     try{
@@ -68,11 +142,11 @@ uint32_t MTDecoder::Start(bool join){
     return OK;
 }
 
-uint32_t MTDecoder::Stop(){
+int32_t MTDecoder::Stop(){
     for(int i = 0; i < m_nThreads; i++){
         m_jobs[i]->Stop();
     }
-    for(int i = 0; i < m_threads.size(); i++){
+    for(uint32_t i = 0; i < m_threads.size(); i++){
         if(m_threads[i].joinable()){
             m_threads[i].join();
         }
@@ -94,7 +168,7 @@ int main(int argc, char** argv){
         return FAIL;
     }
 
-    map<string, string>& optionsMap = ap.getOptions();
+/*    map<string, string>& optionsMap = ap.getOptions();
 
     DecodeMode decMode = MIXED;
     uint32_t frameWidth = 0;
@@ -187,13 +261,19 @@ int main(int argc, char** argv){
         }else if(it->second == string("mixed")){
             decMode = MIXED;
         }
-    }
+    }*/
+
+    unique_ptr<Config>pConfig(ap.GetConfig());
 
     //create MTDecoder instance and Init
     MTDecoder decoder;
 
-    decoder.Init(inputStream, outputStream, frameWidth, frameHeight, decMode, framesPerThread, nThreads);
-    decoder.Start(true);
+    //decoder.Init(inputStream, outputStream, frameWidth, frameHeight, decMode, framesPerThread, nThreads);
+    int32_t res = decoder.Init(*(pConfig.get()));
+    pConfig.reset();
+    if(res == OK){
+        decoder.Start(true);
+    }
 
     /*if(ifs && inputStream != &cin){
         ifs->close();

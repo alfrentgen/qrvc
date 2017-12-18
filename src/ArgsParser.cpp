@@ -56,7 +56,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
 
     function<int32_t()> CheckOptionVal = [&](){
         if(argc == n+1 || !argv[n+1][0]){
-            cerr << "No option value found." << endl;
+            LOG("No option value found.\n");
             return FAIL;
         }else {
             optionVal = string(argv[n+1]);
@@ -78,17 +78,19 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
 
         if(option == counterOpt){
             m_parsedOptions[option] = string("1");
-            cerr << "Counter is on!\n";
-        }else if(option == sizeOpt){
-            pattern = "\\d{1,4}x\\d{1,4}";
+            LOG("Counter is on!\n");
+        } else
+        if(option == sizeOpt){
+            pattern = "^\\d{1,4}x\\d{1,4}$";
             if(CheckOptionVal() == OK){
-                cerr << "Frame size: " + optionVal << ".\n";;
+                LOG("Frame size: %s\n", optionVal.c_str());
             }else{
-                cerr << "Bad size format. Terminated.\n";
+                LOG("Bad size format. Terminated.\n");
                 return FAIL;
             }
-        }else if(option == inFileOpt || option == outFileOpt){
-            pattern = ".*";
+        } else
+        if(option == inFileOpt || option == outFileOpt){
+            pattern = "^.*$";
             if(CheckOptionVal() == OK){
                 string direction;
                 if(option == inFileOpt){
@@ -96,78 +98,82 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
                 }else{
                     direction = "Output";
                 }
-                cerr << direction << " file name: " + optionVal << ".\n";
+                LOG("%s file name: %s\n", direction.c_str(), optionVal.c_str());
             }else{
-                cerr << "Bad file name. Terminated.\n";
+                LOG("Bad file name. Terminated.\n");
                 return FAIL;
             }
-        }else if(option == workersNumberOpt){
-            pattern = "\\d{1,2}";
+        } else
+        if(option == workersNumberOpt){
+            pattern = "^\\d{1,2}$";
             if(CheckOptionVal() == OK){
                 m_parsedOptions[option] = optionVal;
-                cerr << "Number of working threads: " + optionVal << ".\n";
+                LOG("Number of working threads: %s\n", optionVal.c_str());
             }else{
-                cerr << "Bad number of threads. Terminate.\n";
+                LOG("Bad number of threads. Terminate.\n");
                 return FAIL;
             }
-        }else if(option == chunksPerThOpt){
-            pattern = "\\d{1,2}";
+        } else
+        if(option == chunksPerThOpt){
+            pattern = "^\\d{1,2}$";
             if(CheckOptionVal() == OK){
-                cerr << "Chunks per thread: " + optionVal << ".\n";
+                LOG("Chunks per thread: %s\n", optionVal.c_str());
             }else{
-                cerr << "Bad chunks per thread number. Can be 1-99. Terminate.\n";
+                LOG("Bad chunks per thread number. Can be 1-99. Terminate.\n");
                 return FAIL;
             }
-        }else if(option == decModeOpt){
+        } else
+        if(option == decModeOpt){
             pattern = "(^quick$|^slow$|^mixed$){1}";
             if(CheckOptionVal() == OK){
-                cerr << "Decode mode: " + optionVal << ".\n";
+                LOG("Decode mode: %s\n", optionVal.c_str());
             }else{
-                cerr << "Bad decode mode. Terminate.\n";
+                LOG("Bad decode mode. Terminate.\n");
                 return FAIL;
             }
-        }else
+        } else
         if(option == errorLevelOpt){
-            pattern = "[0123]";
+            pattern = "^[0123]$";
             if(CheckOptionVal() == OK){
-                cerr << "ECC level: " + optionVal << ".\n" << endl;
+                LOG("ECC level: %s\n", optionVal.c_str());
             }else{
-                cerr << "ECC level can be 0-3. Terminated." << endl;
+                LOG("ECC level can be 0-3. Terminated.\n");
                 return FAIL;
             }
-        }else
+        } else
         if(option == tailOpt){
-            pattern = "\\d{1,2}";
+            pattern = "^\\d{1,2}$";
             if(CheckOptionVal() == OK){
-                cerr << "Number of trailing frames: " + optionVal << ".\n" << endl;
+                LOG("Number of trailing frames: %s\n", optionVal.c_str());
             }else{
-                cerr << "Number of trailing frames should be in rage 0-99. Terminated." << endl;
+                LOG("Number of trailing frames should be in rage 0-99. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == qrScaleOpt){
-            pattern = "[1-3]?\\d{1}";
+            pattern = "^\\d{1,2}$";
             if(CheckOptionVal() == OK){
-                cerr << "QR element scaling factor is: " + optionVal << ".\n" << endl;
+                LOG("QR element scaling factor is: %s\n", optionVal.c_str());
             }else{
-                cerr << "Scaling factor should be an integer from 1 to 4. Terminated." << endl;
+                LOG("Wrong scaling factor, should be an integer from 1 to 4. Terminated.\n");
                 return FAIL;
             }
-        }else
+        } else
         if(option == repeatOpt){
-            pattern = "\\d{1,1}";
+            pattern = "^\\d{1,1}$";
             if(CheckOptionVal() == OK){
-                cerr << "Number of frame repeats: " + optionVal << ".\n" << endl;
+                LOG("Number of frame repeats: %s\n", optionVal.c_str());
             }else{
-                cerr << "Number of frame repeats should be in rage 0-9. Terminated." << endl;
+                LOG("Number of frame repeats should be in rage 0-9. Terminated.\n");
                 return FAIL;
             }
-        }else if(option == inverseOpt){
+        } else
+        if(option == inverseOpt){
             m_parsedOptions[option] = string("1");
-            cerr << "Invertion of frames enabled!\n";
+            LOG("Invertion of frames enabled!\n");
         }
         else{
-            cerr << "Wrong option. Terminated!\n";
+            LOG("Wrong option. Terminated!\n");
             return FAIL;
         }
     }
@@ -211,7 +217,7 @@ Config* ArgsParserDec::GetConfig(){
     string key = string("-i");
     map<string, string>::iterator it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "Input filename is not specified, reading from stdin.\n";
+        LOG("Input filename is not specified, reading from stdin.\n");
         config.m_ifName.clear();
     }else{
         config.m_ifName = it->second;
@@ -220,7 +226,7 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-o");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "Output filename is not specified, writing to stdout.\n";
+        LOG("Output filename is not specified, writing to stdout.\n");
         config.m_ofName.clear();
     }else{
         config.m_ofName = it->second;
@@ -229,28 +235,27 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-c");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "Counter is disabled.\n";
+        LOG("Counter is disabled.\n");
         config.m_counterOn = false;
     }else{
-        cerr << "Counter is enabled.\n";
+        LOG("Counter is enabled.\n");
         config.m_counterOn = true;
     }
 
     key = string("-f");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "No frame size was specified, using 800x600.\n";
-        config.m_frameWidth = 800;
-        config.m_frameHeight = 600;
+        LOG("No frame size was specified, using 1280x720.\n");
+        config.m_frameWidth = 1280;
+        config.m_frameHeight = 720;
     }else{
         string sizeStr = it->second;
         regex exp = regex("\\d{1,4}");
         smatch result;
-        uint32_t* widthHeight[2] = {&config.m_frameWidth, &config.m_frameHeight};
+        int32_t* widthHeight[2] = {&config.m_frameWidth, &config.m_frameHeight};
 
         for(int i = 0; regex_search(sizeStr, result, exp) && i < 2; ++i){
             string found = result[0];
-            cerr << found << endl;
             sizeStr = result.suffix().str();
             *(widthHeight[i]) = stoi(found);
         }
@@ -259,8 +264,8 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-s");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "No qr scale was specified, using 1.\n";
-        config.m_qrScale = 1;
+        LOG("No qr scale was specified, using 4.\n");
+        config.m_qrScale = 4;
     }else{
         config.m_qrScale = stoi(it->second);
     }
@@ -268,7 +273,7 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-e");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "No ECC level was specified, using the lowest!\n";
+        LOG("No ECC level was specified, using the lowest!\n");
         config.m_eccLevel = 0;
     }else{
         uint32_t l= stoi(it->second);
@@ -294,7 +299,7 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-r");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "No number of frame repeats was specified, using 0.\n";
+        LOG("No number of frame repeats was specified, using 0.\n");
         config.m_frameRepeats = 1;
     }else{
         config.m_frameRepeats = stoi(it->second);
@@ -303,13 +308,13 @@ Config* ArgsParserDec::GetConfig(){
         }else if(config.m_frameRepeats > 10){
             config.m_frameRepeats = 10;
         }
-        cerr << "Number of frame repeats is " << config.m_frameRepeats << endl;
+        //LOG("Number of frame repeats is %d\n", config.m_frameRepeats);
     }
 
     key = string("-t");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "No number of trailing frame was specified, using 0.\n";
+        LOG("No number of trailing frame was specified, using 0.\n");
         config.m_nTrailingFrames = 0;
     }else{
         config.m_nTrailingFrames = stoi(it->second);
@@ -318,7 +323,7 @@ Config* ArgsParserDec::GetConfig(){
         }else if(config.m_nTrailingFrames > 99){
             config.m_nTrailingFrames = 99;
         }
-        cerr << "Number of trailing frames is " << config.m_nTrailingFrames << endl;
+        //LOG("Number of trailing frames is %d\n", config.m_nTrailingFrames);
     }
 
     key = string("-p");
@@ -326,6 +331,7 @@ Config* ArgsParserDec::GetConfig(){
     if(it != optionsMap.end()){
         config.m_framesPerThread = stoi(it->second);
     }else{
+        LOG("No number of frames per thread was specified, using 8.\n");
         config.m_framesPerThread = 8;
     }
 
@@ -334,6 +340,7 @@ Config* ArgsParserDec::GetConfig(){
     if(it != optionsMap.end()){
         config.m_nWorkingThreads = stoi(it->second);
     }else{
+        LOG("No number of working threads was specified, trying hardware cores number if available or 2 otherwise.\n");
         config.m_nWorkingThreads = 0;
     }
 
@@ -348,15 +355,17 @@ Config* ArgsParserDec::GetConfig(){
         }else if(it->second == string("mixed")){
             config.m_decMode = MODE_MIXED;
         }
+    }else{
+        LOG("No mode was specified, using mixed mode.\n");
     }
 
     key = string("-n");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        cerr << "Frame colour inversion is disabled.\n";
+        LOG("Frame colour inversion is disabled.\n");
         config.m_inverseFrame = false;
     }else{
-        cerr << "Frame colour inversion is enabled.\n";
+        LOG("Frame colour inversion is enabled.\n");
         config.m_inverseFrame = true;
     }
 
