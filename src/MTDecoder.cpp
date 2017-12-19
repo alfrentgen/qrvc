@@ -44,43 +44,12 @@ int32_t MTDecoder::Init(Config& config){
         outputStream = ofs;
     }
 
-
-    //calculate number of threads and input queue size
-    int32_t& nThreads = config.m_nWorkingThreads;
-    if(nThreads == 0){
-        m_nThreads = std::thread::hardware_concurrency();
-        m_nThreads = (m_nThreads == 0) ? 2 : m_nThreads;
-    }else{
-        m_nThreads = nThreads;
-    }
-
-    int32_t queueSize;
-    int32_t& framesPerThread = config.m_framesPerThread;
-    if(framesPerThread == 0){
-        framesPerThread = 8;
-    }
-    queueSize = framesPerThread * m_nThreads;
-
-    int32_t& frameWidth = config.m_frameWidth;
-    int32_t& frameHeight = config.m_frameHeight;
-    if(frameWidth <= 0 || frameHeight <= 0){
-        return FAIL;
-    }
-    m_inQ = new InputQueue(inputStream, queueSize, frameWidth * frameHeight);
-    m_outQ = new OutputQueue(outputStream, queueSize, frameWidth * frameHeight);
-
     if(config.m_decMode < 0 || config.m_decMode > 2){
         return FAIL;
     }
 
-    m_decMode = (DecodeMode)config.m_decMode;
-    m_threads.clear();
-
-    m_jobs.resize(m_nThreads);
-
-    for(int i =0; i < m_nThreads; i++){
-        m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode);
-    }
+    Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,
+        config.m_decMode, config.m_framesPerThread, config.m_nWorkingThreads);
 
     LOG("Number of working threads is: %d\n", m_nThreads);
 
@@ -160,128 +129,19 @@ int32_t MTDecoder::Stop(){
 }
 
 int main(int argc, char** argv){
-
-    //system("pwd");
-    //parse arguments
     ArgsParserDec ap = ArgsParserDec();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;
     }
 
-/*    map<string, string>& optionsMap = ap.getOptions();
-
-    DecodeMode decMode = MIXED;
-    uint32_t frameWidth = 0;
-    uint32_t frameHeight = 0;
-    bool frameCounter = 0;
-    int32_t framesPerThread = 0;
-    int32_t nThreads = 0;
-    ifstream* ifs = NULL;
-    ofstream* ofs = NULL;
-    istream* inputStream = &cin;
-    ostream* outputStream = &cout;
-
-    //opening IS and OS
-    string key = string("-i");
-    map<string, string>::iterator it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Input filename is not specified, reading from stdin.\n";
-    }else{
-        ifs = new ifstream(it->second, ios_base::in | ios_base::binary);
-        inputStream = ifs;
-        if (!ifs->is_open() || !ifs){
-            cerr << "Failed to open input stream.";
-            return FAIL;
-        }
-    }
-
-    key = string("-o");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Output filename is not specified, writing to stdout.\n";
-    }else{
-        ofs = new ofstream(it->second, ios_base::out | ios_base::binary);
-        outputStream = ofs;
-        if (!ofs->is_open() || !ofs){
-            cerr << "Failed to open output stream.";
-            return FAIL;
-        }
-    }
-
-    //not used yet
-    key = string("-c");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Counter disabled.\n";
-    }else{
-        cerr << "Counter enabled.\n";
-        frameCounter = 1;
-    }
-
-    key = string("-f");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No frame size specified, using 800x600";
-        frameWidth = 800;
-        frameHeight = 600;
-    }else{
-        string sizeStr = it->second;
-        regex exp = regex("\\d{1,4}");
-        smatch result;
-        uint32_t* widthHeight[2] = {&frameWidth, &frameHeight};
-
-        for(int i = 0; regex_search(sizeStr, result, exp) && i < 2; ++i){
-            string found = result[0];
-            cerr << found << endl;
-            sizeStr = result.suffix().str();
-            *(widthHeight[i]) = stoi(found);
-        }
-    }
-
-    key = string("-p");
-    it = optionsMap.find(key);
-    if(it != optionsMap.end()){
-        framesPerThread = stoi(it->second);
-    }
-
-    key = string("-w");
-    it = optionsMap.find(key);
-    if(it != optionsMap.end()){
-        nThreads = stoi(it->second);
-    }
-
-    decMode = MIXED;
-    key = string("-m");
-    it = optionsMap.find(key);
-    if(it != optionsMap.end()){
-        if(it->second == string("quick")){
-            decMode = QUICK;
-        }else if(it->second == string("slow")){
-            decMode = SLOW;
-        }else if(it->second == string("mixed")){
-            decMode = MIXED;
-        }
-    }*/
-
-    unique_ptr<Config>pConfig(ap.GetConfig());
-
-    //create MTDecoder instance and Init
     MTDecoder decoder;
-
-    //decoder.Init(inputStream, outputStream, frameWidth, frameHeight, decMode, framesPerThread, nThreads);
+    unique_ptr<Config>pConfig(ap.GetConfig());
     int32_t res = decoder.Init(*(pConfig.get()));
     pConfig.reset();
     if(res == OK){
         decoder.Start(true);
+    }else{
+        return res;
     }
-
-    /*if(ifs && inputStream != &cin){
-        ifs->close();
-        delete inputStream;
-    }
-    if(ofs && outputStream != &cout){
-        ofs->close();
-        delete outputStream;
-    }*/
     return 0;
 }

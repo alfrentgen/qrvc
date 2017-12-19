@@ -21,23 +21,26 @@
 //using namespace std;
 class MTEncoder
 {
-    public:
-        MTEncoder();
-        virtual ~MTEncoder();
+public:
+    MTEncoder();
+    virtual ~MTEncoder();
 
-        uint32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, QRecLevel eccLevel, int32_t qrScale,
-                         uint32_t framesPerThread = 0, uint32_t nThreads = 0);
-        uint32_t Start(bool join);
-        uint32_t Stop();
+    int32_t Init(Config& config);
+    int32_t Start(bool join);
+    int32_t Stop();
 
-    private:
-        int32_t m_nThreads;
-        InputQueue* m_inQ;
-        OutputQueue* m_outQ;
-        int32_t m_qrVersion;
+private:
+    int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, QRecLevel eccLevel,
+                int32_t qrScale, uint32_t framesPerThread = 0, uint32_t nThreads = 0);
 
-        vector<Encode*> m_jobs;
-        vector<thread> m_threads;
+private:
+    int32_t m_nThreads;
+    InputQueue* m_inQ;
+    OutputQueue* m_outQ;
+    int32_t m_qrVersion;
+
+    vector<Encode*> m_jobs;
+    vector<thread> m_threads;
 };
 
 #endif // MTENCODER_H

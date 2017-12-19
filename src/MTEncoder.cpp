@@ -54,7 +54,48 @@ MTEncoder::~MTEncoder()
     //dtor
     Stop();
 }
-uint32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, QRecLevel eccLevel, int32_t qrScale,
+
+int32_t MTEncoder::Init(Config& config){
+
+    ifstream* ifs = NULL;
+    ofstream* ofs = NULL;
+    istream* inputStream = &cin;
+    ostream* outputStream = &cout;
+
+    if(config.m_ifName.size() == 0){
+        cerr << "Input filename is not specified, reading from stdin.\n";
+    }else{
+        ifs = new ifstream(config.m_ifName, ios_base::in | ios_base::binary);
+        if (!ifs || !ifs->is_open()){
+            ifs = NULL;
+            cerr << "Failed to open input stream.";
+            return FAIL;
+        }
+        inputStream = ifs;
+    }
+
+    if(config.m_ofName.size() == 0){
+        cerr << "Output filename is not specified, writing to stdout.\n";
+    }else{
+        ofs = new ofstream(config.m_ofName, ios_base::out | ios_base::binary);
+        if (!ofs || !ofs->is_open()){
+            ofs = NULL;
+            cerr << "Failed to open output stream.";
+            return FAIL;
+        }
+        outputStream = ofs;
+    }
+
+    if(config.m_eccLevel < 0 || config.m_eccLevel > 3){
+        return FAIL;
+    }
+
+    Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight, config.m_eccLevel,
+            config.m_qrScale, config.m_framesPerThread, config.m_nWorkingThreads);
+    return OK;
+}
+
+int32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, QRecLevel eccLevel, int32_t qrScale,
                          uint32_t framesPerThread, uint32_t nThreads){
     //check if frame size fits QR code size
     uint32_t version = 0;
@@ -101,7 +142,7 @@ uint32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t f
     return OK;
 }
 
-uint32_t MTEncoder::Start(bool join){
+int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
@@ -124,7 +165,7 @@ uint32_t MTEncoder::Start(bool join){
     return OK;
 }
 
-uint32_t MTEncoder::Stop(){
+int32_t MTEncoder::Stop(){
     for(int i = 0; i < m_nThreads; i++){
         m_jobs[i]->Stop();
     }
@@ -142,173 +183,19 @@ uint32_t MTEncoder::Stop(){
 }
 
 int main(int argc, char** argv){
-
-    //system("pwd");
-    //parse arguments
     ArgsParserDec ap = ArgsParserDec();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;
     }
 
-    map<string, string>& optionsMap = ap.getOptions();
-
-    uint32_t frameWidth = 800;
-    uint32_t frameHeight = 600;
-    uint64_t chunkCounter = 0;
-    int32_t frameRepeats = 1;
-    int32_t framesPerThread = 0;
-    int32_t nThreads = 0;
-    int32_t tail = 0;
-    ifstream* ifs = NULL;
-    ofstream* ofs = NULL;
-    istream* inputStream = &cin;
-    ostream* outputStream = &cout;
-    uint32_t chunkSize = 0;
-    uint32_t qrScale = 1;
-    QRecLevel eccLevel = QR_ECLEVEL_L;
-
-    //opening IS and OS
-    string key = string("-i");
-    map<string, string>::iterator it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Input filename is not specified, reading from stdin.\n";
-    }else{
-        ifs = new ifstream(it->second, ios_base::in | ios_base::binary);
-        inputStream = ifs;
-        if (!ifs->is_open() || !ifs){
-            cerr << "Failed to open input stream.";
-            return FAIL;
-        }
-    }
-
-    key = string("-o");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Output filename is not specified, writing to stdout.\n";
-    }else{
-        ofs = new ofstream(it->second, ios_base::out | ios_base::binary);
-        outputStream = ofs;
-        if (!ofs->is_open() || !ofs){
-            cerr << "Failed to open output stream.";
-            return FAIL;
-        }
-    }
-
-
-    //inputStream->tie(outputStream);
-
-    /*key = string("-c");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "Counter is disabled.\n";
-    }else{
-        cerr << "Counter is enabled.\n";
-        frameCounter = 1;
-    }*/
-
-    key = string("-f");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No frame size was specified, using 800x600.\n";
-        frameWidth = 800;
-        frameHeight = 600;
-    }else{
-        string sizeStr = it->second;
-        regex exp = regex("\\d{1,4}");
-        smatch result;
-        uint32_t* widthHeight[2] = {&frameWidth, &frameHeight};
-
-        for(int i = 0; regex_search(sizeStr, result, exp) && i < 2; ++i){
-            string found = result[0];
-            cerr << found << endl;
-            sizeStr = result.suffix().str();
-            *(widthHeight[i]) = stoi(found);
-        }
-    }
-
-    key = string("-s");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No qr scale was specified, using 1.\n";
-        qrScale = 1;
-    }else{
-        qrScale = stoi(it->second);
-
-    }
-
-    key = string("-e");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No ECC level was specified, using the lowest!\n";
-        eccLevel = QR_ECLEVEL_L;
-    }else{
-        uint32_t l= stoi(it->second);
-        switch(l){
-        case QR_ECLEVEL_L:
-            eccLevel = QR_ECLEVEL_L;
-            break;
-        case QR_ECLEVEL_M:
-            eccLevel = QR_ECLEVEL_M;
-            break;
-        case QR_ECLEVEL_Q:
-            eccLevel = QR_ECLEVEL_Q;
-            break;
-        case QR_ECLEVEL_H:
-            eccLevel = QR_ECLEVEL_H;
-            break;
-        default:
-            eccLevel = QR_ECLEVEL_L;
-            break;
-        }
-    }
-
-    key = string("-r");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No number of frame repeats was specified, using 0.\n";
-        frameRepeats = 1;
-    }else{
-        frameRepeats = stoi(it->second);
-        if(frameRepeats <= 0){
-            frameRepeats = 1;
-        }else if(frameRepeats > 10){
-            frameRepeats = 10;
-        }
-        cerr << "Number of frame repeats is " << frameRepeats << endl;
-    }
-
-    key = string("-t");
-    it = optionsMap.find(key);
-    if(it == optionsMap.end()){
-        cerr << "No number of trailing frame was specified, using 0.\n";
-        tail = 0;
-    }else{
-        tail = stoi(it->second);
-        if(tail < 0){
-            tail = 0;
-        }else if(tail > 99){
-            tail = 99;
-        }
-        cerr << "Number of trailing frames is " << tail << endl;
-    }
-
-    key = string("-p");
-    it = optionsMap.find(key);
-    if(it != optionsMap.end()){
-        framesPerThread = stoi(it->second);
-    }
-
-    key = string("-w");
-    it = optionsMap.find(key);
-    if(it != optionsMap.end()){
-        nThreads = stoi(it->second);
-    }
-
-    //create MTDecoder instance and Init
+    unique_ptr<Config>pConfig(ap.GetConfig());
     MTEncoder encoder;
-
-    encoder.Init(inputStream, outputStream, frameWidth, frameHeight, eccLevel, qrScale, framesPerThread, nThreads);
-    encoder.Start(true);
+    int32_t res = encoder.Init(*(pConfig.get()));
+    if(res == OK){
+        encoder.Start(true);
+    }else{
+        return res;
+    }
 
     return 0;
 }

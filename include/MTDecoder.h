@@ -13,23 +13,26 @@
 //using namespace std;
 class MTDecoder
 {
-    public:
-        MTDecoder();
-        virtual ~MTDecoder();
+public:
+    MTDecoder();
+    virtual ~MTDecoder();
 
-        int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED, uint32_t framesPerThread = 0, uint32_t nThreads = 0);
-        int32_t Init(Config& config);
-        int32_t Start(bool join);
-        int32_t Stop();
+    int32_t Init(Config& config);
+    int32_t Start(bool join);
+    int32_t Stop();
 
-    private:
-        int32_t m_nThreads;
-        InputQueue* m_inQ;
-        OutputQueue* m_outQ;
-        DecodeMode m_decMode;
+private:
+    int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED,
+                    uint32_t framesPerThread = 0, uint32_t nThreads = 0);
 
-        vector<Decode*> m_jobs;
-        vector<thread> m_threads;
+private:
+    int32_t m_nThreads;
+    InputQueue* m_inQ;
+    OutputQueue* m_outQ;
+    DecodeMode m_decMode;
+
+    vector<Decode*> m_jobs;
+    vector<thread> m_threads;
 };
 
 #endif // MTDECODER_H
