@@ -6,9 +6,10 @@ using namespace std;
 
 static int32_t g_idCounter = 0;
 
-Encode::Encode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale):
+Encode::Encode(int32_t fWidth, int32_t fHeight, bool invert, InputQueue* inQ, OutputQueue* outQ,
+                int32_t version, QRecLevel eccLevel, int32_t qrScale):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_isWorking(true)
+    m_isWorking(true), m_invertColors(invert)
 {
     //ctor
     m_ID = g_idCounter++;
@@ -96,6 +97,7 @@ uint32_t Encode::EncodeData(){
     vector<uint8_t>& rawFrame = m_data.m_outBuffer;
     uint8_t arrFrameID[8] = {0};
     uint8_t arrHashSum[4] = {0};
+    uint8_t color = m_invertColors ? 255 : 0;
     //uint8_t* pInData = m_data.m_inBuffer.data();
 
     //put frame ID in data to encode little endian(lesser byte first)
@@ -116,7 +118,7 @@ uint32_t Encode::EncodeData(){
     QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
     rawFrame.resize(m_frameWidth * m_frameHeight);
     //currently only black on white codes are supported
-    rawFrame.assign(rawFrame.size(), 255);
+    rawFrame.assign(rawFrame.size(), ~color);
     //put scaled code in the center of rawFrame
     //positioning
     /*if(!pQR){
@@ -134,7 +136,7 @@ uint32_t Encode::EncodeData(){
 
     for(int32_t y = 0; y < qrWidth; y++){
         for(int32_t x = 0; x < qrWidth; x++){
-            uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? 0 : 255;
+            uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? color : ~color;
             fill_n(frameIt + xOffset + x * m_qrScale, m_qrScale, val);
         }
         frameIt += m_frameWidth;
