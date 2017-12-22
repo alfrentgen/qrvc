@@ -6,16 +6,17 @@ using namespace std;
 
 static int32_t g_idCounter = 0;
 
-Encode::Encode(int32_t fWidth, int32_t fHeight, bool invert, InputQueue* inQ, OutputQueue* outQ,
+Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
+                InputQueue* inQ, OutputQueue* outQ,
                 int32_t version, QRecLevel eccLevel, int32_t qrScale):
-    m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_isWorking(true), m_invertColors(invert)
+    m_frameWidth(fWidth), m_frameHeight(fHeight), m_frameRepeats(frameRepeats),
+    m_tailSize(tailSize), m_invertColors(invert),
+    m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
+    m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale),
+    m_isWorking(false)
 {
     //ctor
     m_ID = g_idCounter++;
-    m_version = version;
-    m_eccLevel = eccLevel;
-    m_qrScale = qrScale;
 }
 
 Encode::~Encode()
@@ -37,7 +38,11 @@ int32_t Encode::Do(){
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
+
         result = m_inQ->GetChunk(m_data);
+        if(result == 0 && m_inQ->GetState() == INQ_EMPTY_AND_DEPLETED){
+            m_frameRepeats = m_tailSize;
+        }
 
         if(result == INQ_EMPTY_AND_DEPLETED){
             lckInQ.unlock();
@@ -98,6 +103,7 @@ uint32_t Encode::EncodeData(){
     uint8_t arrFrameID[8] = {0};
     uint8_t arrHashSum[4] = {0};
     uint8_t color = m_invertColors ? 255 : 0;
+    int32_t frameSize = m_frameWidth * m_frameHeight;
     //uint8_t* pInData = m_data.m_inBuffer.data();
 
     //put frame ID in data to encode little endian(lesser byte first)
@@ -116,7 +122,7 @@ uint32_t Encode::EncodeData(){
 
     //encode data
     QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
-    rawFrame.resize(m_frameWidth * m_frameHeight);
+    rawFrame.resize(m_frameRepeats * frameSize);
     //currently only black on white codes are supported
     rawFrame.assign(rawFrame.size(), ~color);
     //put scaled code in the center of rawFrame
@@ -144,6 +150,12 @@ uint32_t Encode::EncodeData(){
             copy_n(frameIt - m_frameWidth, m_frameWidth, frameIt);
             frameIt += m_frameWidth;
         }
+    }
+
+    frameIt = rawFrame.begin();
+    for(int i = 1; i < m_frameRepeats; i++){
+        frameIt += frameSize;
+        copy_n(rawFrame.begin(), frameSize, frameIt);
     }
     //mem leakage is unwanted
     QRcode_free(pQR);

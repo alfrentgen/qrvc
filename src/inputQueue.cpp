@@ -84,10 +84,22 @@ int32_t InputQueue::GetChunk(Chunk& chunkTo){
 
         --m_chunksAvailable;
         return m_chunksAvailable;
-    }else {
-        if(m_depleted){
+    }else if(m_depleted){
             return INQ_EMPTY_AND_DEPLETED;
-        }
+    } else {
         return INQ_EMPTY;
     }
+}
+
+int32_t InputQueue::GetState(){
+    int32_t result;
+    if(m_chunksAvailable > 0){
+        result = m_chunksAvailable;
+    }else if(m_depleted){
+        result = INQ_EMPTY_AND_DEPLETED;
+    }else{
+        result = INQ_EMPTY;
+    }
+
+    return result;
 }

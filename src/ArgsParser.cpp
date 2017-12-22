@@ -299,7 +299,7 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-r");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        LOG("No number of frame repeats was specified, using 0.\n");
+        LOG("No number of frame repeats was specified, using 1.\n");
         config.m_frameRepeats = 1;
     }else{
         config.m_frameRepeats = stoi(it->second);

@@ -17,6 +17,7 @@ class InputQueue
 
         int32_t GetChunk(Chunk& chunkTo);
         int32_t Load(bool dropTail);
+        int32_t GetState();
 
     public:
         bool m_waitForFlush;

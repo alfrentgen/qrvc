@@ -30,8 +30,10 @@ public:
     int32_t Stop();
 
 private:
-    int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, bool invert,
-                QRecLevel eccLevel, int32_t qrScale, uint32_t framesPerThread = 0, uint32_t nThreads = 0);
+    int32_t Init(istream* is, ostream* os,
+                int32_t frameWidth, int32_t frameHeight, int32_t frameRepeat, int32_t tailSize, bool invert,
+                QRecLevel eccLevel, int32_t qrScale,
+                uint32_t framesPerThread = 0, uint32_t nThreads = 0);
 
 private:
     int32_t m_nThreads;
@@ -39,6 +41,7 @@ private:
     OutputQueue* m_outQ;
     int32_t m_qrVersion;
     bool m_invertColors;
+    int32_t m_repeats;
 
     vector<Encode*> m_jobs;
     vector<thread> m_threads;

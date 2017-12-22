@@ -90,13 +90,17 @@ int32_t MTEncoder::Init(Config& config){
         return FAIL;
     }
 
-    Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight, config.m_inverseFrame,
-        config.m_eccLevel, config.m_qrScale, config.m_framesPerThread, config.m_nWorkingThreads);
+    Init(inputStream, outputStream,
+        config.m_frameWidth, config.m_frameHeight, config.m_frameRepeats, config.m_nTrailingFrames, config.m_inverseFrame,
+        config.m_eccLevel, config.m_qrScale,
+        config.m_framesPerThread, config.m_nWorkingThreads);
     return OK;
 }
 
-int32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, bool invert,
-                        QRecLevel eccLevel, int32_t qrScale, uint32_t framesPerThread, uint32_t nThreads){
+int32_t MTEncoder::Init(istream* is, ostream* os,
+                        int32_t frameWidth, int32_t frameHeight, int32_t frameRepeat, int32_t tailSize, bool invert,
+                        QRecLevel eccLevel, int32_t qrScale,
+                        uint32_t framesPerThread, uint32_t nThreads){
     //check if frame size fits QR code size
     uint32_t version = 0;
     int32_t chunkSize = getChunkSize(frameWidth, frameHeight, eccLevel, qrScale, &version);
@@ -135,7 +139,9 @@ int32_t MTEncoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
 
     m_invertColors = invert;
     for(int i =0; i < m_nThreads; i++){
-        m_jobs[i] = new Encode(frameWidth, frameHeight, invert, m_inQ, m_outQ, m_qrVersion, eccLevel, qrScale);
+        m_jobs[i] = new Encode(frameWidth, frameHeight, frameRepeat, tailSize, invert,
+                                m_inQ, m_outQ,
+                                m_qrVersion, eccLevel, qrScale);
     }
 
     LOG("Number of working threads is: %d\n", m_nThreads);
