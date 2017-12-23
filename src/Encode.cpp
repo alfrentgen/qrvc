@@ -41,7 +41,7 @@ int32_t Encode::Do(){
 
         result = m_inQ->GetChunk(m_data);
         if(result == 0 && m_inQ->GetState() == INQ_EMPTY_AND_DEPLETED){
-            m_frameRepeats = m_tailSize;
+            m_frameRepeats += m_tailSize;
         }
 
         if(result == INQ_EMPTY_AND_DEPLETED){

@@ -172,7 +172,9 @@ uint32_t Decode::DecodeData(){
 
 uint32_t Decode::DecodeDataQuick(){
     uint8_t* pImage = quirc_begin(m_qr, &m_frameWidth, &m_frameHeight);
-    m_qr->image = m_data.m_inBuffer.data();
+    //m_qr->image = m_data.m_inBuffer.data();
+    copy_n(m_data.m_inBuffer.data(), m_frameWidth * m_frameHeight, pImage);
+
     quirc_end(m_qr);
     int32_t num_codes = quirc_count(m_qr);
 
