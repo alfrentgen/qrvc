@@ -1,14 +1,13 @@
 1) In qrdectxt.c in function qr_code_data_list_extract_text() in section QR_MODE_BYTE we must do nothing, just put decoded bytes as is from in to out(but saving iconv() function logic for pointers shifts).
 2) fstream should be used with buffer!!! https://stackoverflow.com/questions/26095160/why-are-stdfstreams-so-slow
 
-23122017 TODO
+25122017 TODO:
 1) Introduce frame hashsum(not decoded data hashsum!), to skip decoding of
-duplicated frames if they occur in the input bunch of frames.
-2) Write OpenCL code for decoder.
-3) Add options: enable/disable frame counter for encoder and decoder,
+duplicated frames if they occur in the input bunch of frames(--skip-dup option)
+2) Move hashsum calculation to encode procedure instead of that in flush now.
+3) Write OpenCL code for decoder.
+4) Add options: enable/disable frame counter for encoder and decoder,
 enable/disable hashsum for frame encoder/decoder,
-enable/disable hashsum check for skipping duplicated frames in decoder.
-4) try to make decode libs quickier by using simplified image filtration.
 
 DONE or not very urgent:
 1) Make encoder multithread(in progress) DONE
@@ -26,3 +25,5 @@ QUIRC_MAX_REGION=65534 definition
 5) Add config structure for enc/dec init and filling function in ArgsParser. DONE.
 6) Add inverse colours QR code support. DONE.
 7) add -r and -t options support in mtenc. DONE.
+8) try to make decode libs quickier by using simplified image filtration.
+   NOT URGENT. SEEMS THAT QUIRC ALREADY DO IT AS FAST AS POSSIBLE.
