@@ -45,7 +45,6 @@ class Decode : public Job
         virtual uint32_t DecodeData();
         virtual uint32_t DecodeDataQuick();
         //uint32_t Decode::DecodeData_mock();
-
 };
 
 //#if USE_ZBAR

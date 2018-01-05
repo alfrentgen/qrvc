@@ -25,7 +25,8 @@ int32_t OutputQueue::Put(Chunk& chunk){
     swap(m_queue[m_chunksLoaded].m_outBuffer, chunk.m_outBuffer);
     m_queue[m_chunksLoaded].m_frameID = chunk.m_frameID;
     m_queue[m_chunksLoaded].m_chunkID = chunk.m_chunkID;
-    m_queue[m_chunksLoaded].m_hashsum = chunk.m_hashsum;
+    m_queue[m_chunksLoaded].m_inHash = chunk.m_inHash;
+    m_queue[m_chunksLoaded].m_outHash = chunk.m_outHash;
     m_queue[m_chunksLoaded].m_rendered = chunk.m_rendered;
     m_chunksLoaded++;
     return OK;
@@ -46,7 +47,12 @@ int32_t OutputQueue::PrepareFlush(bool simple){
     function<bool(Chunk, Chunk)> compareChunks = [] (Chunk ch1, Chunk ch2) -> bool{
         return ch1.m_frameID < ch2.m_frameID;
     };
-    sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
+
+    chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
+    stable_sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
+    chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
+    auto deltaSort = chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
+    LOG("deltaSort = %lu\n", deltaSort);
 
     if(simple){
         m_flushSize = 0;
@@ -87,7 +93,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         delta += chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
 
         if(chunk.m_chunkID == m_nextID){
-            if(chunk.m_hashsum == hashsum){
+            if(chunk.m_outHash == hashsum){
                 inPtr = (char*)chunk.m_outBuffer.data() + 8;
                 copy_n(inPtr, dataSize, flushIterator);
                 flushIterator += dataSize;
@@ -99,7 +105,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         }else if(chunk.m_chunkID > m_nextID){//a gap or just a bad chunk?
             //It's a correctly decoded chunk, so there is a gap.
             LOG("%s", "DecOutputQueue: Chunk ID is greater than required!\n");
-            if(chunk.m_hashsum == hashsum){//
+            if(chunk.m_outHash == hashsum){//
                 int32_t gapSize = chunk.m_chunkID - m_nextID;
                 LOG("DecOutputQueue: A gap of %d chunks acquired. Starts at %lu ends at %lu.\n", gapSize, m_nextID, chunk.m_chunkID);
                 inPtr = (char*)chunk.m_outBuffer.data() + 8;
@@ -135,4 +141,15 @@ void OutputQueue::SetCapacity(uint32_t newCap){
 
 bool OutputQueue::IsFull(){
     return m_chunksLoaded == m_capacity;
+}
+
+bool OutputQueue::IsAlreadyPut(Chunk& chunk){
+    for(int i = 0 ; i < m_chunksLoaded; i++){
+        if(m_queue[i].m_inHash == chunk.m_inHash){
+            if(m_queue[i].m_inBuffer == chunk.m_inBuffer){
+                return true;
+            }
+        }
+    }
+    return false;
 }

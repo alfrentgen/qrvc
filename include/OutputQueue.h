@@ -21,6 +21,7 @@ class OutputQueue
         void SetCapacity(uint32_t newCap);
         bool IsFull();
         int32_t EstimateFlushingBufferSize();
+        bool IsAlreadyPut(Chunk& chunk);
 
     public:
         mutex m_syncMtx;

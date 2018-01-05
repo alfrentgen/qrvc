@@ -23,9 +23,9 @@ void Chunk::Init(uint8_t val){
     //m_decResults.decodedBytes = 0;
     m_chunkID = 0;
     m_frameID = 0;
-    m_hashsum = 0;
+    m_outHash = 0;
     m_rendered = false;
-    fill_n(m_inBuffer.begin(), m_inBuffer.size(), val);
+    m_inBuffer.assign(m_inBuffer.size(), val);
 }
 
 void Chunk::SetInBuffer(uint8_t* pBuffer, int32_t size){
@@ -59,4 +59,28 @@ uint32_t Chunk::CalcHashsum(uint8_t* pBuffer, int32_t bufSize){
         hash += pBuffer[i];
     }
     return hash;
+}
+
+Chunk::Chunk(Chunk&& ch):
+m_inBuffer(0), m_outBuffer(0)
+{// move constructor
+    m_chunkID = ch.m_chunkID;
+    m_frameID = ch.m_frameID;
+    m_inHash = ch.m_inHash;
+    m_outHash = ch.m_outHash;
+    m_rendered = ch.m_rendered;
+
+    m_inBuffer.swap(ch.m_inBuffer);
+    m_outBuffer.swap(ch.m_outBuffer);
+}
+
+Chunk& Chunk::operator=(Chunk&& ch){// move assignment
+    m_chunkID = ch.m_chunkID;
+    m_frameID = ch.m_frameID;
+    m_inHash = ch.m_inHash;
+    m_outHash = ch.m_outHash;
+    m_rendered = ch.m_rendered;
+
+    m_inBuffer.swap(ch.m_inBuffer);
+    m_outBuffer.swap(ch.m_outBuffer);
 }

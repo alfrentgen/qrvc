@@ -11,8 +11,12 @@ using namespace std;
 class Chunk{
 public:
     Chunk(int32_t inBuffSize = 0, uint8_t val = 255);
+    Chunk(Chunk&& a);// move constructor
+    Chunk(const Chunk&) = default;
     //Chunk(uint8_t* pInBuff, int32_t inBuffSize, uint64_t frameID);
     virtual ~Chunk();
+
+    Chunk& operator=(Chunk&&);// move assignment
 
     void Init(uint8_t val = 255);
 
@@ -30,7 +34,8 @@ public:
 
     uint64_t m_chunkID;
     uint64_t m_frameID;
-    uint32_t m_hashsum;
+    uint32_t m_inHash;
+    uint32_t m_outHash;
     bool m_rendered;
     //decodeResults m_decResults;
 

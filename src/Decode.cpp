@@ -83,6 +83,36 @@ int32_t Decode::Do(){
         }
         lckInQ.unlock();
 
+#if 1//SKIP_OPTION_IMPLEMENTED
+        //check if the frame  already has a double in output queue
+        m_data.m_inHash = m_data.CalcHashsum(m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
+        bool duplicated = false;
+        //LOG("inHash = %d\n", m_data.m_inHash);
+        m_t1 = chrono::steady_clock::now();
+        lckOutQ.lock();
+        duplicated = m_outQ->IsAlreadyPut(m_data);
+        lckOutQ.unlock();
+        m_t2 = chrono::steady_clock::now();
+        auto delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
+        //LOG("Duplicated frames search time: %llu micorseconds\n", delta);
+
+        if(!duplicated){
+            int32_t decRes;
+            if(m_decMode == QUICK){
+                decRes = DecodeDataQuick();
+            }else if(m_decMode == SLOW){
+                decRes = DecodeData();
+            }else{
+                decRes = DecodeDataQuick();
+                if(decRes){
+                    decRes = DecodeData();
+                }
+            }
+        }else{
+            //LOG("Duplicated frame has occured!\n");
+            m_data.m_rendered = false;
+        }
+#else
         int32_t decRes;
         if(m_decMode == QUICK){
             decRes = DecodeDataQuick();
@@ -94,6 +124,7 @@ int32_t Decode::Do(){
                 decRes = DecodeData();
             }
         }
+#endif
 
         lckOutQ.lock();
         m_outQ->Put(m_data);
@@ -154,11 +185,11 @@ uint32_t Decode::DecodeData(){
     }
 
     //extracting hashsum
-    m_data.m_hashsum = 0;
+    m_data.m_outHash = 0;
     uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
     for(int i = 0; i < 4; i++){
         int32_t shift = 8 * i;
-        m_data.m_hashsum |= (uint32_t)outBuffer[i] << shift;
+        m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
     }
 
     m_data.m_rendered = true;
@@ -220,11 +251,11 @@ uint32_t Decode::DecodeDataQuick(){
     }
 
     //extracting hashsum
-    m_data.m_hashsum = 0;
+    m_data.m_outHash = 0;
     uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
     for(int i = 0; i < 4; i++){
         int32_t shift = 8 * i;
-        m_data.m_hashsum |= (uint32_t)outBuffer[i] << shift;
+        m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
     }
 
     m_data.m_rendered = true;
