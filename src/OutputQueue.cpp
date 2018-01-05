@@ -49,6 +49,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
     };
 
     chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
+    //LOG("SORTING!\n");
     stable_sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
     chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
     auto deltaSort = chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
@@ -83,7 +84,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         dataSize = ((dataSize - 12) > 0) ? (dataSize - 12) : 0;
         //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
         if(!chunk.m_rendered){
-            LOG("LOG: frame #%lu is not rendered!\n", chunk.m_frameID);
+            //LOG("LOG: frame #%lu is not rendered!\n", chunk.m_frameID);
             continue;
         }
 
@@ -118,7 +119,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
             }
         }
     }
-    LOG("Hashsum calculation time in out queue: %d\n", delta);
+    LOG("Hashsum calculation time in out queue: %d microseconds\n", delta);
 
     m_flushSize = flushIterator - m_flushBuffer.begin();
     m_flushBuffer.resize(m_flushSize);
@@ -152,4 +153,12 @@ bool OutputQueue::IsAlreadyPut(Chunk& chunk){
         }
     }
     return false;
+}
+
+int32_t OutputQueue::GetSnapshot(vector<Chunk*>& snapshot){
+    snapshot.clear();
+    for(int i = 0; i < m_chunksLoaded; i++){
+        snapshot.push_back(&m_queue[i]);
+    }
+    return m_chunksLoaded;
 }

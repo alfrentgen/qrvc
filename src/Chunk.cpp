@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "pch.h"
 
 using namespace std;
 
@@ -72,6 +73,7 @@ m_inBuffer(0), m_outBuffer(0)
 
     m_inBuffer.swap(ch.m_inBuffer);
     m_outBuffer.swap(ch.m_outBuffer);
+    //LOG("Inside Chunk() move cstr\n");
 }
 
 Chunk& Chunk::operator=(Chunk&& ch){// move assignment
@@ -83,4 +85,5 @@ Chunk& Chunk::operator=(Chunk&& ch){// move assignment
 
     m_inBuffer.swap(ch.m_inBuffer);
     m_outBuffer.swap(ch.m_outBuffer);
+    //LOG("Inside Chunk =operator\n");
 }

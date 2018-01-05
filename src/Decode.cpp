@@ -37,6 +37,7 @@ static auto tp2 = chrono::steady_clock::now();
 
 int32_t Decode::Do(){
     int32_t result;
+    vector<Chunk*> snapshot(0);
     unique_lock<mutex> lckInQ(m_inQ->m_syncMtx, defer_lock);
     unique_lock<mutex> lckOutQ(m_outQ->m_syncMtx, defer_lock);
 
@@ -87,14 +88,31 @@ int32_t Decode::Do(){
         //check if the frame  already has a double in output queue
         m_data.m_inHash = m_data.CalcHashsum(m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
         bool duplicated = false;
+
         //LOG("inHash = %d\n", m_data.m_inHash);
-        m_t1 = chrono::steady_clock::now();
-        lckOutQ.lock();
-        duplicated = m_outQ->IsAlreadyPut(m_data);
-        lckOutQ.unlock();
-        m_t2 = chrono::steady_clock::now();
+        //m_t1 = chrono::steady_clock::now();
+        /*lckOutQ.lock();
+        //duplicated = m_outQ->IsAlreadyPut(m_data);
+        //lckOutQ.unlock();*/
+        /*m_t2 = chrono::steady_clock::now();
         auto delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        //LOG("Duplicated frames search time: %llu micorseconds\n", delta);
+        LOG("Duplicated frames search time: %llu micorseconds\n", delta);*/
+
+        //m_t1 = chrono::steady_clock::now();
+        lckOutQ.lock();
+        int32_t nChunks = m_outQ->GetSnapshot(snapshot);
+        lckOutQ.unlock();
+        /*m_t2 = chrono::steady_clock::now();
+        auto delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
+        LOG("Snapshot getting time: %llu micorseconds\n", delta);*/
+
+        for(int i= 0; i < nChunks; i++){
+            if(snapshot[i]->m_inHash == m_data.m_inHash){
+                if(snapshot[i]->m_inBuffer == m_data.m_inBuffer){
+                    duplicated = true;
+                }
+            }
+        }
 
         if(!duplicated){
             int32_t decRes;

@@ -22,6 +22,7 @@ class OutputQueue
         bool IsFull();
         int32_t EstimateFlushingBufferSize();
         bool IsAlreadyPut(Chunk& chunk);
+        int32_t GetSnapshot(vector<Chunk*>& snapshot);
 
     public:
         mutex m_syncMtx;
