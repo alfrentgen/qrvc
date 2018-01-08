@@ -48,8 +48,8 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         return ch1.m_frameID < ch2.m_frameID;
     };
 
-    chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
     //LOG("SORTING!\n");
+    chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
     stable_sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
     chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
     auto deltaSort = chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
@@ -88,38 +88,19 @@ int32_t OutputQueue::PrepareFlush(bool simple){
             continue;
         }
 
-        chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
-        uint32_t hashsum = chunk.CalcHashsum(chunk.m_outBuffer.data(), chunk.m_outBuffer.size() - 4);
-        chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
-        delta += chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
+        inPtr = (char*)chunk.m_outBuffer.data() + 8;
+        copy_n(inPtr, dataSize, flushIterator);
+        flushIterator += dataSize;
 
         if(chunk.m_chunkID == m_nextID){
-            if(chunk.m_outHash == hashsum){
-                inPtr = (char*)chunk.m_outBuffer.data() + 8;
-                copy_n(inPtr, dataSize, flushIterator);
-                flushIterator += dataSize;
-
-                m_nextID++;
-            }else{
-                LOG("%s", "DecOutputQueue: Chunk ID matches, but chunk hashsum is incorrect! Skipping.\n");
-            }
-        }else if(chunk.m_chunkID > m_nextID){//a gap or just a bad chunk?
-            //It's a correctly decoded chunk, so there is a gap.
+            m_nextID++;
+        }else if(chunk.m_chunkID > m_nextID){//a gap
             LOG("%s", "DecOutputQueue: Chunk ID is greater than required!\n");
-            if(chunk.m_outHash == hashsum){//
-                int32_t gapSize = chunk.m_chunkID - m_nextID;
-                LOG("DecOutputQueue: A gap of %d chunks acquired. Starts at %lu ends at %lu.\n", gapSize, m_nextID, chunk.m_chunkID);
-                inPtr = (char*)chunk.m_outBuffer.data() + 8;
-                copy_n(inPtr, dataSize, flushIterator);
-                flushIterator += dataSize;
-                m_nextID = ++chunk.m_chunkID;
-            }
-            else{//the chunk is bad, it has a lousy checksum. Just go on.
-                LOG("%s", "DecOutputQueue: chunk checksum is incorrect!\n");
-            }
+            int32_t gapSize = chunk.m_chunkID - m_nextID;
+            LOG("DecOutputQueue: A gap of %d chunks acquired. Starts at %lu ends at %lu.\n", gapSize, m_nextID, chunk.m_chunkID);
+            m_nextID = ++chunk.m_chunkID;
         }
     }
-    LOG("Hashsum calculation time in out queue: %d microseconds\n", delta);
 
     m_flushSize = flushIterator - m_flushBuffer.begin();
     m_flushBuffer.resize(m_flushSize);

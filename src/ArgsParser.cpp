@@ -23,7 +23,8 @@ ArgsParserDec::ArgsParserDec() :
                 string("-t"),
                 string("-s"),
                 string("-r"),
-                string("-n")
+                string("-n"),
+                string("-k")
                 })
 {
     //ctor
@@ -48,7 +49,8 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     string& tailOpt = m_options[8];//number of tail frames
     string& qrScaleOpt = m_options[9];//qr scale
     string& repeatOpt = m_options[10];//frame repetition
-    string& inverseOpt = m_options[11];//frame repetition
+    string& inverseOpt = m_options[11];//inverse frame
+    string& skipOpt = m_options[12];//skip duplicated frames in decoder
 
     string optionVal;
     string option;
@@ -171,6 +173,10 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         if(option == inverseOpt){
             m_parsedOptions[option] = string("1");
             LOG("Invertion of frames enabled!\n");
+        } else
+        if(option == skipOpt){
+            m_parsedOptions[option] = string("1");
+            LOG("Duplicate frames skipping enabled!\n");
         }
         else{
             LOG("Wrong option. Terminated!\n");
@@ -367,6 +373,16 @@ Config* ArgsParserDec::GetConfig(){
     }else{
         LOG("Frame colour inversion is enabled.\n");
         config.m_inverseFrame = true;
+    }
+
+    key = string("-k");
+    it = optionsMap.find(key);
+    if(it == optionsMap.end()){
+        LOG("Duplicated frames skipping is disabled.\n");
+        config.m_skipDupFrames = false;
+    }else{
+        LOG("Duplicated frames skipping is enabled.\n");
+        config.m_skipDupFrames = true;
     }
 
     return &config;

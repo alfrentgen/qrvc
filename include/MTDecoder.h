@@ -23,7 +23,7 @@ public:
 
 private:
     int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED,
-                    uint32_t framesPerThread = 0, uint32_t nThreads = 0);
+                    uint32_t framesPerThread = 0, uint32_t nThreads = 0, bool skipDup = false);
 
 private:
     int32_t m_nThreads;

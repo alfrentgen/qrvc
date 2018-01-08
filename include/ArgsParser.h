@@ -8,6 +8,8 @@ using namespace std;
 typedef struct Config {
     bool    m_counterOn;
     bool    m_inverseFrame;
+    bool    m_skipDupFrames;
+
     int32_t m_frameWidth;
     int32_t m_frameHeight;
     int32_t m_frameRepeats;

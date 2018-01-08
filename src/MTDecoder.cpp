@@ -49,14 +49,15 @@ int32_t MTDecoder::Init(Config& config){
     }
 
     Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,
-        config.m_decMode, config.m_framesPerThread, config.m_nWorkingThreads);
+        config.m_decMode, config.m_framesPerThread, config.m_nWorkingThreads, config.m_skipDupFrames);
 
     LOG("Number of working threads is: %d\n", m_nThreads);
 
     return OK;
 }
 
-int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads){
+int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight,
+                        DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads, bool skipDup){
     //calculate number of threads and input queue size
     if(nThreads == 0){
         m_nThreads = std::thread::hardware_concurrency();
@@ -80,7 +81,7 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
     m_jobs.resize(m_nThreads);
 
     for(int i =0; i < m_nThreads; i++){
-        m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode);
+        m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode, skipDup);
     }
 
     LOG("Number of working threads is: %d\n", m_nThreads);

@@ -19,7 +19,7 @@ using namespace std;
 class Decode : public Job
 {
     public:
-        Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode);
+        Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode, bool skipDup);
         virtual ~Decode();
         virtual int32_t Do() override;
         virtual void Stop() override;
@@ -37,13 +37,20 @@ class Decode : public Job
         zbar::Image m_image;
         struct quirc *m_qr;
         DecodeMode m_decMode;
+        int32_t m_ID;
+        bool m_skipDup;
+
         chrono::time_point<chrono::steady_clock> m_t1;
         chrono::time_point<chrono::steady_clock> m_t2;
-        int32_t m_ID;
+
 
     protected:
         virtual uint32_t DecodeData();
         virtual uint32_t DecodeDataQuick();
+
+    private:
+        uint32_t ExtractHashsum();
+        uint64_t ExtractChunkID();
         //uint32_t Decode::DecodeData_mock();
 };
 

@@ -7,9 +7,10 @@ using namespace zbar;
 
 static int32_t g_idCounter = 0;
 
-Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode):
+Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode, bool skipDup):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true), m_decMode(decMode)
+    m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true), m_decMode(decMode),
+    m_skipDup(skipDup)
 {
     //ctor
     m_scanner.set_config(ZBAR_QRCODE, ZBAR_CFG_ENABLE, 1);
@@ -84,37 +85,27 @@ int32_t Decode::Do(){
         }
         lckInQ.unlock();
 
-#if 1//SKIP_OPTION_IMPLEMENTED
         //check if the frame  already has a double in output queue
         m_data.m_inHash = m_data.CalcHashsum(m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
+
         bool duplicated = false;
+        if(m_skipDup){
+            lckOutQ.lock();
+            int32_t nChunks = m_outQ->GetSnapshot(snapshot);
+            lckOutQ.unlock();
 
-        //LOG("inHash = %d\n", m_data.m_inHash);
-        //m_t1 = chrono::steady_clock::now();
-        /*lckOutQ.lock();
-        //duplicated = m_outQ->IsAlreadyPut(m_data);
-        //lckOutQ.unlock();*/
-        /*m_t2 = chrono::steady_clock::now();
-        auto delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        LOG("Duplicated frames search time: %llu micorseconds\n", delta);*/
-
-        //m_t1 = chrono::steady_clock::now();
-        lckOutQ.lock();
-        int32_t nChunks = m_outQ->GetSnapshot(snapshot);
-        lckOutQ.unlock();
-        /*m_t2 = chrono::steady_clock::now();
-        auto delta = chrono::duration_cast<chrono::microseconds>(m_t2 - m_t1).count();
-        LOG("Snapshot getting time: %llu micorseconds\n", delta);*/
-
-        for(int i= 0; i < nChunks; i++){
-            if(snapshot[i]->m_inHash == m_data.m_inHash){
-                if(snapshot[i]->m_inBuffer == m_data.m_inBuffer){
-                    duplicated = true;
+            for(int i= 0; i < nChunks; i++){
+                if(snapshot[i]->m_inHash == m_data.m_inHash){
+                    if(snapshot[i]->m_inBuffer == m_data.m_inBuffer){
+                        duplicated = true;
+                    }
                 }
             }
         }
 
-        if(!duplicated){
+        if(m_skipDup && duplicated){
+            m_data.m_rendered = false;
+        }else{
             int32_t decRes;
             if(m_decMode == QUICK){
                 decRes = DecodeDataQuick();
@@ -126,23 +117,13 @@ int32_t Decode::Do(){
                     decRes = DecodeData();
                 }
             }
-        }else{
-            //LOG("Duplicated frame has occured!\n");
-            m_data.m_rendered = false;
-        }
-#else
-        int32_t decRes;
-        if(m_decMode == QUICK){
-            decRes = DecodeDataQuick();
-        }else if(m_decMode == SLOW){
-            decRes = DecodeData();
-        }else{
-            decRes = DecodeDataQuick();
-            if(decRes){
-                decRes = DecodeData();
+
+            uint32_t hashsum = m_data.CalcHashsum(m_data.m_outBuffer.data(), m_data.m_outBuffer.size() - 4);
+            if(hashsum != m_data.m_outHash){
+                m_data.m_rendered = false;
+                LOG("Decoded chunk checksum is incorrect! The chunk will be skipped.\n");
             }
         }
-#endif
 
         lckOutQ.lock();
         m_outQ->Put(m_data);
@@ -196,19 +177,21 @@ uint32_t Decode::DecodeData(){
     decodedData.copy((char*)m_data.m_outBuffer.data(), decodedData.size());
 
     //extracting chunk ID
-    m_data.m_chunkID = 0;
+    m_data.m_chunkID = ExtractChunkID();
+    /*m_data.m_chunkID = 0;
     for(int i = 0; i < 8; i++){
         int32_t shift = 8 * i;
         m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
-    }
+    }*/
 
     //extracting hashsum
-    m_data.m_outHash = 0;
+    m_data.m_outHash = ExtractHashsum();
+    /*m_data.m_outHash = 0;
     uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
     for(int i = 0; i < 4; i++){
         int32_t shift = 8 * i;
         m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
-    }
+    }*/
 
     m_data.m_rendered = true;
     if(decodedData.size() == 12 ){
@@ -262,19 +245,19 @@ uint32_t Decode::DecodeDataQuick(){
     }
 
     //extracting chunk ID
-    m_data.m_chunkID = 0;
-    for(int i = 0; i < 8; i++){
+    m_data.m_chunkID = ExtractChunkID();//0;
+    /*for(int i = 0; i < 8; i++){
         int32_t shift = 8 * i;
         m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
-    }
+    }*/
 
     //extracting hashsum
-    m_data.m_outHash = 0;
-    uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
+    m_data.m_outHash = ExtractHashsum();//0;
+    /*uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
     for(int i = 0; i < 4; i++){
         int32_t shift = 8 * i;
         m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
-    }
+    }*/
 
     m_data.m_rendered = true;
     if(m_data.m_outBuffer.size() == 12 ){
@@ -283,6 +266,27 @@ uint32_t Decode::DecodeDataQuick(){
     }
 
     return 0;
+}
+
+uint32_t Decode::ExtractHashsum(){
+    //extracting hashsum
+    uint32_t hashsum = 0;
+    uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
+    for(int i = 0; i < 4; i++){
+        int32_t shift = 8 * i;
+        hashsum |= (uint32_t)outBuffer[i] << shift;
+    }
+    return hashsum;
+}
+
+uint64_t Decode::ExtractChunkID(){
+    //extracting chunk ID
+    uint64_t id = 0;
+    for(int i = 0; i < 8; i++){
+        int32_t shift = 8 * i;
+        id |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
+    }
+    return id;
 }
 
 /*
