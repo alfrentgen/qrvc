@@ -83,11 +83,11 @@ int32_t OutputQueue::PrepareFlush(bool simple){
         int32_t dataSize = chunk.m_outBuffer.size();
         dataSize = ((dataSize - 12) > 0) ? (dataSize - 12) : 0;
         //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
-        if(!chunk.m_rendered){
-            //LOG("LOG: frame #%lu is not rendered!\n", chunk.m_frameID);
+        if(!chunk.m_rendered || chunk.m_chunkID < m_nextID){
             continue;
         }
 
+        //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
         inPtr = (char*)chunk.m_outBuffer.data() + 8;
         copy_n(inPtr, dataSize, flushIterator);
         flushIterator += dataSize;
