@@ -5,14 +5,14 @@ message(STATUS ${GENERATOR})
 project("QR video codec" C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(USE_ZBAR "Enable zbar library usage."	ON)
-option(USE_QUIRC "Enable quirc library usage."	ON)
+#option(USE_ZBAR "Enable zbar library usage."	ON)
+#option(USE_QUIRC "Enable quirc library usage."	ON)
 option(USE_X86_32 "Build for x86 32 bits"	OFF)
-option(USE_STATIC "Static linking"	ON)
+option(BUILD_STATIC "Static linking"	ON)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3")
 
-if(USE_STATIC)
+if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
     #-static -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
@@ -27,7 +27,7 @@ endif()
 
 if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
 			#The solution was found here https://github.com/dmlc/xgboost/issues/977.
-    if(NOT USE_STATIC)
+    if(NOT BUILD_STATIC)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
     endif()
 	message(STATUS "MINGW CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
@@ -38,17 +38,6 @@ message(STATUS "CMAKE_C_FLAGS ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
 add_subdirectory(libs)
-
-#[[set(PARSER_FILES
-src/ArgsParser.cpp
-include/ArgsParser.h
-include/Decode.h
-include/Encode.h)
-
-add_library(parser STATIC ${PARSER_FILES})
-target_include_directories(parser PUBLIC include)
-add_dependencies(parser quirc zbar_cut qrenc)
-target_link_libraries(parser PRIVATE quirc zbar_cut qrenc)]]
 
 set(DEC_HDR
 include/pch.h
@@ -78,23 +67,6 @@ target_link_libraries(qvsdec quirc zbar_cut)
 add_dependencies(qvsdec quirc zbar_cut)
 set_target_properties(qvsdec PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qvsdec PUBLIC include)
-
-SET(ENC_SRC
-src/ArgsParser.cpp
-src/encoder.cpp
-)
-
-SET(ENC_HDR
-include/pch.h
-include/ArgsParser.h
-include/encoder.h
-)
-
-add_executable(qvsenc ${ENC_HDR} ${ENC_SRC})
-target_link_libraries(qvsenc qrenc)
-add_dependencies(qvsenc qrenc)
-set_target_properties(qvsenc PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(qvsenc PUBLIC include)
 
 SET(MTENC_HDR
 include/pch.h

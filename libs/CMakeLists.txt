@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 
 project("QR libraries" C CXX)
 
-if(USE_ZBAR)
 add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 
 set(ZBAR_LIB_PATH  ./zbar)
@@ -52,9 +51,7 @@ target_compile_definitions(zbar_cut PRIVATE
 ZBAR_VERSION_MAJOR=0
 ZBAR_VERSION_MINOR=10
 )
-endif(USE_ZBAR)
 
-if(USE_QUIRC)
 set(QUIRC_LIB_PATH  quirc)
 
 set(QUIRC_HDR
@@ -74,7 +71,6 @@ set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
 set_target_properties(quirc PROPERTIES FOLDER "libraries")
 target_compile_definitions(quirc PRIVATE QUIRC_MAX_REGIONS=65534)
-endif(USE_QUIRC)
 
 set(QRENC_LIB_PATH  ./libqrencode)
 
