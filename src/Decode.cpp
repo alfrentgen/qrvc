@@ -178,20 +178,9 @@ uint32_t Decode::DecodeData(){
 
     //extracting chunk ID
     m_data.m_chunkID = ExtractChunkID();
-    /*m_data.m_chunkID = 0;
-    for(int i = 0; i < 8; i++){
-        int32_t shift = 8 * i;
-        m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
-    }*/
 
     //extracting hashsum
     m_data.m_outHash = ExtractHashsum();
-    /*m_data.m_outHash = 0;
-    uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
-    for(int i = 0; i < 4; i++){
-        int32_t shift = 8 * i;
-        m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
-    }*/
 
     m_data.m_rendered = true;
     if(decodedData.size() == 12 ){
@@ -245,19 +234,10 @@ uint32_t Decode::DecodeDataQuick(){
     }
 
     //extracting chunk ID
-    m_data.m_chunkID = ExtractChunkID();//0;
-    /*for(int i = 0; i < 8; i++){
-        int32_t shift = 8 * i;
-        m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
-    }*/
+    m_data.m_chunkID = ExtractChunkID();
 
     //extracting hashsum
-    m_data.m_outHash = ExtractHashsum();//0;
-    /*uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
-    for(int i = 0; i < 4; i++){
-        int32_t shift = 8 * i;
-        m_data.m_outHash |= (uint32_t)outBuffer[i] << shift;
-    }*/
+    m_data.m_outHash = ExtractHashsum();
 
     m_data.m_rendered = true;
     if(m_data.m_outBuffer.size() == 12 ){
@@ -288,104 +268,3 @@ uint64_t Decode::ExtractChunkID(){
     }
     return id;
 }
-
-/*
-uint32_t Decode::DecodeData_mock(){
-    cerr << "In DecodeData().\n";
-    m_data.m_inBuffer.swap(m_data.m_outBuffer);
-    m_data.m_rendered = true;
-    return 0;
-}
-*/
-
-/*DecodeQ::DecodeQ(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ)
-: Decode(fWidth, fHeight, inQ, outQ)
-{
-    //ctor
-    //Decode(fWidth, fHeight, inQ, outQ);
-    //m_scanner.set_config(ZBAR_QRCODE, ZBAR_CFG_ENABLE, 1);
-    m_qr = quirc_new();
-    if (!m_qr) {
-	    perror("Failed to allocate memory");
-	    abort();
-    }
-    if (quirc_resize(m_qr, fWidth, fHeight) < 0) {
-	    perror("Failed to allocate video memory");
-	    abort();
-    }
-}
-
-uint32_t DecodeQ::DecodeData(){
-    //cerr << "In Decode::DecodeData():\n";
-    //cerr << "m_data.m_frameID = " << m_data.m_frameID << endl;
-
-    uint8_t* pImage = quirc_begin(m_qr, &m_frameWidth, &m_frameHeight);
-    m_qr->image = m_data.m_inBuffer.data();
-    quirc_end(m_qr);
-    int32_t num_codes = quirc_count(m_qr);
-
-    if(num_codes == 0){
-        fprintf(stderr, "Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
-        m_data.m_rendered = false;
-        return -1;
-    }
-
-    m_data.m_outBuffer.clear();
-    for (int32_t i = 0; i < num_codes; i++) {
-	    struct quirc_code code;
-	    struct quirc_data data;
-	    quirc_decode_error_t err;
-
-	    quirc_extract(m_qr, i, &code);
-
-	    // Decoding stage
-	    err = quirc_decode(&code, &data);
-	    if (err){
-		    fprintf(stderr, "DECODE FAILED: %s\n", quirc_strerror(err));
-	    }
-	    else{
-		    //fprintf(stderr, "Data: %s\n", data.payload);
-		    int32_t outBufferSize = m_data.m_outBuffer.size();
-            m_data.m_outBuffer.resize(outBufferSize + data.payload_len);
-            uint8_t* curPosition = m_data.m_outBuffer.data() + outBufferSize;
-            copy_n(data.payload, data.payload_len, curPosition);
-	    }
-    }
-
-    if(m_data.m_outBuffer.size() < 12 ){
-        fprintf(stderr, "Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
-        m_data.m_rendered = false;
-        return -1;
-    }
-
-    //extracting chunk ID
-    m_data.m_chunkID = 0;
-    for(int i = 0; i < 8; i++){
-        int32_t shift = 8 * i;
-        m_data.m_chunkID |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
-    }
-
-    //extracting hashsum
-    m_data.m_hashsum = 0;
-    uint8_t* outBuffer = m_data.m_outBuffer.data() + m_data.m_outBuffer.size() - 4;
-    for(int i = 0; i < 4; i++){
-        int32_t shift = 8 * i;
-        m_data.m_hashsum |= (uint32_t)outBuffer[i] << shift;
-    }
-
-    if(m_data.m_outBuffer.size() == 12 ){
-        fprintf(stderr, "Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", m_data.m_outBuffer.size());
-        m_data.m_rendered = false;
-    }
-
-    m_data.m_rendered = true;
-
-    return 0;
-}
-
-DecodeQ::~DecodeQ()
-{
-    //dtor
-    quirc_destroy(m_qr);
-}
-*/

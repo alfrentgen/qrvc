@@ -95,7 +95,6 @@ void Encode::Stop(){
     m_isWorking.clear();
 }
 
-#if 1
 uint32_t Encode::EncodeData(){
 
     vector<uint8_t>& inChunk = m_data.m_inBuffer;
@@ -161,12 +160,3 @@ uint32_t Encode::EncodeData(){
     QRcode_free(pQR);
     return 0;
 }
-#else
-uint32_t Encode::EncodeData(){
-
-    vector<uint8_t>& inChunk = m_data.m_inBuffer;
-    vector<uint8_t>& rawFrame = m_data.m_outBuffer;
-    inChunk.swap(rawFrame);
-    return 0;
-}
-#endif

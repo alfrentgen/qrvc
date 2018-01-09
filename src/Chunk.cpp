@@ -9,13 +9,6 @@ m_inBuffer(inBuffSize, val), m_outBuffer(0)
     Init();
 }
 
-/*Chunk::Chunk(uint8_t* pInBuff, int32_t buffSize, uint64_t frameID):
-m_rendered(false), m_chunkID(0), m_hashsum(0), m_frameID(frameID)
-{
-    SetInBuffer(pInBuff, buffSize);
-    //ctor
-}*/
-
 Chunk::~Chunk()
 {    //dtor
 }

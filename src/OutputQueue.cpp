@@ -13,7 +13,6 @@ OutputQueue::~OutputQueue()
 {
     if(m_outStream != NULL && m_outStream != &cout){
         m_outStream->flush();
-        //((ifstream*)m_outStream)->close();
     }
 }
 
@@ -37,45 +36,25 @@ int32_t OutputQueue::EstimateFlushingBufferSize(){
     for(int32_t i = 0; i < m_chunksLoaded; i++){
         size += m_queue[i].m_outBuffer.size();
     }
-    //size -= (size > m_chunksLoaded * 12) ? m_chunksLoaded * 12 : 0;
     return size;
 }
 
 //flush output queue if it has at leastNChunks
 int32_t OutputQueue::PrepareFlush(bool simple){
-    //LOG("%s", "In OutputQueue::PrepareFlush()\n");
+
     vector<Chunk*> snapshot(0);
     int32_t nChunks = GetSnapshot(snapshot);
     function<bool(Chunk*, Chunk*)> comparePChunks = [] (Chunk* ch1, Chunk* ch2) -> bool{
         return ch1->m_frameID < ch2->m_frameID;
     };
 
-    chrono::time_point<chrono::steady_clock> tp1_ = chrono::steady_clock::now();
     stable_sort(snapshot.begin(), snapshot.begin() + nChunks, comparePChunks);
-    chrono::time_point<chrono::steady_clock> tp2_ = chrono::steady_clock::now();
-    auto deltaSort2 = chrono::duration_cast<chrono::microseconds>(tp2_ - tp1_).count();
-    LOG("deltaSort2 = %lu microsecs\n", deltaSort2);
-
-    //LOG("SORTING!\n");
-    /*function<bool(Chunk, Chunk)> compareChunks = [] (Chunk ch1, Chunk ch2) -> bool{
-        return ch1.m_frameID < ch2.m_frameID;
-    };
-
-    chrono::time_point<chrono::steady_clock> tp1 = chrono::steady_clock::now();
-    stable_sort(m_queue.begin(), m_queue.begin() + m_chunksLoaded, compareChunks);
-    chrono::time_point<chrono::steady_clock> tp2 = chrono::steady_clock::now();
-    auto deltaSort = chrono::duration_cast<chrono::microseconds>(tp2 - tp1).count();
-    LOG("deltaSort = %lu microsecs\n", deltaSort);*/
 
     if(simple){
         m_flushSize = 0;
-        //LOG("m_flushSize = 0; threadID = %d\n", this_thread::get_id());
         m_flushBuffer.clear();
         for(int i = 0; i < m_chunksLoaded; i++){
             Chunk& chunk = *snapshot[i];
-            //Chunk& chunk = m_queue[i];
-            //LOG("chunk #%d, out size = %d, threadID = %d\n", chunk.m_frameID, chunk.m_outBuffer.size(),
-            //this_thread::get_id());
             m_flushSize += chunk.m_outBuffer.size();
             m_flushBuffer.insert(m_flushBuffer.end(), chunk.m_outBuffer.begin(), chunk.m_outBuffer.end());
         }
@@ -92,15 +71,13 @@ int32_t OutputQueue::PrepareFlush(bool simple){
     long long delta = 0;
     for(int32_t i = 0; i < m_chunksLoaded; i++){
         Chunk& chunk = *snapshot[i];
-        //Chunk& chunk = m_queue[i];
         int32_t dataSize = chunk.m_outBuffer.size();
         dataSize = ((dataSize - 12) > 0) ? (dataSize - 12) : 0;
-        //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
+
         if(!chunk.m_rendered || chunk.m_chunkID < m_nextID){
             continue;
         }
 
-        //LOG("frameID = %d, chunkId = %d\n", chunk.m_frameID, chunk.m_chunkID);
         inPtr = (char*)chunk.m_outBuffer.data() + 8;
         copy_n(inPtr, dataSize, flushIterator);
         flushIterator += dataSize;
@@ -122,9 +99,7 @@ int32_t OutputQueue::PrepareFlush(bool simple){
 }
 
 int32_t OutputQueue::Flush(){
-    //LOG("In Flush(): Flush size = %d, threadID = %d\n", m_flushSize, this_thread::get_id());
-    //LOG("%s%d\n", "m_flushBuffer.size() = ", m_flushBuffer.size());
-    m_outStream->write(m_flushBuffer.data(), m_flushBuffer.size()/*m_flushSize*/);
+    m_outStream->write(m_flushBuffer.data(), m_flushBuffer.size());
     m_outStream->flush();
     m_flushSize = 0;
 }
