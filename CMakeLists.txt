@@ -8,7 +8,20 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #option(USE_ZBAR "Enable zbar library usage."	ON)
 #option(USE_QUIRC "Enable quirc library usage."	ON)
 option(USE_X86_32 "Build for x86 32 bits"	OFF)
+#option(USE_ARM_V8A "Build for ARMv8-A 64"	OFF)
 option(BUILD_STATIC "Static linking"	ON)
+
+#[[if(USE_ARM_V8A)
+    #arm-linux-androideabi-gcc
+    #arm-linux-androideabi-g++
+    #arm-linux-androideabi-ar
+    #arm-linux-androideabi-ld
+    set(CMAKE_C_COMPILER /usr/bin/arm-linux-androideabi-gcc)
+    set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-androideabi-g++)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a")
+    set(USE_X86_32 OFF)
+endif()]]
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3")
 
@@ -23,6 +36,7 @@ endif()
 if(USE_X86_32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+    #set(USE_ARM_V8A OFF)
 endif()
 
 if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
