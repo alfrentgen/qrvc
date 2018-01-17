@@ -6,6 +6,7 @@
 2) Site
 3) GUI
 4) CMake cross compilation
+5) Implement logging to file option and chunk skip(range(start_chunk_id, stop_chunk_id)) option for decoder.
 
 DONE or not very urgent:
 1) Make encoder multithread(in progress) DONE
