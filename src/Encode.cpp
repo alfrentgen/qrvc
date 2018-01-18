@@ -8,11 +8,11 @@ static int32_t g_idCounter = 0;
 
 Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
                 InputQueue* inQ, OutputQueue* outQ,
-                int32_t version, QRecLevel eccLevel, int32_t qrScale):
+                int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_frameRepeats(frameRepeats),
     m_tailSize(tailSize), m_invertColors(invert),
     m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale),
+    m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale), m_alignment(alignment),
     m_isWorking(false)
 {
     //ctor
@@ -135,8 +135,30 @@ uint32_t Encode::EncodeData(){
     uint8_t* pQRData = pQR->data;
     int32_t qrWidth = pQR->width;
     //LOG("qrWidth %d\n", qrWidth);
-    uint32_t xOffset = (m_frameWidth - m_qrScale * qrWidth)/2;
-    uint32_t yOffset = (m_frameHeight - m_qrScale * qrWidth)/2;
+    uint32_t xOffset;
+    uint32_t yOffset;
+
+    if(m_alignment){
+        int32_t nPadsX = (m_frameWidth - m_qrScale * qrWidth) / m_alignment;
+        int32_t nPadsY = (m_frameHeight - m_qrScale * qrWidth) / m_alignment;
+
+        if(nPadsX == 1){
+            xOffset = m_alignment;
+        }else{
+            xOffset = (nPadsX/2) * m_alignment;
+        }
+
+        if(nPadsY == 1){
+            yOffset = m_alignment;
+        }else{
+            yOffset = (nPadsY/2) * m_alignment;
+        }
+
+    } else{
+        xOffset = (m_frameWidth - m_qrScale * qrWidth)/2;
+        yOffset = (m_frameHeight - m_qrScale * qrWidth)/2;
+    }
+
     vector<uint8_t>::iterator frameIt = rawFrame.begin() + yOffset * m_frameWidth;
 
     for(int32_t y = 0; y < qrWidth; y++){

@@ -17,7 +17,7 @@ class Encode : public Job
 {
     public:
         Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
-                InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale);
+                InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment);
         virtual ~Encode();
         virtual int32_t Do() override;
         virtual void Stop() override;
@@ -40,6 +40,7 @@ class Encode : public Job
         bool m_invertColors;
         int32_t m_frameRepeats;
         int32_t m_tailSize;
+        int32_t m_alignment;
 
 
     protected:

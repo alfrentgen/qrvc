@@ -20,6 +20,7 @@ typedef struct Config {
 
     int32_t m_qrScale;
     int32_t m_eccLevel;
+    int32_t m_alignment;
 
     int32_t m_decMode;
 

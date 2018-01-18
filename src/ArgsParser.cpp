@@ -24,7 +24,8 @@ ArgsParserDec::ArgsParserDec() :
                 string("-s"),
                 string("-r"),
                 string("-n"),
-                string("-k")
+                string("-k"),
+                string("-a")
                 })
 {
     //ctor
@@ -51,6 +52,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     string& repeatOpt = m_options[10];//frame repetition
     string& inverseOpt = m_options[11];//inverse frame
     string& skipOpt = m_options[12];//skip duplicated frames in decoder
+    string& alignOpt = m_options[13];//skip duplicated frames in decoder
 
     string optionVal;
     string option;
@@ -157,7 +159,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
             if(CheckOptionVal() == OK){
                 LOG("QR element scaling factor is: %s\n", optionVal.c_str());
             }else{
-                LOG("Wrong scaling factor, should be an integer from 1 to 4. Terminated.\n");
+                LOG("Wrong scaling factor, should be an integer from 1 to 99. Terminated.\n");
                 return FAIL;
             }
         } else
@@ -177,6 +179,15 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         if(option == skipOpt){
             m_parsedOptions[option] = string("1");
             LOG("Duplicate frames skipping enabled!\n");
+        }else
+        if(option == alignOpt){
+            pattern = "^\\d{1,3}$";
+            if(CheckOptionVal() == OK){
+                LOG("Number of frame repeats: %s\n", optionVal.c_str());
+            }else{
+                LOG("Number of frame repeats should be in rage 0-999. Terminated.\n");
+                return FAIL;
+            }
         }
         else{
             LOG("Wrong option. Terminated!\n");
@@ -311,8 +322,8 @@ Config* ArgsParserDec::GetConfig(){
         config.m_frameRepeats = stoi(it->second);
         if(config.m_frameRepeats <= 0){
             config.m_frameRepeats = 1;
-        }else if(config.m_frameRepeats > 10){
-            config.m_frameRepeats = 10;
+        }else if(config.m_frameRepeats > 99){
+            config.m_frameRepeats = 100;
         }
         //LOG("Number of frame repeats is %d\n", config.m_frameRepeats);
     }
@@ -327,7 +338,7 @@ Config* ArgsParserDec::GetConfig(){
         if(config.m_nTrailingFrames < 0){
             config.m_nTrailingFrames = 0;
         }else if(config.m_nTrailingFrames > 99){
-            config.m_nTrailingFrames = 99;
+            config.m_nTrailingFrames = 100;
         }
         //LOG("Number of trailing frames is %d\n", config.m_nTrailingFrames);
     }
@@ -383,6 +394,21 @@ Config* ArgsParserDec::GetConfig(){
     }else{
         LOG("Duplicated frames skipping is enabled.\n");
         config.m_skipDupFrames = true;
+    }
+
+    key = string("-a");
+    it = optionsMap.find(key);
+    if(it == optionsMap.end()){
+        LOG("No alignment value was specified, using 0.\n");
+        config.m_alignment = 0;
+    }else{
+        config.m_alignment = stoi(it->second);
+        if(config.m_alignment <= 0){
+            config.m_alignment = 0;
+        }else if(config.m_alignment > 99){
+            config.m_alignment = 100;
+        }
+        //LOG("Number of frame repeats is %d\n", config.m_frameRepeats);
     }
 
     return &config;

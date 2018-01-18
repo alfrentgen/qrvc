@@ -32,7 +32,7 @@ public:
 private:
     int32_t Init(istream* is, ostream* os,
                 int32_t frameWidth, int32_t frameHeight, int32_t frameRepeat, int32_t tailSize, bool invert,
-                QRecLevel eccLevel, int32_t qrScale,
+                QRecLevel eccLevel, int32_t qrScale, int32_t alignment,
                 uint32_t framesPerThread = 0, uint32_t nThreads = 0);
 
 private:
