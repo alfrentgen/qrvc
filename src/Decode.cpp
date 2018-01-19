@@ -118,10 +118,12 @@ int32_t Decode::Do(){
                 }
             }
 
-            uint32_t hashsum = m_data.CalcHashsum(m_data.m_outBuffer.data(), m_data.m_outBuffer.size() - 4);
-            if(hashsum != m_data.m_outHash){
-                m_data.m_rendered = false;
-                LOG("Decoded chunk checksum is incorrect! The chunk will be skipped.\n");
+            if(decRes == OK){
+                uint32_t hashsum = m_data.CalcHashsum(m_data.m_outBuffer.data(), m_data.m_outBuffer.size() - 4);
+                if(hashsum != m_data.m_outHash){
+                    m_data.m_rendered = false;
+                    LOG("Decoded chunk checksum is incorrect! The chunk will be skipped.\n");
+                }
             }
         }
 
