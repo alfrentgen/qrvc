@@ -184,11 +184,7 @@ uint32_t Encode::EncodeData(){
             uint8_t* pCur = rawFrame.data();
             uint8_t* pKey = m_pKeyFrame->data();
             for(int32_t i = 0; i < frameSize; i++){
-                if(pCur[i] == pKey[i]){
-                    pCur = 255;
-                }else{
-                    pCur = 0;
-                }
+                pCur[i] = ~(pCur[i] ^ pKey[i]);
             }
         }
     }
