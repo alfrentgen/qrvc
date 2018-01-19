@@ -6,6 +6,9 @@ using namespace std;
 
 static int32_t g_idCounter = 0;
 
+#define BLACK 0x0
+#define WHITE 0xff
+
 Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
                 InputQueue* inQ, OutputQueue* outQ,
                 int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment, vector<uint8_t>* pKeyFrame):
@@ -105,7 +108,7 @@ uint32_t Encode::EncodeData(){
     vector<uint8_t>& rawFrame = m_data.m_outBuffer;
     uint8_t arrFrameID[8] = {0};
     uint8_t arrHashSum[4] = {0};
-    uint8_t color = m_invertColors ? 255 : 0;
+    uint8_t color = m_invertColors ? WHITE : BLACK;
     int32_t frameSize = m_frameWidth * m_frameHeight;
     //uint8_t* pInData = m_data.m_inBuffer.data();
 
