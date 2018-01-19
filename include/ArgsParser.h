@@ -6,7 +6,7 @@
 using namespace std;
 
 typedef struct Config {
-    bool    m_counterOn;
+    bool    m_cypherOn;
     bool    m_inverseFrame;
     bool    m_skipDupFrames;
 

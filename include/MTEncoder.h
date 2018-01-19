@@ -42,6 +42,8 @@ private:
     int32_t m_qrVersion;
     bool m_invertColors;
     int32_t m_repeats;
+    bool m_cypherOn;
+    vector<uint8_t> m_keyFrame;
 
     vector<Encode*> m_jobs;
     vector<thread> m_threads;

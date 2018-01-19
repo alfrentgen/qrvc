@@ -42,7 +42,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     string& inFileOpt = m_options[0];//input file name
     string& outFileOpt = m_options[1];//output file name
     string& sizeOpt = m_options[2];//frame size -s NxN
-    string& counterOpt = m_options[3];//counter on/off
+    string& cypherOpt = m_options[3];//cyphering on/off
     string& chunksPerThOpt = m_options[4];//chunks per thread
     string& workersNumberOpt = m_options[5];//number of threads
     string& decModeOpt = m_options[6];//decode library
@@ -52,7 +52,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     string& repeatOpt = m_options[10];//frame repetition
     string& inverseOpt = m_options[11];//inverse frame
     string& skipOpt = m_options[12];//skip duplicated frames in decoder
-    string& alignOpt = m_options[13];//skip duplicated frames in decoder
+    string& alignOpt = m_options[13];//alignment of left top corner
 
     string optionVal;
     string option;
@@ -80,9 +80,9 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         option = string(argv[n]);
         //cerr << "On option: " << option << "\n";
 
-        if(option == counterOpt){
+        if(option == cypherOpt){
             m_parsedOptions[option] = string("1");
-            LOG("Counter is on!\n");
+            LOG("Cyphering is enabled!\n");
         } else
         if(option == sizeOpt){
             pattern = "^\\d{1,4}x\\d{1,4}$";
@@ -217,7 +217,7 @@ Config* ArgsParserDec::GetConfig(){
 
     config.m_frameWidth = 800;
     config.m_frameHeight = 600;
-    config.m_counterOn = true;
+    config.m_cypher = true;
     config.m_frameRepeats = 1;
     config.m_framesPerThread = 8;
     config.m_nWorkingThreads = 0;
@@ -252,11 +252,11 @@ Config* ArgsParserDec::GetConfig(){
     key = string("-c");
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
-        LOG("Counter is disabled.\n");
-        config.m_counterOn = false;
+        LOG("Cyphering is disabled.\n");
+        config.m_cypher = false;
     }else{
-        LOG("Counter is enabled.\n");
-        config.m_counterOn = true;
+        LOG("Cyphering is enabled.\n");
+        config.m_cypher = true;
     }
 
     key = string("-f");

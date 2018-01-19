@@ -8,12 +8,12 @@ static int32_t g_idCounter = 0;
 
 Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
                 InputQueue* inQ, OutputQueue* outQ,
-                int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment):
+                int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment, vector<uint8_t>* pKeyFrame):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_frameRepeats(frameRepeats),
     m_tailSize(tailSize), m_invertColors(invert),
     m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale), m_alignment(alignment),
-    m_isWorking(false)
+    m_isWorking(false), m_pKeyFrame(pKeyFrame)
 {
     //ctor
     m_ID = g_idCounter++;
@@ -73,9 +73,13 @@ int32_t Encode::Do(){
             lckInQ.unlock();
             continue;
         }
-        lckInQ.unlock();
-
-        EncodeData();
+        if(m_data.m_frameID == 0 && m_pKeyFrame){
+            EncodeData();
+            lckInQ.unlock();
+        }else{
+            lckInQ.unlock();
+            EncodeData();
+        }
 
         lckOutQ.lock();
         m_outQ->Put(m_data);
@@ -170,6 +174,20 @@ uint32_t Encode::EncodeData(){
         for(uint32_t cnt = 1; cnt < m_qrScale; ++cnt){
             copy_n(frameIt - m_frameWidth, m_frameWidth, frameIt);
             frameIt += m_frameWidth;
+        }
+    }
+
+    if(m_data.m_frameID == 0){
+        ;
+    }
+
+    if(m_data.m_frameID == 0 && m_pKeyFrame){
+        frameIt = rawFrame.begin();
+        vector<uint8_t>::iterator keyIt = m_pKeyFrame->begin();
+        for(;;){
+            if(){
+                ;
+            }
         }
     }
 

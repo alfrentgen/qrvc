@@ -44,7 +44,8 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
     return mockList.size;
 }
 
-MTEncoder::MTEncoder()
+MTEncoder::MTEncoder():
+m_keyFrame(0)
 {
     //ctor
 }
@@ -61,6 +62,8 @@ int32_t MTEncoder::Init(Config& config){
     ofstream* ofs = NULL;
     istream* inputStream = &cin;
     ostream* outputStream = &cout;
+
+    m_cypherOn = config.m_cypherOn;
 
     if(config.m_ifName.size() == 0){
         cerr << "Input filename is not specified, reading from stdin.\n";
@@ -110,6 +113,12 @@ int32_t MTEncoder::Init(istream* is, ostream* os,
     }
     m_qrVersion = version;
 
+    if(m_cypherOn){
+        m_keyFrame.resize(frameHeight*frameWidth);
+        m_keyFrame.assign(m_keyFrame.size(),0);
+    }
+    vector<uint8_t> * const pKeyFrame = m_cypherOn ? &m_keyFrame : NULL;
+
     int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
     cerr << "Chunk size: " << chunkSize << endl;
     cerr << "Bytes to read: " << nBytesToRead << endl;
@@ -136,10 +145,11 @@ int32_t MTEncoder::Init(istream* is, ostream* os,
     m_jobs.resize(m_nThreads);
 
     m_invertColors = invert;
+
     for(int i =0; i < m_nThreads; i++){
         m_jobs[i] = new Encode(frameWidth, frameHeight, frameRepeat, tailSize, invert,
                                 m_inQ, m_outQ,
-                                m_qrVersion, eccLevel, qrScale, alignment);
+                                m_qrVersion, eccLevel, qrScale, alignment, pKeyFrame);
     }
 
     LOG("Number of working threads is: %d\n", m_nThreads);
