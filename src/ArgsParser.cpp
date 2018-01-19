@@ -217,7 +217,7 @@ Config* ArgsParserDec::GetConfig(){
 
     config.m_frameWidth = 800;
     config.m_frameHeight = 600;
-    config.m_cypher = true;
+    config.m_cypherOn = true;
     config.m_frameRepeats = 1;
     config.m_framesPerThread = 8;
     config.m_nWorkingThreads = 0;
@@ -253,10 +253,10 @@ Config* ArgsParserDec::GetConfig(){
     it = optionsMap.find(key);
     if(it == optionsMap.end()){
         LOG("Cyphering is disabled.\n");
-        config.m_cypher = false;
+        config.m_cypherOn = false;
     }else{
         LOG("Cyphering is enabled.\n");
-        config.m_cypher = true;
+        config.m_cypherOn = true;
     }
 
     key = string("-f");

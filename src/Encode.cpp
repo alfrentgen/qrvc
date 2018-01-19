@@ -177,16 +177,18 @@ uint32_t Encode::EncodeData(){
         }
     }
 
-    if(m_data.m_frameID == 0){
-        ;
-    }
-
-    if(m_data.m_frameID == 0 && m_pKeyFrame){
-        frameIt = rawFrame.begin();
-        vector<uint8_t>::iterator keyIt = m_pKeyFrame->begin();
-        for(;;){
-            if(){
-                ;
+    if(m_pKeyFrame){
+        if(m_data.m_frameID == 0){
+            m_pKeyFrame->assign(rawFrame.begin(), rawFrame.begin() + frameSize);
+        }else{
+            uint8_t* pCur = rawFrame.data();
+            uint8_t* pKey = m_pKeyFrame->data();
+            for(int32_t i = 0; i < frameSize; i++){
+                if(pCur[i] == pKey[i]){
+                    pCur = 255;
+                }else{
+                    pCur = 0;
+                }
             }
         }
     }

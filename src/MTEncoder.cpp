@@ -52,6 +52,7 @@ m_keyFrame(0)
 
 MTEncoder::~MTEncoder()
 {
+    m_keyFrame.resize(0);
     //dtor
     Stop();
 }
