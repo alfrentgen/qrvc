@@ -45,14 +45,13 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
 }
 
 MTEncoder::MTEncoder():
-m_keyFrame(0), m_pKeyFileStream(NULL)
+m_pKeyFileStream(NULL)
 {
     //ctor
 }
 
 MTEncoder::~MTEncoder()
 {
-    m_keyFrame.resize(0);
     //dtor
     Stop();
 }
@@ -66,9 +65,9 @@ int32_t MTEncoder::Init(Config& config){
     ofstream* keyFileStream = NULL;
 
     m_cypherOn = config.m_cypherOn;
-    if(m_cypherOn && !config.m_keyName.empty()){
+    if(m_cypherOn && !config.m_keyFileName.empty()){
         //open file for key;
-        m_pKeyFileStream = new ofstream(config.m_keyName, ios_base::out | ios_base::binary);
+        m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
     }else{
         m_pKeyFileStream = NULL;
     }

@@ -48,6 +48,11 @@ int32_t MTDecoder::Init(Config& config){
         return FAIL;
     }
 
+    m_cypherOn = config.m_cypherOn;
+    if(m_cypherOn && !config.m_keyFileName.empty()){
+        //ifstream;
+    }
+
     Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,
         config.m_decMode, config.m_framesPerThread, config.m_nWorkingThreads, config.m_skipDupFrames);
 

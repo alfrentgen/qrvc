@@ -261,11 +261,11 @@ Config* ArgsParserDec::GetConfig(){
     if(it == optionsMap.end()){
         LOG("Cyphering is disabled.\n");
         config.m_cypherOn = false;
-        config.m_keyName.clear();
+        config.m_keyFileName.clear();
     }else{
         LOG("Cyphering is enabled.\n");
         config.m_cypherOn = true;
-        config.m_keyName = it->second;
+        config.m_keyFileName = it->second;
     }
 
     key = string("-f");

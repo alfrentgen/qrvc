@@ -26,13 +26,16 @@ private:
                     uint32_t framesPerThread = 0, uint32_t nThreads = 0, bool skipDup = false);
 
 private:
+    bool m_cypherOn;
     int32_t m_nThreads;
     InputQueue* m_inQ;
     OutputQueue* m_outQ;
     DecodeMode m_decMode;
+    vector<uint8_t> m_keyFrame;
 
     vector<Decode*> m_jobs;
     vector<thread> m_threads;
+    ifstream* m_pKeyFileStream;
 };
 
 #endif // MTDECODER_H
