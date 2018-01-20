@@ -17,10 +17,11 @@ class Encode : public Job
 {
     public:
         Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
-                InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment, vector<uint8_t>* pKeyFrame);
+                InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment);
         virtual ~Encode();
         virtual int32_t Do() override;
         virtual void Stop() override;
+        void SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS);
 
     protected:
         uint32_t m_frameWidth;
@@ -42,6 +43,7 @@ class Encode : public Job
         int32_t m_tailSize;
         int32_t m_alignment;
         vector<uint8_t>* m_pKeyFrame;
+        ofstream* m_pKeyFileStream;
 
     protected:
         virtual uint32_t EncodeData();

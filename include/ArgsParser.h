@@ -26,6 +26,7 @@ typedef struct Config {
 
     string  m_ifName;
     string  m_ofName;
+    string  m_keyName;
 } Config;
 
 class ArgsParserDec

@@ -11,12 +11,12 @@ static int32_t g_idCounter = 0;
 
 Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
                 InputQueue* inQ, OutputQueue* outQ,
-                int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment, vector<uint8_t>* pKeyFrame):
+                int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_frameRepeats(frameRepeats),
     m_tailSize(tailSize), m_invertColors(invert),
     m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale), m_alignment(alignment),
-    m_isWorking(false), m_pKeyFrame(pKeyFrame)
+    m_isWorking(false), m_pKeyFileStream(NULL), m_pKeyFrame(NULL)
 {
     //ctor
     m_ID = g_idCounter++;
@@ -76,6 +76,7 @@ int32_t Encode::Do(){
             lckInQ.unlock();
             continue;
         }
+
         if(m_data.m_frameID == 0 && m_pKeyFrame){
             EncodeData();
             lckInQ.unlock();
@@ -183,6 +184,12 @@ uint32_t Encode::EncodeData(){
     if(m_pKeyFrame){
         if(m_data.m_frameID == 0){
             m_pKeyFrame->assign(rawFrame.begin(), rawFrame.begin() + frameSize);
+            if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+                m_pKeyFileStream->write((char*)rawFrame.data(), frameSize);
+                m_pKeyFileStream->close();
+                //clear zero frame
+                rawFrame.assign(rawFrame.size(), ~color);
+            }
         }else{
             uint8_t* pCur = rawFrame.data();
             uint8_t* pKey = m_pKeyFrame->data();
@@ -200,4 +207,9 @@ uint32_t Encode::EncodeData(){
     //mem leakage is unwanted
     QRcode_free(pQR);
     return 0;
+}
+
+void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
+    m_pKeyFrame = pKeyFrame;
+    m_pKeyFileStream = pKeyFileOS;
 }

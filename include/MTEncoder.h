@@ -44,6 +44,7 @@ private:
     int32_t m_repeats;
     bool m_cypherOn;
     vector<uint8_t> m_keyFrame;
+    ofstream* m_pKeyFileStream;
 
     vector<Encode*> m_jobs;
     vector<thread> m_threads;

@@ -81,7 +81,14 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         //cerr << "On option: " << option << "\n";
 
         if(option == cypherOpt){
-            m_parsedOptions[option] = string("1");
+            pattern = "^.*$";
+            if(CheckOptionVal() == OK){
+                LOG("Key frame file name: %s\n", optionVal.c_str());
+            }else{
+                LOG("No valid filename for key frame were found.\n");
+                optionVal.clear();
+                m_parsedOptions[option] = optionVal;
+            }
             LOG("Cyphering is enabled!\n");
         } else
         if(option == sizeOpt){
@@ -204,7 +211,7 @@ map<string, string>& ArgsParserDec::getOptions(){
 bool ArgsParserDec::IsOptionName(string& str){
     for (auto & element : m_options) {
         if(element == str){
-            cerr << element << ": option value missed\n";
+            //cerr << element << ": option value missed\n";
             return true;
         }
     }
@@ -254,9 +261,11 @@ Config* ArgsParserDec::GetConfig(){
     if(it == optionsMap.end()){
         LOG("Cyphering is disabled.\n");
         config.m_cypherOn = false;
+        config.m_keyName.clear();
     }else{
         LOG("Cyphering is enabled.\n");
         config.m_cypherOn = true;
+        config.m_keyName = it->second;
     }
 
     key = string("-f");
