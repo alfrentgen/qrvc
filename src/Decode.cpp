@@ -83,14 +83,17 @@ int32_t Decode::Do(){
 
             continue;
         }
-        //save zero frame as key frame if m_pKeyFrame was set.
+        //save zero frame as key frame if m_pKeyFrame was given and not filled.
         if(m_data.m_frameID == 0 && m_pKeyFrame && m_pKeyFrame->size() == 0){
+            //save
             m_pKeyFrame->assign(m_data.m_inBuffer.begin(), m_data.m_inBuffer.end());
-
+            //denoise
             for(int32_t i = 0; i < m_pKeyFrame->size(); i++){
-                (*m_pKeyFrame)[i] = (*m_pKeyFrame)[i] > 127) ? 255 : 0;
+                (*m_pKeyFrame)[i] = ( (*m_pKeyFrame)[i] > 127 ) ? 255 : 0;
             }
             LOG("Reading zero frame, size = %d.\n", m_data.m_inBuffer.size());
+            lckInQ.unlock();
+            goto skipDecyph;//yeah!
         }
         lckInQ.unlock();
 
@@ -101,6 +104,8 @@ int32_t Decode::Do(){
                 m_data.m_inBuffer[i] ^= ~((*m_pKeyFrame)[i]);
             }
         }
+
+skipDecyph:
         //check if the frame  already has a double in output queue
         m_data.m_inHash = m_data.CalcHashsum(m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
 
