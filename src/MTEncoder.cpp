@@ -68,6 +68,10 @@ int32_t MTEncoder::Init(Config& config){
     if(m_cypherOn && !config.m_keyFileName.empty()){
         //open file for key;
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
+        if(!m_pKeyFileStream->good()){
+            m_pKeyFileStream->close();
+            return FAIL;
+        }
     }else{
         m_pKeyFileStream = NULL;
     }

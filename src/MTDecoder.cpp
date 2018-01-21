@@ -50,7 +50,11 @@ int32_t MTDecoder::Init(Config& config){
 
     m_cypherOn = config.m_cypherOn;
     if(m_cypherOn && !config.m_keyFileName.empty()){
-        //ifstream;
+        m_pKeyFileStream = new ifstream(config.m_keyFileName, ios_base::in | ios_base::binary);
+        if(!m_pKeyFileStream->good()){
+            m_pKeyFileStream->close();
+            return FAIL;
+        }
     }
 
     Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,
@@ -76,6 +80,16 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
         framesPerThread = 8;
     }
     queueSize = framesPerThread * m_nThreads;
+
+    if(m_pKeyFileStream){
+        m_keyFrame.resize(frameWidth * frameHeight);
+        m_pKeyFileStream->read(m_keyFrame.data(), frameWidth * frameHeight);
+        int32_t bytesRead = m_pKeyFileStream->gcount();
+        if(bytesRead < frameWidth * frameHeight){
+            LOG("Not enough bytes in key file: %d!\n", bytesRead);
+            return FAIL;
+        }
+    }
 
     m_inQ = new InputQueue(is, queueSize, frameWidth * frameHeight);
     m_outQ = new OutputQueue(os, queueSize, frameWidth * frameHeight);
