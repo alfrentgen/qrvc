@@ -83,8 +83,24 @@ int32_t Decode::Do(){
 
             continue;
         }
+        //save zero frame as key frame if m_pKeyFrame was set.
+        if(m_data.m_frameID == 0 && m_pKeyFrame && m_pKeyFrame->size() == 0){
+            m_pKeyFrame->assign(m_data.m_inBuffer.begin(), m_data.m_inBuffer.end());
+
+            for(int32_t i = 0; i < m_pKeyFrame->size(); i++){
+                (*m_pKeyFrame)[i] = (*m_pKeyFrame)[i] > 127) ? 255 : 0;
+            }
+            LOG("Reading zero frame, size = %d.\n", m_data.m_inBuffer.size());
+        }
         lckInQ.unlock();
 
+        //decypher if key frame was given
+        if(m_pKeyFrame){
+            for(int32_t i = 0; i < m_frameWidth * m_frameHeight; i++){
+                m_data.m_inBuffer[i] = (m_data.m_inBuffer[i] > 127) ? 255 : 0;
+                m_data.m_inBuffer[i] ^= ~((*m_pKeyFrame)[i]);
+            }
+        }
         //check if the frame  already has a double in output queue
         m_data.m_inHash = m_data.CalcHashsum(m_data.m_inBuffer.data(), m_data.m_inBuffer.size());
 
@@ -269,4 +285,8 @@ uint64_t Decode::ExtractChunkID(){
         id |= ((uint64_t)m_data.m_outBuffer[i]) << shift;
     }
     return id;
+}
+
+void Decode::SetCypheringParams(vector<uint8_t>* pKeyFrame){
+    m_pKeyFrame = pKeyFrame;
 }

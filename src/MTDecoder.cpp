@@ -2,7 +2,8 @@
 #include "utilities.h"
 
 
-MTDecoder::MTDecoder()
+MTDecoder::MTDecoder():
+m_pKeyFileStream(NULL)
 {
     //ctor
 }
@@ -48,6 +49,11 @@ int32_t MTDecoder::Init(Config& config){
         return FAIL;
     }
 
+    if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+        m_pKeyFileStream->close();
+    }
+    m_pKeyFileStream = NULL;
+
     m_cypherOn = config.m_cypherOn;
     if(m_cypherOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ifstream(config.m_keyFileName, ios_base::in | ios_base::binary);
@@ -81,6 +87,9 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
     }
     queueSize = framesPerThread * m_nThreads;
 
+    if(m_cypherOn){
+        m_keyFrame.resize(0);
+    }
     if(m_pKeyFileStream){
         m_keyFrame.resize(frameWidth * frameHeight);
         m_pKeyFileStream->read(m_keyFrame.data(), frameWidth * frameHeight);
@@ -88,8 +97,11 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
         if(bytesRead < frameWidth * frameHeight){
             LOG("Not enough bytes in key file: %d!\n", bytesRead);
             return FAIL;
+        }else{
+            LOG("Key frame bytes read: %d\n", bytesRead);
         }
     }
+    vector<uint8_t>* pkeyFrame = m_cypherOn ? &m_keyFrame : NULL;
 
     m_inQ = new InputQueue(is, queueSize, frameWidth * frameHeight);
     m_outQ = new OutputQueue(os, queueSize, frameWidth * frameHeight);
@@ -101,6 +113,7 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
 
     for(int i =0; i < m_nThreads; i++){
         m_jobs[i] = new Decode(frameWidth, frameHeight, m_inQ, m_outQ, m_decMode, skipDup);
+        m_jobs[i]->SetCypheringParams(pkeyFrame);
     }
 
     LOG("Number of working threads is: %d\n", m_nThreads);
@@ -142,6 +155,11 @@ int32_t MTDecoder::Stop(){
     }
 
     m_threads.clear();
+    m_keyFrame.clear();
+    if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+        m_pKeyFileStream->close();
+    }
+    m_pKeyFileStream = NULL;
 
     //need to wait for threads to be stopped
     //and streams to be closed

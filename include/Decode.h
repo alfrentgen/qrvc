@@ -23,6 +23,7 @@ class Decode : public Job
         virtual ~Decode();
         virtual int32_t Do() override;
         virtual void Stop() override;
+        void SetCypheringParams(vector<uint8_t>* pKeyFrame);
 
     protected:
         uint32_t m_frameWidth;
@@ -39,6 +40,7 @@ class Decode : public Job
         DecodeMode m_decMode;
         int32_t m_ID;
         bool m_skipDup;
+        vector<uint8_t>* m_pKeyFrame;
 
         chrono::time_point<chrono::steady_clock> m_t1;
         chrono::time_point<chrono::steady_clock> m_t2;
