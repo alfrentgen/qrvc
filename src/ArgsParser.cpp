@@ -190,9 +190,9 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         if(option == alignOpt){
             pattern = "^\\d{1,3}$";
             if(CheckOptionVal() == OK){
-                LOG("Number of frame repeats: %s\n", optionVal.c_str());
+                LOG("Code alignment: %s\n", optionVal.c_str());
             }else{
-                LOG("Number of frame repeats should be in rage 0-999. Terminated.\n");
+                LOG("Code alignment should be in 0-999. Terminated.\n");
                 return FAIL;
             }
         }
