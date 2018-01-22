@@ -16,7 +16,7 @@ Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t ta
     m_tailSize(tailSize), m_invertColors(invert),
     m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale), m_alignment(alignment),
-    m_isWorking(false), m_pKeyFileStream(NULL), m_pKeyFrame(NULL)
+    m_isWorking(false), m_pKeyFileStream(NULL), m_pKey(NULL)
 {
     //ctor
     m_ID = g_idCounter++;
@@ -77,7 +77,7 @@ int32_t Encode::Do(){
             continue;
         }
 
-        if(m_data.m_frameID == 0 && m_pKeyFrame){
+        if(m_data.m_frameID == 0 && m_pKey){
             EncodeData();
             lckInQ.unlock();
         }else{
@@ -111,7 +111,6 @@ uint32_t Encode::EncodeData(){
     uint8_t arrHashSum[4] = {0};
     uint8_t color = m_invertColors ? WHITE : BLACK;
     int32_t frameSize = m_frameWidth * m_frameHeight;
-    //uint8_t* pInData = m_data.m_inBuffer.data();
 
     //put frame ID in data to encode little endian(lesser byte first)
     for(int i = 0; i < 8; i++){
@@ -129,20 +128,9 @@ uint32_t Encode::EncodeData(){
 
     //encode data
     QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
-    rawFrame.resize(m_frameRepeats * frameSize);
-    //currently only black on white codes are supported
-    rawFrame.assign(rawFrame.size(), ~color);
-    //put scaled code in the center of rawFrame
-    //positioning
-    /*if(!pQR){
-        LOG("Job #%d inside EncodeData().\n", m_ID);
-        LOG("inChunk.size() = %d\n", inChunk.size());
-        LOG("m_eccLevel = %d.\n", m_eccLevel);
-        LOG("m_version = %d\n", m_version);
-    }*/
+
     uint8_t* pQRData = pQR->data;
     int32_t qrWidth = pQR->width;
-    //LOG("qrWidth %d\n", qrWidth);
     uint32_t xOffset;
     uint32_t yOffset;
 
@@ -167,11 +155,51 @@ uint32_t Encode::EncodeData(){
         yOffset = (m_frameHeight - m_qrScale * qrWidth)/2;
     }
 
-    vector<uint8_t>::iterator frameIt = rawFrame.begin() + yOffset * m_frameWidth;
+    if(m_pKey){
+        if(m_data.m_frameID == 0){
+            m_pKey->resize(qrWidth * qrWidth);
+            m_pKey->assign(pQRData, pQRData + qrWidth * qrWidth);
+
+            //if a separate key file must be written, we make the first code blank for getting first frames blank.
+            if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+                //write key frame to file
+                vector<uint8_t> keyFrame(frameSize);
+                keyFrame.assign(keyFrame.size(), ~color);
+                FillFrames(keyFrame, frameSize, xOffset, yOffset, 0, pQRData, qrWidth, color, ~color);
+                m_pKeyFileStream->write((char*)keyFrame.data(), frameSize);
+                m_pKeyFileStream->close();
+
+                fill_n(pQRData, qrWidth * qrWidth, 0);
+            }
+        }else{
+            for(int i = 0 ; i < qrWidth * qrWidth; i++){
+                pQRData[i] ^= (*m_pKey)[i];
+            }
+        }
+    }
+
+    rawFrame.resize(m_frameRepeats * frameSize);
+    rawFrame.assign(rawFrame.size(), ~color);
+    FillFrames(rawFrame, frameSize, xOffset, yOffset, m_frameRepeats, pQRData, qrWidth, color, ~color);
+
+    //mem leakage is unwanted
+    QRcode_free(pQR);
+    return 0;
+}
+
+void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
+    m_pKey = pKeyFrame;
+    m_pKeyFileStream = pKeyFileOS;
+}
+
+void Encode::FillFrames(vector<uint8_t>& frames, int32_t frameSize, int32_t xOffset, int32_t yOffset, int32_t frameRepeats,
+                        uint8_t* pQRData ,int32_t qrWidth, int32_t drawColor, int32_t bgColor){
+
+    vector<uint8_t>::iterator frameIt = frames.begin() + yOffset * m_frameWidth;
 
     for(int32_t y = 0; y < qrWidth; y++){
         for(int32_t x = 0; x < qrWidth; x++){
-            uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? color : ~color;
+            uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? drawColor : bgColor;
             fill_n(frameIt + xOffset + x * m_qrScale, m_qrScale, val);
         }
         frameIt += m_frameWidth;
@@ -181,35 +209,9 @@ uint32_t Encode::EncodeData(){
         }
     }
 
-    if(m_pKeyFrame){
-        if(m_data.m_frameID == 0){
-            m_pKeyFrame->assign(rawFrame.begin(), rawFrame.begin() + frameSize);
-            if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
-                m_pKeyFileStream->write((char*)rawFrame.data(), frameSize);
-                m_pKeyFileStream->close();
-                //clear zero frame
-                rawFrame.assign(rawFrame.size(), ~color);
-            }
-        }else{
-            uint8_t* pCur = rawFrame.data();
-            uint8_t* pKey = m_pKeyFrame->data();
-            for(int32_t i = 0; i < frameSize; i++){
-                pCur[i] = ~(pCur[i] ^ pKey[i]);
-            }
-        }
-    }
-
-    frameIt = rawFrame.begin();
+    frameIt = frames.begin();
     for(int i = 1; i < m_frameRepeats; i++){
         frameIt += frameSize;
-        copy_n(rawFrame.begin(), frameSize, frameIt);
+        copy_n(frames.begin(), frameSize, frameIt);
     }
-    //mem leakage is unwanted
-    QRcode_free(pQR);
-    return 0;
-}
-
-void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
-    m_pKeyFrame = pKeyFrame;
-    m_pKeyFileStream = pKeyFileOS;
 }

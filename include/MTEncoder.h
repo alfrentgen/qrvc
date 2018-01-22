@@ -43,7 +43,7 @@ private:
     bool m_invertColors;
     int32_t m_repeats;
     bool m_cypherOn;
-    vector<uint8_t> m_keyFrame;
+    vector<uint8_t> m_keyQR;
     ofstream* m_pKeyFileStream;
 
     vector<Encode*> m_jobs;

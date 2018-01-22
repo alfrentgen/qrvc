@@ -151,11 +151,8 @@ int32_t MTEncoder::Init(istream* is, ostream* os,
 
     m_invertColors = invert;
 
-    if(m_cypherOn){
-        m_keyFrame.resize(frameHeight * frameWidth);
-        m_keyFrame.assign(m_keyFrame.size(),0);
-    }
-    vector<uint8_t> * const pKeyFrame = m_cypherOn ? &m_keyFrame : NULL;
+    m_keyQR.resize(0);
+    vector<uint8_t> * const pKeyFrame = m_cypherOn ? &m_keyQR : NULL;
 
     for(int i =0; i < m_nThreads; i++){
         m_jobs[i] = new Encode(frameWidth, frameHeight, frameRepeat, tailSize, invert,

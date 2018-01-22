@@ -42,12 +42,15 @@ class Encode : public Job
         int32_t m_frameRepeats;
         int32_t m_tailSize;
         int32_t m_alignment;
-        vector<uint8_t>* m_pKeyFrame;
+        vector<uint8_t>* m_pKey;
         ofstream* m_pKeyFileStream;
 
     protected:
         virtual uint32_t EncodeData();
-        //uint32_t Decode::DecodeData_mock();
+
+    private:
+        void FillFrames(vector<uint8_t>& frames, int32_t frameSize, int32_t xOffset, int32_t yOffset, int32_t frameRepeats,
+                        uint8_t* pQRData, int32_t qrWidth, int32_t drawColor, int32_t bgColor);
 
 };
 #endif // ENCODE_H
