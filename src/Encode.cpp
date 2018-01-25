@@ -175,6 +175,21 @@ uint32_t Encode::EncodeData(){
             for(int i = 0 ; i < qrWidth * qrWidth; i++){
                 pQRData[i] ^= (*m_pKey)[i];
             }
+#ifdef MOAR_COMPRESSION
+            for(int i = 0 ; i < qrWidth; i++){
+                uint8_t prevPhase = (pQRData[i * qrWidth] == (*m_pKey)[i * qrWidth]) ? 0 : 1;//0 - match, 1 - unmatch;
+
+                for(int j = 0 ; j < qrWidth; j++){
+                    uint8_t curPhase = (pQRData[i * qrWidth + j] == (*m_pKey)[i * qrWidth + j]) ? 0 : 1;
+                    if(curPhase == prevPhase){
+                        pQRData[i * qrWidth + j] = 0;
+                    }else{
+                        pQRData[i * qrWidth + j] = 1;
+                        prevPhase = curPhase;
+                    }
+                }
+            }
+#endif
         }
     }
 

@@ -99,6 +99,25 @@ int32_t Decode::Do(){
 
         //decypher if key frame was given
         if(m_pKeyFrame){
+
+#ifdef MOAR_COMPRESSION
+            uint8_t prevPhase = 0;//0 - match, 1 - unmatch
+            for(int32_t j = 0; j < m_frameHeight; j++){
+                for(int32_t i = 0; i < m_frameWidth; i++){
+                    if(m_data.m_inBuffer[j * m_frameWidth + i] == 0){
+                        ;
+                    }else{
+                        ;
+                    }
+                    m_data.m_inBuffer[j * m_frameWidth + i] == 0 ? : ;//black block means match phase switch
+                }
+            }
+
+            for(int32_t i = 0; i < m_frameWidth * m_frameHeight; i++){
+                m_data.m_inBuffer[i] = (m_data.m_inBuffer[i] > 127) ? 255 : 0;
+                m_data.m_inBuffer[i] ^= ~((*m_pKeyFrame)[i]);
+            }
+#endif
             for(int32_t i = 0; i < m_frameWidth * m_frameHeight; i++){
                 m_data.m_inBuffer[i] = (m_data.m_inBuffer[i] > 127) ? 255 : 0;
                 m_data.m_inBuffer[i] ^= ~((*m_pKeyFrame)[i]);
