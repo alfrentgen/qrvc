@@ -175,8 +175,9 @@ uint32_t Encode::EncodeData(){
             for(int i = 0 ; i < qrWidth * qrWidth; i++){
                 pQRData[i] ^= (*m_pKey)[i];
             }
-#ifdef MOAR_COMPRESSION
-            for(int i = 0 ; i < qrWidth; i++){
+#if def MOAR_COMPRESSION
+            //mark phase change with a black dot, if the phase is unchanged draw white then
+            /*for(int i = 0 ; i < qrWidth; i++){
                 uint8_t prevPhase = (pQRData[i * qrWidth] == (*m_pKey)[i * qrWidth]) ? 0 : 1;//0 - match, 1 - unmatch;
                 pQRData[i * qrWidth] = prevPhase;
                 for(int j = 1 ; j < qrWidth; j++){
@@ -188,18 +189,20 @@ uint32_t Encode::EncodeData(){
                         prevPhase = curPhase;
                     }
                 }
-            }
-            /*vector<uint8_t> phases(qrWidth * qrWidth);
-            for(int i = 0 ; i < qrWidth; i++){
+            }*/
+
+            //draw color is inversed on phase switch
+            /*for(int i = 0 ; i < qrWidth; i++){
                 uint8_t prevPhase = (pQRData[i * qrWidth] == (*m_pKey)[i * qrWidth]) ? 0 : 1;//0 - match, 1 - unmatch;
-                phases[i * qrWidth] = prevPhase;
+                uint8_t color = prevPhase;
+                pQRData[i * qrWidth] = color;
                 for(int j = 1 ; j < qrWidth; j++){
                     uint8_t curPhase = (pQRData[i * qrWidth + j] == (*m_pKey)[i * qrWidth + j]) ? 0 : 1;
                     if(curPhase == prevPhase){
-
-                        pQRData[i * qrWidth + j] = 0;
+                        pQRData[i * qrWidth + j] = color;
                     }else{
-                        pQRData[i * qrWidth + j] = 1;
+                        color = color ? 0 : 1;
+                        pQRData[i * qrWidth + j] = color;
                         prevPhase = curPhase;
                     }
                 }
