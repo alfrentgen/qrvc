@@ -101,15 +101,24 @@ int32_t Decode::Do(){
         if(m_pKeyFrame){
 
 #ifdef MOAR_COMPRESSION
-            uint8_t prevPhase = 0;//0 - match, 1 - unmatch
             for(int32_t j = 0; j < m_frameHeight; j++){
-                for(int32_t i = 0; i < m_frameWidth; i++){
-                    if(m_data.m_inBuffer[j * m_frameWidth + i] == 0){
-                        ;
-                    }else{
-                        ;
+                bool match = true;
+                if(m_data.m_inBuffer[j * m_frameWidth] == 0){
+                    match = false
+                }
+
+                int32_t blockSize = 0;
+                uint8_t* position = &m_data.m_inBuffer[j * m_frameWidth];
+                for(int32_t i = 1; i < m_frameWidth; i++){
+                    //white to black transition triggers phase change
+                    if(m_data.m_inBuffer[j * m_frameWidth + i - 1] == 255 && m_data.m_inBuffer[j * m_frameWidth + i] == 0){
+                        match = !match;
+                        //calcuate block size
+                        while(){
+                        }
+                        //prevValue = m_data.m_inBuffer[j * m_frameWidth + i - 1];
+                        break;
                     }
-                    m_data.m_inBuffer[j * m_frameWidth + i] == 0 ? : ;//black block means match phase switch
                 }
             }
 
