@@ -188,11 +188,11 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
             LOG("Duplicate frames skipping enabled!\n");
         }else
         if(option == alignOpt){
-            pattern = "^\\d{1,3}$";
+            pattern = "^\\d{1,2}$";
             if(CheckOptionVal() == OK){
                 LOG("Code alignment: %s\n", optionVal.c_str());
             }else{
-                LOG("Code alignment should be in 0-999. Terminated.\n");
+                LOG("Code alignment should be in 0-99. Terminated.\n");
                 return FAIL;
             }
         }
@@ -222,8 +222,8 @@ Config* ArgsParserDec::GetConfig(){
     Config& config = *(new Config);
     //memset(config, 0, sizeof(Config));
 
-    config.m_frameWidth = 800;
-    config.m_frameHeight = 600;
+    config.m_frameWidth = 1280;
+    config.m_frameHeight = 720;
     config.m_cypherOn = false;
     config.m_frameRepeats = 1;
     config.m_framesPerThread = 8;
