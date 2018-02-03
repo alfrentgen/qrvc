@@ -201,11 +201,11 @@ uint32_t Decode::DecodeData(){
     //);
 
     if(decodeResult < 0){
-        LOG("Decoding chunk #%llu, errors (code = %d) have occured during decoding!\n", m_data.m_frameID, decodeResult);
+        LOG("SLOW: Decoding chunk #%llu, errors (code = %d) have occured during decoding!\n", m_data.m_frameID, decodeResult);
         m_data.m_rendered = false;
         return -1;
     }else if(decodeResult == 0){
-        LOG("Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, decodeResult);
+        LOG("SLOW: Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, decodeResult);
         m_data.m_rendered = false;
         return -1;
     }
@@ -251,7 +251,7 @@ uint32_t Decode::DecodeDataQuick(){
     int32_t num_codes = quirc_count(m_qr);
 
     if(num_codes == 0){
-        LOG("Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
+        LOG("QUICK: Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
         m_data.m_rendered = false;
         return -1;
     }

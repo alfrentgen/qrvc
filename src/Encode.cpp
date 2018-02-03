@@ -175,7 +175,7 @@ uint32_t Encode::EncodeData(){
             for(int i = 0 ; i < qrWidth * qrWidth; i++){
                 pQRData[i] ^= (*m_pKey)[i];
             }
-#if def MOAR_COMPRESSION
+#ifdef MOAR_COMPRESSION
             //mark phase change with a black dot, if the phase is unchanged draw white then
             /*for(int i = 0 ; i < qrWidth; i++){
                 uint8_t prevPhase = (pQRData[i * qrWidth] == (*m_pKey)[i * qrWidth]) ? 0 : 1;//0 - match, 1 - unmatch;
