@@ -1,3 +1,3 @@
 date
-../build/qvsenc -f $1 -s 4 -i ./$2.bin -o ./$2_$1.yuv
+../build/qvsenc -f $1 -s 8 -i ./$2.bin -o ./$2_$1_mt.yuv -w $3 -p 99 -a $4
 date

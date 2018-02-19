@@ -105,11 +105,11 @@ src/OutputQueue.cpp
 src/MTEncoder.cpp
 )
 
-add_executable(mtqvsenc ${MTENC_HDR} ${MTENC_SRC})
-target_link_libraries(mtqvsenc qrenc)
-add_dependencies(mtqvsenc qrenc)
-set_target_properties(mtqvsenc PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(mtqvsenc PUBLIC include)
+add_executable(qvsenc ${MTENC_HDR} ${MTENC_SRC})
+target_link_libraries(qvsenc qrenc)
+add_dependencies(qvsenc qrenc)
+set_target_properties(qvsenc PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(qvsenc PUBLIC include)
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
