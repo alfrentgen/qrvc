@@ -64,9 +64,8 @@ int32_t MTEncoder::Init(Config& config){
     ostream* outputStream = &cout;
     ofstream* keyFileStream = NULL;
 
-    m_cypherOn = config.m_cypherOn;
+    m_cypherOn = config.m_cypheringOn;
     if(m_cypherOn && !config.m_keyFileName.empty()){
-        //open file for key;
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
         if(!m_pKeyFileStream->good()){
             m_pKeyFileStream->close();
@@ -76,9 +75,7 @@ int32_t MTEncoder::Init(Config& config){
         m_pKeyFileStream = NULL;
     }
 
-    if(config.m_ifName.size() == 0){
-        cerr << "Input filename is not specified, reading from stdin.\n";
-    }else{
+    if(config.m_ifName.size() != 0){
         ifs = new ifstream(config.m_ifName, ios_base::in | ios_base::binary);
         if (!ifs || !ifs->is_open()){
             ifs = NULL;
@@ -88,9 +85,7 @@ int32_t MTEncoder::Init(Config& config){
         inputStream = ifs;
     }
 
-    if(config.m_ofName.size() == 0){
-        cerr << "Output filename is not specified, writing to stdout.\n";
-    }else{
+    if(config.m_ofName.size() != 0){
         ofs = new ofstream(config.m_ofName, ios_base::out | ios_base::binary);
         if (!ofs || !ofs->is_open()){
             ofs = NULL;
@@ -125,21 +120,12 @@ int32_t MTEncoder::Init(istream* is, ostream* os,
     m_qrVersion = version;
 
     int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
-    cerr << "Chunk size: " << chunkSize << endl;
-    cerr << "Bytes to read: " << nBytesToRead << endl;
-
-    //calculate number of threads and input queue size
-    if(nThreads == 0){
-        m_nThreads = std::thread::hardware_concurrency();
-        m_nThreads = (m_nThreads == 0) ? 2 : m_nThreads;
-    }else{
-        m_nThreads = nThreads;
-    }
 
     int32_t queueSize;
     if(framesPerThread == 0){
         framesPerThread = 8;
     }
+    m_nThreads = nThreads;
     queueSize = framesPerThread * m_nThreads;
 
     m_inQ = new InputQueue(is, queueSize, nBytesToRead);
@@ -161,8 +147,6 @@ int32_t MTEncoder::Init(istream* is, ostream* os,
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
     }
 
-    LOG("Number of working threads is: %d\n", m_nThreads);
-
     return OK;
 }
 
@@ -170,9 +154,9 @@ int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
-        LOG("Strating %d threads.\n", m_nThreads);
+        //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_nThreads; i++){
-        LOG("Strating thread #%d.\n", i);
+        //LOG("Strating thread #%d.\n", i);
             m_threads.push_back(thread(&Encode::Do, m_jobs[i]));
         }
 

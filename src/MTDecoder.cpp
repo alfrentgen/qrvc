@@ -21,9 +21,7 @@ int32_t MTDecoder::Init(Config& config){
     ifstream* ifs = NULL;
     ofstream* ofs = NULL;
 
-    if(config.m_ifName.size() == 0){
-        cerr << "Input filename is not specified, reading from stdin.\n";
-    }else{
+    if(config.m_ifName.size() != 0){
         ifs = new ifstream(config.m_ifName, ios_base::in | ios_base::binary);
         if (!ifs || !ifs->is_open()){
             ifs = NULL;
@@ -33,9 +31,7 @@ int32_t MTDecoder::Init(Config& config){
         inputStream = ifs;
     }
 
-    if(config.m_ofName.size() == 0){
-        cerr << "Output filename is not specified, writing to stdout.\n";
-    }else{
+    if(config.m_ofName.size() != 0){
         ofs = new ofstream(config.m_ofName, ios_base::out | ios_base::binary);
         if (!ofs || !ofs->is_open()){
             ofs = NULL;
@@ -54,7 +50,7 @@ int32_t MTDecoder::Init(Config& config){
     }
     m_pKeyFileStream = NULL;
 
-    m_cypherOn = config.m_cypherOn;
+    m_cypherOn = config.m_cypheringOn;
     if(m_cypherOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ifstream(config.m_keyFileName, ios_base::in | ios_base::binary);
         if(!m_pKeyFileStream->good()){
@@ -66,25 +62,19 @@ int32_t MTDecoder::Init(Config& config){
     Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,
         config.m_decMode, config.m_framesPerThread, config.m_nWorkingThreads, config.m_skipDupFrames);
 
-    LOG("Number of working threads is: %d\n", m_nThreads);
+    //LOG("Number of working threads is: %d\n", m_nThreads);
 
     return OK;
 }
 
 int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight,
                         DecodeMode decMode, uint32_t framesPerThread, uint32_t nThreads, bool skipDup){
-    //calculate number of threads and input queue size
-    if(nThreads == 0){
-        m_nThreads = std::thread::hardware_concurrency();
-        m_nThreads = (m_nThreads == 0) ? 2 : m_nThreads;
-    }else{
-        m_nThreads = nThreads;
-    }
 
     int32_t queueSize;
     if(framesPerThread == 0){
         framesPerThread = 8;
     }
+    m_nThreads = nThreads;
     queueSize = framesPerThread * m_nThreads;
 
     if(m_cypherOn){
@@ -116,8 +106,6 @@ int32_t MTDecoder::Init(istream* is, ostream* os, int32_t frameWidth, int32_t fr
         m_jobs[i]->SetCypheringParams(pkeyFrame);
     }
 
-    LOG("Number of working threads is: %d\n", m_nThreads);
-
     return OK;
 }
 
@@ -125,7 +113,7 @@ int32_t MTDecoder::Start(bool join){
 
     m_threads.clear();
     try{
-        LOG("Strating %d threads.\n", m_nThreads);
+        //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_nThreads; i++){
             m_threads.push_back(thread(&Decode::Do, m_jobs[i]));
         }
