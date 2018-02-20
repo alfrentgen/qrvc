@@ -344,8 +344,8 @@ Config* ArgsParserDec::GetConfig(){
     option = string("-t");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No number of trailing frame is specified, using 0.\n");
-        config.m_nTrailingFrames = 0;
+        LOG("No number of trailing frame is specified, using 10.\n");
+        config.m_nTrailingFrames = 10;
     }else{
         config.m_nTrailingFrames = stoi(it->second);
         if(config.m_nTrailingFrames < 0){
