@@ -23,7 +23,8 @@ option(BUILD_STATIC "Static linking"	ON)
     set(USE_X86_32 OFF)
 endif()]]
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic")
 
 if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
@@ -34,9 +35,12 @@ if(BUILD_STATIC)
 endif()
 
 if(USE_X86_32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -march=i686")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32 -march=i686")
     #set(USE_ARM_V8A OFF)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
 endif()
 
 if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
