@@ -47,7 +47,7 @@ ${ZBAR_LIB_PATH}/include
 ${ZBAR_LIB_PATH}/include/zbar
 ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(WIN32)
+if(MINGW)
 	target_link_libraries(zbar_cut iconv)
 endif()
 set_target_properties(zbar_cut PROPERTIES FOLDER "libraries")
