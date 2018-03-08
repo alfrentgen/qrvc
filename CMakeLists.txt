@@ -5,8 +5,6 @@ message(STATUS ${GENERATOR})
 project("QR video codec" C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#option(USE_ZBAR "Enable zbar library usage."	ON)
-#option(USE_QUIRC "Enable quirc library usage."	ON)
 option(USE_X86_32 "Build for x86 32 bits"	OFF)
 #option(USE_ARM_V8A "Build for ARMv8-A 64"	OFF)
 option(BUILD_STATIC "Static linking"	ON)
@@ -80,11 +78,11 @@ src/OutputQueue.cpp
 src/MTDecoder.cpp
 )
 
-add_executable(qvsdec ${DEC_HDR} ${DEC_SRC})
-target_link_libraries(qvsdec quirc zbar_cut)
-add_dependencies(qvsdec quirc zbar_cut)
-set_target_properties(qvsdec PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(qvsdec PUBLIC include)
+add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
+target_link_libraries(qrvd quirc zbar_cut)
+add_dependencies(qrvd quirc zbar_cut)
+set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(qrvd PUBLIC include)
 
 SET(MTENC_HDR
 include/pch.h
@@ -109,11 +107,11 @@ src/OutputQueue.cpp
 src/MTEncoder.cpp
 )
 
-add_executable(qvsenc ${MTENC_HDR} ${MTENC_SRC})
-target_link_libraries(qvsenc qrenc)
-add_dependencies(qvsenc qrenc)
-set_target_properties(qvsenc PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(qvsenc PUBLIC include)
+add_executable(qrve ${MTENC_HDR} ${MTENC_SRC})
+target_link_libraries(qrve qrenc)
+add_dependencies(qrve qrenc)
+set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(qrve PUBLIC include)
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
