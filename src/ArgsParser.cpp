@@ -11,7 +11,7 @@ using namespace std;
 #define MODE_MIXED 1
 #define MODE_SLOW 2
 
-ArgsParserDec::ArgsParserDec() :
+ArgsParser::ArgsParser() :
     m_options({ string("-i"),
                 string("-o"),
                 string("-f"),
@@ -31,12 +31,12 @@ ArgsParserDec::ArgsParserDec() :
     //ctor
 }
 
-ArgsParserDec::~ArgsParserDec()
+ArgsParser::~ArgsParser()
 {
     //dtor.h
 }
 
-int ArgsParserDec::parseOptions(int argc, char **argv){
+int ArgsParser::parseOptions(int argc, char **argv){
     int n = 0;
 
     string& inFileOpt = m_options[0];//input file name
@@ -65,7 +65,7 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
         }else {
             optionVal = string(argv[n+1]);
 
-            if(!ArgsParserDec::IsOptionName(optionVal) && regex_match(optionVal, pattern)){
+            if(!ArgsParser::IsOptionName(optionVal) && regex_match(optionVal, pattern)){
                 m_parsedOptions[option] = optionVal;
                 ++n;
             }else{
@@ -204,11 +204,11 @@ int ArgsParserDec::parseOptions(int argc, char **argv){
     return n;
 }
 
-map<string, string>& ArgsParserDec::getOptions(){
+map<string, string>& ArgsParser::getOptions(){
     return m_parsedOptions;
 }
 
-bool ArgsParserDec::IsOptionName(string& str){
+bool ArgsParser::IsOptionName(string& str){
     for (auto & element : m_options) {
         if(element == str){
             //cerr << element << ": option value missed\n";
@@ -218,7 +218,7 @@ bool ArgsParserDec::IsOptionName(string& str){
     return false;
 }
 
-Config* ArgsParserDec::GetConfig(){
+Config* ArgsParser::GetConfig(){
     Config& config = *(new Config);
     //memset(config, 0, sizeof(Config));
 

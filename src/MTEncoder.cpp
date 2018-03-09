@@ -192,7 +192,7 @@ int32_t MTEncoder::Stop(){
 }
 
 int main(int argc, char** argv){
-    ArgsParserDec ap = ArgsParserDec();
+    ArgsParser ap = ArgsParser();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;
     }

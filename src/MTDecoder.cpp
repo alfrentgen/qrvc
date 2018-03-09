@@ -155,7 +155,7 @@ int32_t MTDecoder::Stop(){
 }
 
 int main(int argc, char** argv){
-    ArgsParserDec ap = ArgsParserDec();
+    ArgsParser ap = ArgsParser();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;
     }

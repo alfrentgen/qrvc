@@ -29,15 +29,15 @@ typedef struct Config {
     string  m_keyFileName;
 } Config;
 
-class ArgsParserDec
+class ArgsParser
 {
     public:
         vector<string> m_options;
         map<string, string> m_parsedOptions;
 
     public:
-        ArgsParserDec();
-        virtual ~ArgsParserDec();
+        ArgsParser();
+        virtual ~ArgsParser();
         virtual int parseOptions(int argc, char **argv);
         virtual Config* GetConfig();
         virtual map<string, string>& getOptions();
