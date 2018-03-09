@@ -115,3 +115,8 @@ target_include_directories(qrve PUBLIC include)
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
+
+#making package
+add_custom_target(create_tar ALL COMMAND
+    ${CMAKE_COMMAND} -E tar "-cfvz" "qrvc.tgz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>")
+add_dependencies(create_tar qrvd qrve)

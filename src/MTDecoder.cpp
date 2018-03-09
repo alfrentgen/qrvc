@@ -1,7 +1,6 @@
 #include "MTDecoder.h"
 #include "utilities.h"
 
-
 MTDecoder::MTDecoder():
 m_pKeyFileStream(NULL)
 {
