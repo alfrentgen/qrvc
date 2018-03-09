@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project("QR libraries" C CXX)
 
-message(status ${CMAKE_CXX_FLAGS})
-message(status ${CMAKE_C_FLAGS})
-message(status ${CMAKE_EXE_LINKER_FLAGS})
+#message(STATUS ${CMAKE_CXX_FLAGS})
+#message(STATUS ${CMAKE_C_FLAGS})
+#message(STATUS ${CMAKE_EXE_LINKER_FLAGS})
 
 add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 
