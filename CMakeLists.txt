@@ -41,12 +41,15 @@ else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
 endif()
 
-if(MINGW AND WIN32)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
+if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
 			#The solution was found here https://github.com/dmlc/xgboost/issues/977.
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lkernel32 -luser32 -lmsvcrt -Wl,--allow-multiple-definition")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive -luser32 -lmsvcrt -lkernel32")
     if(NOT BUILD_STATIC)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
     endif()
 	message(STATUS "MINGW CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
+	message(STATUS "MINGW CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
 endif()
 
 message(STATUS "CMAKE_LINKER ${CMAKE_LINKER}")
