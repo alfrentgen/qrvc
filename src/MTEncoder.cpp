@@ -1,5 +1,6 @@
 #include <MTEncoder.h>
 #include "utilities.h"
+#include "help.h"
 
 int estimateBitStreamSizeOfEntry(QRinput_List *entry, int version, int mqr)
 {
@@ -192,6 +193,13 @@ int32_t MTEncoder::Stop(){
 }
 
 int main(int argc, char** argv){
+
+    if(argc <= 1){
+        print_help(string("common"));
+        print_help(string("encoder"));
+        exit(0);
+    }
+
     ArgsParser ap = ArgsParser();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;

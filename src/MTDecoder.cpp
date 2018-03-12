@@ -1,5 +1,6 @@
 #include "MTDecoder.h"
 #include "utilities.h"
+#include "help.h"
 
 MTDecoder::MTDecoder():
 m_pKeyFileStream(NULL)
@@ -154,6 +155,13 @@ int32_t MTDecoder::Stop(){
 }
 
 int main(int argc, char** argv){
+
+    if(argc <= 1){
+        print_help(string("common"));
+        print_help(string("decoder"));
+        exit(0);
+    }
+
     ArgsParser ap = ArgsParser();
     if(ap.parseOptions(argc, argv) == FAIL){
         return FAIL;

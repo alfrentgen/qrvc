@@ -71,6 +71,7 @@ include/OutputQueue.h
 include/MTDecoder.h
 include/utilities.h
 include/utilities_c.h
+include/help.h
 )
 
 set(DEC_SRC
@@ -100,6 +101,7 @@ include/OutputQueue.h
 include/MTEncoder.h
 include/utilities.h
 include/utilities_c.h
+include/help.h
 )
 
 SET(MTENC_SRC
