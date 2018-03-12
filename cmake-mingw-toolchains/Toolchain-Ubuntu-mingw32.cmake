@@ -11,9 +11,6 @@ set(TOOLCHAIN_PREFIX i686-w64-mingw32)
 # cross compilers to use for C and C++
 set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc-posix)
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++-posix)
-#set(CMAKE_LINKER /usr/bin/${TOOLCHAIN_PREFIX}-ld)
-#set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc-win32)
-#set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++-win32)
 set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
 
 # target environment on the build host system

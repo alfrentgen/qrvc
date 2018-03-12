@@ -35,16 +35,16 @@ endif()
 if(USE_X86_32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -march=i686")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32 -march=i686")
+    set(TARBALL_ARCH "x86_32")
     #set(USE_ARM_V8A OFF)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
+    set(TARBALL_ARCH "x86_64")
 endif()
 
 if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
 			#The solution was found here https://github.com/dmlc/xgboost/issues/977.
-    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lkernel32 -luser32 -lmsvcrt -Wl,--allow-multiple-definition")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--whole-archive -luser32 -lmsvcrt -lkernel32")
     if(NOT BUILD_STATIC)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
     endif()
@@ -121,7 +121,15 @@ target_include_directories(qrve PUBLIC include)
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
 
-#making package
+#package making target
+if(MINGW)
+    set(TARBALL_NAME qrvc_win)
+else()
+    set(TARBALL_NAME qrvc_linux)
+endif()
+set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
+message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
+
 add_custom_target(create_tar ALL COMMAND
-    ${CMAKE_COMMAND} -E tar "-cfvz" "qrvc.tgz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>")
+    ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>")
 add_dependencies(create_tar qrvd qrve)
