@@ -28,6 +28,7 @@ public:
     int32_t Init(Config& config);
     int32_t Start(bool join);
     int32_t Stop();
+    int32_t VerifyConfig(Config& conf);
 
 private:
     int32_t Init(istream* is, ostream* os,
@@ -45,6 +46,7 @@ private:
     bool m_cypherOn;
     vector<uint8_t> m_keyQR;
     ofstream* m_pKeyFileStream;
+    Config m_config;
 
     vector<Encode*> m_jobs;
     vector<thread> m_threads;

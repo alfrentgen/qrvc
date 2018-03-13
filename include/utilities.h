@@ -29,4 +29,24 @@ static std::chrono::microseconds timeCounter;
 
 #define LOG(...)    fprintf(stderr, __VA_ARGS__)
 
+/*template<typename T>
+void limitValue(T& value, T max, T min){
+    if(value > max){
+        value = max;
+    }
+    if(value < min){
+        value = min;
+    }
+}*/
+
+#define LIMIT_VAR(VAR, MIN, MAX)\
+do{\
+    if(VAR < MIN){\
+        VAR = MIN;\
+    }\
+    if(VAR > MAX){\
+        VAR = MAX;\
+    }\
+}while(0);\
+
 #endif

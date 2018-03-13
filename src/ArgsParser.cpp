@@ -229,6 +229,7 @@ Config* ArgsParser::GetConfig(){
     config.m_framesPerThread = 8;
     config.m_nWorkingThreads = 2;
     config.m_nTrailingFrames = 0;
+    config.m_qrVersion = 0;
     config.m_qrScale = 4;
     config.m_eccLevel = ECC_LEVEL_L;
     config.m_ifName.clear();

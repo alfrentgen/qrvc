@@ -216,3 +216,41 @@ int main(int argc, char** argv){
 
     return 0;
 }
+
+int32_t MTEncoder::VerifyConfig(Config& config){
+
+    //qr
+    //config.m_qrScale;//this is const[1, 10]
+    LIMIT_VAR(config.m_qrScale, 1, 10);
+    //config.m_eccLevel;//this is const[1, 4]
+    LIMIT_VAR(config.m_eccLevel, 1, 4);
+    //config.m_qrVersion;//this is to work out[1, 40]
+    //frame
+    //config.m_alignment;//this is const[0, 64]
+    LIMIT_VAR(config.m_alignment, 0, 64);
+    config.m_frameHeight;//const []
+    LIMIT_VAR(config.m_frameHeight, 21, 1920);
+    config.m_frameWidth;//this is const
+    LIMIT_VAR(config.m_frameWidth, 21, 1920);
+    config.m_cypheringOn;//this is const [0, 1]
+
+    uint32_t version = 0;
+    int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment, config.m_eccLevel, config.m_qrScale, &version);
+    if(!chunkSize || version > 40 || version <= 0){
+        cerr << "Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n";
+        return FAIL;
+    }else{
+        cerr << "QR version: " << version << endl;
+    }
+
+    //stream
+    config.m_frameRepeats;
+    config.m_nTrailingFrames;
+    //system
+    config.m_nWorkingThreads
+    config.m_ofName;
+    config.m_ifName;
+    config.m_keyFileName;
+
+    return OK;
+}
