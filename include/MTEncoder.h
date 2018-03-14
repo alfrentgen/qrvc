@@ -28,7 +28,7 @@ public:
     int32_t Init(Config& config);
     int32_t Start(bool join);
     int32_t Stop();
-    int32_t VerifyConfig(Config& conf);
+    int32_t ValidateConfig(Config& conf);
 
 private:
     int32_t Init(istream* is, ostream* os,

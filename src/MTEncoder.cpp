@@ -217,37 +217,32 @@ int main(int argc, char** argv){
     return 0;
 }
 
-int32_t MTEncoder::VerifyConfig(Config& config){
+int32_t MTEncoder::ValidateConfig(Config& config){
 
     //qr
-    //config.m_qrScale;//this is const[1, 10]
     LIMIT_VAR(config.m_qrScale, 1, 10);
-    //config.m_eccLevel;//this is const[1, 4]
-    LIMIT_VAR(config.m_eccLevel, 1, 4);
-    //config.m_qrVersion;//this is to work out[1, 40]
-    //frame
-    //config.m_alignment;//this is const[0, 64]
-    LIMIT_VAR(config.m_alignment, 0, 64);
-    config.m_frameHeight;//const []
-    LIMIT_VAR(config.m_frameHeight, 21, 1920);
-    config.m_frameWidth;//this is const
-    LIMIT_VAR(config.m_frameWidth, 21, 1920);
-    config.m_cypheringOn;//this is const [0, 1]
+    LIMIT_VAR(config.m_eccLevel, 0, 3);
 
-    uint32_t version = 0;
+    //frame
+    LIMIT_VAR(config.m_alignment, 0, 64);
+    LIMIT_VAR(config.m_frameHeight, 21, 1920);
+    LIMIT_VAR(config.m_frameWidth, 21, 1920);
+
+    int32_t version = 0;
     int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment, config.m_eccLevel, config.m_qrScale, &version);
     if(!chunkSize || version > 40 || version <= 0){
-        cerr << "Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n";
+        LOG("Frame size does not fit any possible qr code version. Try smaller scale, ECC level, bigger frame or changing alignment.\n");
         return FAIL;
     }else{
-        cerr << "QR version: " << version << endl;
+        LOG("QR version: %d\n", version);
+        config.m_qrVersion = version;
     }
 
     //stream
-    config.m_frameRepeats;
+    LIMIT_VAR(config.m_frameRepeats, 1, 9);//???
     config.m_nTrailingFrames;
     //system
-    config.m_nWorkingThreads
+    config.m_nWorkingThreads;
     config.m_ofName;
     config.m_ifName;
     config.m_keyFileName;
