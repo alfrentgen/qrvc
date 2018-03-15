@@ -62,6 +62,7 @@ add_subdirectory(libs)
 
 set(DEC_HDR
 include/pch.h
+include/Config.h
 include/ArgsParser.h
 include/Chunk.h
 include/Job.h
@@ -92,6 +93,7 @@ target_include_directories(qrvd PUBLIC include)
 
 SET(MTENC_HDR
 include/pch.h
+include/Config.h
 include/ArgsParser.h
 include/Chunk.h
 include/Job.h

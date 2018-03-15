@@ -9,13 +9,24 @@ static int32_t g_idCounter = 0;
 #define BLACK 0x0
 #define WHITE 0xff
 
-Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
+/*Encode::Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
                 InputQueue* inQ, OutputQueue* outQ,
                 int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment):
     m_frameWidth(fWidth), m_frameHeight(fHeight), m_frameRepeats(frameRepeats),
     m_tailSize(tailSize), m_invertColors(invert),
     m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
     m_version(version), m_eccLevel(eccLevel), m_qrScale(qrScale), m_alignment(alignment),
+    m_isWorking(false), m_pKeyFileStream(NULL), m_pKey(NULL)
+{
+    //ctor
+    m_ID = g_idCounter++;
+}*/
+
+Encode::Encode(Config& config, InputQueue* inQ, OutputQueue* outQ):
+    m_frameWidth(config.m_frameWidth), m_frameHeight(config.m_frameHeight), m_frameRepeats(config.m_frameRepeats),
+    m_tailSize(config.m_nTrailingFrames), m_invertColors(config.m_inverseFrame),
+    m_inQ(inQ), m_outQ(outQ), m_data(config.m_frameWidth * config.m_frameHeight),
+    m_version(config.m_qrVersion), m_eccLevel(config.m_eccLevel), m_qrScale(config.m_qrScale), m_alignment(config.m_alignment),
     m_isWorking(false), m_pKeyFileStream(NULL), m_pKey(NULL)
 {
     //ctor

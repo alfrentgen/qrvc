@@ -9,6 +9,7 @@
 #include "Decode.h"
 #include "ArgsParser.h"
 #include "Chunk.h"
+#include "Config.h"
 
 //using namespace std;
 class MTDecoder

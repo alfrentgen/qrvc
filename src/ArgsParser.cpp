@@ -2,15 +2,6 @@
 
 using namespace std;
 
-#define ECC_LEVEL_L 0
-#define ECC_LEVEL_M 1
-#define ECC_LEVEL_H 2
-#define ECC_LEVEL_Q 3
-
-#define MODE_QUICK 0
-#define MODE_MIXED 1
-#define MODE_SLOW 2
-
 ArgsParser::ArgsParser() :
     m_options({ string("-i"),
                 string("-o"),
@@ -78,103 +69,73 @@ int ArgsParser::parseOptions(int argc, char **argv){
     for(n = 1; n < argc; n++){
 
         option = string(argv[n]);
-        //cerr << "On option: " << option << "\n";
 
         if(option == cypherOpt){
             pattern = "^.*$";
-            if(CheckOptionVal() == OK){
-                //LOG("Key frame file name: %s\n", optionVal.c_str());
-            }else{
-                //LOG("No valid filename for key frame were found.\n");
+            if(CheckOptionVal() != OK){
                 optionVal.clear();//empty file name means no special file for key frame
                 m_parsedOptions[option] = optionVal;
             }
-            //LOG("Cyphering is enabled!\n");
         } else
         if(option == sizeOpt){
             pattern = "^\\d{1,4}x\\d{1,4}$";
-            if(CheckOptionVal() == OK){
-                //LOG("Frame size: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Bad size format. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == inFileOpt || option == outFileOpt){
             pattern = "^.*$";
-            if(CheckOptionVal() == OK){
-                /*string direction;
-                if(option == inFileOpt){
-                    direction = "Input";
-                }else{
-                    direction = "Output";
-                }
-                LOG("%s file name: %s\n", direction.c_str(), optionVal.c_str());*/
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Bad file name. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == workersNumberOpt){
             pattern = "^\\d{1,2}$";
-            if(CheckOptionVal() == OK){
-                m_parsedOptions[option] = optionVal;
-                //LOG("Number of working threads: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Bad number of threads. Terminate.\n");
                 return FAIL;
             }
         } else
         if(option == chunksPerThOpt){
             pattern = "^\\d{1,2}$";
-            if(CheckOptionVal() == OK){
-                //LOG("Chunks per thread: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Bad chunks per thread number. Can be 1-99. Terminate.\n");
                 return FAIL;
             }
         } else
         if(option == decModeOpt){
             pattern = "(^quick$|^slow$|^mixed$){1}";
-            if(CheckOptionVal() == OK){
-                //LOG("Decode mode: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Bad decode mode. Terminate.\n");
                 return FAIL;
             }
         } else
         if(option == errorLevelOpt){
             pattern = "^[0123]$";
-            if(CheckOptionVal() == OK){
-                //LOG("ECC level: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("ECC level can be 0-3. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == tailOpt){
             pattern = "^\\d{1,2}$";
-            if(CheckOptionVal() == OK){
-                //LOG("Number of trailing frames: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Number of trailing frames should be in rage 0-99. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == qrScaleOpt){
             pattern = "^\\d{1,2}$";
-            if(CheckOptionVal() == OK){
-                //LOG("QR element scaling factor is: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Wrong scaling factor, should be an integer from 1 to 99. Terminated.\n");
                 return FAIL;
             }
         } else
         if(option == repeatOpt){
-            pattern = "^\\d{1,1}$";
-            if(CheckOptionVal() == OK){
-                //LOG("Number of frame repeats: %s\n", optionVal.c_str());
-            }else{
+            pattern = "^\\d[1-9]$";
+            if(CheckOptionVal() != OK){
                 LOG("Number of frame repeats should be in rage 0-9. Terminated.\n");
                 return FAIL;
             }
@@ -185,13 +146,10 @@ int ArgsParser::parseOptions(int argc, char **argv){
         } else*/
         if(option == skipOpt){
             m_parsedOptions[option] = string("1");
-            //LOG("Duplicate frames skipping enabled!\n");
         }else
         if(option == alignOpt){
             pattern = "^\\d{1,2}$";
-            if(CheckOptionVal() == OK){
-                //LOG("Code alignment: %s\n", optionVal.c_str());
-            }else{
+            if(CheckOptionVal() != OK){
                 LOG("Code alignment should be in 0-99. Terminated.\n");
                 return FAIL;
             }
@@ -220,14 +178,12 @@ bool ArgsParser::IsOptionName(string& str){
 
 Config* ArgsParser::GetConfig(){
     Config& config = *(new Config);
-    //memset(config, 0, sizeof(Config));
-
     config.m_frameWidth = 1280;
     config.m_frameHeight = 720;
-    config.m_cypheringOn = false;
+    config.m_cipheringOn = false;
     config.m_frameRepeats = 1;
     config.m_framesPerThread = 8;
-    config.m_nWorkingThreads = 2;
+    config.m_nWorkingThreads = 0;
     config.m_nTrailingFrames = 0;
     config.m_qrVersion = 0;
     config.m_qrScale = 4;
@@ -244,32 +200,32 @@ Config* ArgsParser::GetConfig(){
     string option = string("-i");
     map<string, string>::iterator it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("Input filename is not specified, reading from stdin.\n");
+        //LOG("Input filename is not specified, reading from stdin.\n");
         config.m_ifName.clear();
     }else{
-        LOG("Input file name: %s\n", config.m_ifName.c_str());
         config.m_ifName = it->second;
+        //LOG("Input file name: %s\n", config.m_ifName.c_str());
     }
 
     option = string("-o");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("Output filename is not specified, writing to stdout.\n");
+        //LOG("Output filename is not specified, writing to stdout.\n");
         config.m_ofName.clear();
     }else{
-        LOG("Output file name: %s\n", config.m_ofName.c_str());
         config.m_ofName = it->second;
+        //LOG("Output file name: %s\n", config.m_ofName.c_str());
     }
 
     option = string("-c");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("Cyphering is disabled.\n");
-        config.m_cypheringOn = false;
+        //LOG("Cyphering is disabled.\n");
+        config.m_cipheringOn = false;
         config.m_keyFileName.clear();
     }else{
-        LOG("Cyphering is enabled.\n");
-        config.m_cypheringOn = true;
+        //LOG("Cyphering is enabled.\n");
+        config.m_cipheringOn = true;
         config.m_keyFileName = it->second;
     }
 
@@ -278,7 +234,7 @@ Config* ArgsParser::GetConfig(){
     if(it == optionsMap.end()){
         config.m_frameWidth = 1280;
         config.m_frameHeight = 720;
-        LOG("No frame size is specified, using %dx%d.\n", config.m_frameWidth, config.m_frameHeight);
+        //LOG("No frame size is specified, using %dx%d.\n", config.m_frameWidth, config.m_frameHeight);
     }else{
         string sizeStr = it->second;
         regex exp = regex("\\d{1,4}");
@@ -295,7 +251,7 @@ Config* ArgsParser::GetConfig(){
     option = string("-s");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No qr scale is specified, using 4.\n");
+        //LOG("No qr scale is specified, using 4.\n");
         config.m_qrScale = 4;
     }else{
         config.m_qrScale = stoi(it->second);
@@ -304,7 +260,7 @@ Config* ArgsParser::GetConfig(){
     option = string("-e");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No ECC level is specified, using the lowest!\n");
+        //LOG("No ECC level is specified, using the lowest!\n");
         config.m_eccLevel = ECC_LEVEL_L;
     }else{
         uint32_t l= stoi(it->second);
@@ -330,7 +286,7 @@ Config* ArgsParser::GetConfig(){
     option = string("-r");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No number of frame repeats is specified, using 1.\n");
+        //LOG("No number of frame repeats is specified, using 1.\n");
         config.m_frameRepeats = 1;
     }else{
         config.m_frameRepeats = stoi(it->second);
@@ -345,7 +301,7 @@ Config* ArgsParser::GetConfig(){
     option = string("-t");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No number of trailing frame is specified, using 10.\n");
+        //LOG("No number of trailing frame is specified, using 10.\n");
         config.m_nTrailingFrames = 10;
     }else{
         config.m_nTrailingFrames = stoi(it->second);
@@ -362,7 +318,7 @@ Config* ArgsParser::GetConfig(){
     if(it != optionsMap.end()){
         config.m_framesPerThread = stoi(it->second);
     }else{
-        LOG("No number of frames per thread is specified, using 8.\n");
+        //LOG("No number of frames per thread is specified, using 8.\n");
         config.m_framesPerThread = 8;
     }
 
@@ -371,14 +327,14 @@ Config* ArgsParser::GetConfig(){
     if(it != optionsMap.end()){
         config.m_nWorkingThreads = stoi(it->second);
     }else{
-        LOG("No number of working threads is specified, ");
+        //LOG("No number of working threads is specified, ");
         config.m_nWorkingThreads = 0;
     }
     if(config.m_nWorkingThreads <= 0){
         config.m_nWorkingThreads = std::thread::hardware_concurrency();
         config.m_nWorkingThreads = (config.m_nWorkingThreads == 0) ? 2 : config.m_nWorkingThreads;
     }
-    LOG("using %d.\n", config.m_nWorkingThreads);
+    //LOG("using %d.\n", config.m_nWorkingThreads);
 
     option = string("-m");
     it = optionsMap.find(option);
@@ -392,7 +348,7 @@ Config* ArgsParser::GetConfig(){
         }
     }else{
         config.m_decMode = MODE_MIXED;
-        LOG("No mode is specified, using mixed mode.\n");
+        //LOG("No mode is specified, using mixed mode.\n");
     }
 
     /*option = string("-n");
@@ -408,17 +364,17 @@ Config* ArgsParser::GetConfig(){
     option = string("-k");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("Duplicated frames skipping is disabled.\n");
+        //LOG("Duplicated frames skipping is disabled.\n");
         config.m_skipDupFrames = false;
     }else{
-        LOG("Duplicated frames skipping is enabled.\n");
+        //LOG("Duplicated frames skipping is enabled.\n");
         config.m_skipDupFrames = true;
     }
 
     option = string("-a");
     it = optionsMap.find(option);
     if(it == optionsMap.end()){
-        LOG("No alignment value is specified, using 8.\n");
+        //LOG("No alignment value is specified, using 8.\n");
         config.m_alignment = 8;
     }else{
         config.m_alignment = stoi(it->second);

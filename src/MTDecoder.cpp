@@ -50,7 +50,7 @@ int32_t MTDecoder::Init(Config& config){
     }
     m_pKeyFileStream = NULL;
 
-    m_cypherOn = config.m_cypheringOn;
+    m_cypherOn = config.m_cipheringOn;
     if(m_cypherOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ifstream(config.m_keyFileName, ios_base::in | ios_base::binary);
         if(!m_pKeyFileStream->good()){

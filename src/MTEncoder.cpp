@@ -45,6 +45,17 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
     return mockList.size;
 }
 
+void printEncCfg(Config cfg){
+    LOG("qrve settings: ");
+    LOG("-i %s ", cfg.m_ifName.c_str());
+    LOG("-f %dx%d ", cfg.m_frameWidth, cfg.m_frameHeight);
+    LOG("-o %s ", cfg.m_ofName.c_str());
+    LOG("-s %d ", cfg.m_qrScale);
+    LOG("-e %d ", cfg.m_eccLevel);
+    LOG("\nQR Version: %d ", cfg.m_qrVersion);
+    LOG("\n");
+}
+
 MTEncoder::MTEncoder():
 m_pKeyFileStream(NULL)
 {
@@ -65,8 +76,7 @@ int32_t MTEncoder::Init(Config& config){
     ostream* outputStream = &cout;
     ofstream* keyFileStream = NULL;
 
-    m_cypherOn = config.m_cypheringOn;
-    if(m_cypherOn && !config.m_keyFileName.empty()){
+    if(config.m_cipheringOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
         if(!m_pKeyFileStream->good()){
             m_pKeyFileStream->close();
@@ -96,55 +106,41 @@ int32_t MTEncoder::Init(Config& config){
         outputStream = ofs;
     }
 
-    if(config.m_eccLevel < 0 || config.m_eccLevel > 3){
+    if(ValidateConfig(config) != OK){
         return FAIL;
     }
 
-    Init(inputStream, outputStream,
-        config.m_frameWidth, config.m_frameHeight, config.m_frameRepeats, config.m_nTrailingFrames, config.m_inverseFrame,
-        config.m_eccLevel, config.m_qrScale, config.m_alignment, config.m_framesPerThread, config.m_nWorkingThreads);
-    return OK;
-}
-
-int32_t MTEncoder::Init(istream* is, ostream* os,
-                        int32_t frameWidth, int32_t frameHeight, int32_t frameRepeat, int32_t tailSize, bool invert,
-                        QRecLevel eccLevel, int32_t qrScale, int32_t alignment, uint32_t framesPerThread, uint32_t nThreads){
-    //check if frame size fits QR code size
+    //Init2
     uint32_t version = 0;
-    int32_t chunkSize = getChunkSize(frameWidth - alignment, frameHeight - alignment, eccLevel, qrScale, &version);
+    int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment,
+                                        config.m_eccLevel, config.m_qrScale, &version);
     if(!chunkSize || version > 40 || version <= 0){
-        cerr << "Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n";
+        LOG("Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n");
         return FAIL;
-    }else{
-        cerr << "QR version: " << version << endl;
     }
-    m_qrVersion = version;
+    //LOG("QR version: %d\n", version);
+    config.m_qrVersion = version;
+
+    m_config = config;//accept config, as it is counted valid from now
+    printEncCfg(m_config);
 
     int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
-
-    int32_t queueSize;
-    if(framesPerThread == 0){
-        framesPerThread = 8;
-    }
-    m_nThreads = nThreads;
-    queueSize = framesPerThread * m_nThreads;
-
-    m_inQ = new InputQueue(is, queueSize, nBytesToRead);
-    m_outQ = new OutputQueue(os, queueSize, frameWidth * frameHeight);
+    int32_t queueSize = config.m_framesPerThread * config.m_nWorkingThreads;
+    m_inQ = new InputQueue(inputStream, queueSize, nBytesToRead);
+    m_outQ = new OutputQueue(outputStream, queueSize, config.m_frameWidth * config.m_frameHeight);
 
     m_threads.clear();
-
-    m_jobs.resize(m_nThreads);
-
-    m_invertColors = invert;
+    m_jobs.resize(config.m_nWorkingThreads);
 
     m_keyQR.resize(0);
-    vector<uint8_t> * const pKeyFrame = m_cypherOn ? &m_keyQR : NULL;
+    vector<uint8_t> * const pKeyFrame = config.m_cipheringOn ? &m_keyQR : NULL;
 
-    for(int i =0; i < m_nThreads; i++){
-        m_jobs[i] = new Encode(frameWidth, frameHeight, frameRepeat, tailSize, invert,
+    for(int i =0; i < config.m_nWorkingThreads; i++){
+        /*m_jobs[i] = new Encode(config.m_frameWidth, config.m_frameHeight, config.m_frameRepeats, config.m_nTrailingFrames,
+                                config.m_inverseFrame,
                                 m_inQ, m_outQ,
-                                m_qrVersion, eccLevel, qrScale, alignment);
+                                config.m_qrVersion, config.m_eccLevel, config.m_qrScale, config.m_alignment);*/
+        m_jobs[i] = new Encode(m_config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
     }
 
@@ -156,13 +152,13 @@ int32_t MTEncoder::Start(bool join){
     m_threads.clear();
     try{
         //LOG("Strating %d threads.\n", m_nThreads);
-        for(int i = 0; i < m_nThreads; i++){
+        for(int i = 0; i < m_config.m_nWorkingThreads; i++){
         //LOG("Strating thread #%d.\n", i);
             m_threads.push_back(thread(&Encode::Do, m_jobs[i]));
         }
 
         if(join){
-            for(int i = 0; i < m_nThreads; i++){
+            for(int i = 0; i < m_config.m_nWorkingThreads; i++){
                 if(m_threads[i].joinable()){
                     m_threads[i].join();
                 }
@@ -176,7 +172,7 @@ int32_t MTEncoder::Start(bool join){
 }
 
 int32_t MTEncoder::Stop(){
-    for(int i = 0; i < m_nThreads; i++){
+    for(int i = 0; i < m_config.m_nWorkingThreads; i++){
         m_jobs[i]->Stop();
     }
     for(int i = 0; i < m_threads.size(); i++){
@@ -219,33 +215,31 @@ int main(int argc, char** argv){
 
 int32_t MTEncoder::ValidateConfig(Config& config){
 
+    //frame
+    LIMIT_VAR(config.m_alignment, 0, 64);//64 is the size of macroblock in x264
+    LIMIT_VAR(config.m_frameHeight, 21, 1920);//21 is the smallest size of qr code
+    LIMIT_VAR(config.m_frameWidth, 21, 1920);
+
     //qr
     LIMIT_VAR(config.m_qrScale, 1, 10);
     LIMIT_VAR(config.m_eccLevel, 0, 3);
+    /****
+    config.m_qrVersion;//must be calculated in Init()
+    ****/
 
-    //frame
-    LIMIT_VAR(config.m_alignment, 0, 64);
-    LIMIT_VAR(config.m_frameHeight, 21, 1920);
-    LIMIT_VAR(config.m_frameWidth, 21, 1920);
+    //frame sequence
+    LIMIT_VAR(config.m_frameRepeats, 1, 9);
+    LIMIT_VAR(config.m_nTrailingFrames, 0, 99);
 
-    int32_t version = 0;
-    int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment, config.m_eccLevel, config.m_qrScale, &version);
-    if(!chunkSize || version > 40 || version <= 0){
-        LOG("Frame size does not fit any possible qr code version. Try smaller scale, ECC level, bigger frame or changing alignment.\n");
-        return FAIL;
-    }else{
-        LOG("QR version: %d\n", version);
-        config.m_qrVersion = version;
-    }
-
-    //stream
-    LIMIT_VAR(config.m_frameRepeats, 1, 9);//???
-    config.m_nTrailingFrames;
     //system
-    config.m_nWorkingThreads;
+    LIMIT_VAR(config.m_framesPerThread, 1, 99);
+    /********************
+    config.m_nWorkingThreads;//already detected in ArgsParser::GetConfig(), because it is common for decoder and encoder.
+    //the next must be checked in Init()
     config.m_ofName;
     config.m_ifName;
     config.m_keyFileName;
+    *********************/
 
     return OK;
 }
