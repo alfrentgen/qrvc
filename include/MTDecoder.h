@@ -9,6 +9,7 @@
 #include "Decode.h"
 #include "ArgsParser.h"
 #include "Chunk.h"
+#include "Config.h"
 
 //using namespace std;
 class MTDecoder
@@ -20,6 +21,7 @@ public:
     int32_t Init(Config& config);
     int32_t Start(bool join);
     int32_t Stop();
+    int32_t ValidateConfig(Config& config);
 
 private:
     int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED,
@@ -36,6 +38,7 @@ private:
     vector<Decode*> m_jobs;
     vector<thread> m_threads;
     ifstream* m_pKeyFileStream;
+    Config m_config;
 };
 
 #endif // MTDECODER_H

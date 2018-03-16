@@ -83,6 +83,7 @@ src/Decode.cpp
 src/inputQueue.cpp
 src/OutputQueue.cpp
 src/MTDecoder.cpp
+src/Config.cpp
 )
 
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
@@ -114,6 +115,7 @@ src/Encode.cpp
 src/inputQueue.cpp
 src/OutputQueue.cpp
 src/MTEncoder.cpp
+src/Config.cpp
 )
 
 add_executable(qrve ${MTENC_HDR} ${MTENC_SRC})

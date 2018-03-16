@@ -7,12 +7,13 @@
 #include <quirc.h>
 #include <quirc_internal.h>
 #include <zbar.h>
+#include "Config.h"
 
-enum DecodeMode{
+/*enum DecodeMode{
     QUICK = 0,
     MIXED = 1,
     SLOW = 2,
-};
+};*/
 
 using namespace std;
 

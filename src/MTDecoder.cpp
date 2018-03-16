@@ -1,6 +1,7 @@
 #include "MTDecoder.h"
 #include "utilities.h"
 #include "help.h"
+#include "Config.h"
 
 MTDecoder::MTDecoder():
 m_pKeyFileStream(NULL)
@@ -12,6 +13,30 @@ MTDecoder::~MTDecoder()
 {
     //dtor
     Stop();
+}
+
+int32_t MTDecoder::ValidateConfig(Config& config){
+    //frame
+    LIMIT_VAR(config.m_frameHeight, 21, 1920);//21 is the smallest size of qr code
+    LIMIT_VAR(config.m_frameWidth, 21, 1920);
+
+    //stream
+    LIMIT_VAR(config.m_decMode, QUICK, SLOW);
+    //config.m_skipDupFrames;
+
+
+    //system
+    LIMIT_VAR(config.m_framesPerThread, 1, 99);
+    /********************
+    config.m_nWorkingThreads;//already detected in ArgsParser::GetConfig()
+    because it is common for decoder and encoder.
+    //the next must be checked in Init()
+    config.m_ofName;
+    config.m_ifName;
+    config.m_keyFileName;
+    *********************/
+
+    return OK;
 }
 
 int32_t MTDecoder::Init(Config& config){
@@ -57,6 +82,10 @@ int32_t MTDecoder::Init(Config& config){
             m_pKeyFileStream->close();
             return FAIL;
         }
+    }
+
+    if(ValidateConfig(config) != OK){
+        return FAIL;
     }
 
     Init(inputStream, outputStream, config.m_frameWidth, config.m_frameHeight,

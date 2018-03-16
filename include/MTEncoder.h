@@ -9,6 +9,7 @@
 #include "Encode.h"
 #include "ArgsParser.h"
 #include "Chunk.h"
+#include "Config.h"
 
 #define MAX_BIN_CHUNKSIZE 2953
 #define NOT_MQR 0
@@ -28,7 +29,7 @@ public:
     int32_t Init(Config& config);
     int32_t Start(bool join);
     int32_t Stop();
-    int32_t ValidateConfig(Config& conf);
+    int32_t ValidateConfig(Config& config);
 
 private:
     InputQueue* m_inQ;

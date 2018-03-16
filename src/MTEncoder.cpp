@@ -63,7 +63,6 @@ int32_t MTEncoder::Init(Config& config){
     ofstream* ofs = NULL;
     istream* inputStream = &cin;
     ostream* outputStream = &cout;
-    ofstream* keyFileStream = NULL;
 
     if(config.m_cipheringOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
