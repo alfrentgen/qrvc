@@ -45,17 +45,6 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
     return mockList.size;
 }
 
-void printEncCfg(Config cfg){
-    LOG("qrve settings: ");
-    LOG("-i %s ", cfg.m_ifName.c_str());
-    LOG("-f %dx%d ", cfg.m_frameWidth, cfg.m_frameHeight);
-    LOG("-o %s ", cfg.m_ofName.c_str());
-    LOG("-s %d ", cfg.m_qrScale);
-    LOG("-e %d ", cfg.m_eccLevel);
-    LOG("\nQR Version: %d ", cfg.m_qrVersion);
-    LOG("\n");
-}
-
 MTEncoder::MTEncoder():
 m_pKeyFileStream(NULL)
 {

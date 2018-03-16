@@ -9,7 +9,6 @@
 #include "Encode.h"
 #include "ArgsParser.h"
 #include "Chunk.h"
-#include "Config.h"
 
 #define MAX_BIN_CHUNKSIZE 2953
 #define NOT_MQR 0
