@@ -33,7 +33,7 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
 
     QRinput_List mockList;
     mockList.mode = QR_MODE_8;
-    mockList.size = MAX_BIN_CHUNKSIZE;
+    mockList.size = MAX_BIN_CHUNKSIZE + 1;
     uint32_t minVersion;
     do{
         uint32_t bits = estimateBitStreamSizeOfEntry(&mockList, version, NOT_MQR);
@@ -42,6 +42,8 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
     }while(minVersion != version);
 
     *retVersion = version;
+    LOG("ECC level: %d\n", eccLevel);
+    LOG("Chunk size: %d\n", mockList.size);
     return mockList.size;
 }
 
