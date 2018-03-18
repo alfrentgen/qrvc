@@ -14,12 +14,6 @@
 
 using namespace std;
 
-enum DecodeMode{
-    QUICK = 0,
-    MIXED = 1,
-    SLOW = 2,
-};
-
 typedef struct Config {
     bool    m_cipheringOn;
     bool    m_inverseFrame;

@@ -157,9 +157,9 @@ skipDecyph:
             m_data.m_rendered = false;
         }else{
             int32_t decRes;
-            if(m_decMode == QUICK){
+            if(m_decMode == MODE_QUICK){
                 decRes = DecodeDataQuick();
-            }else if(m_decMode == SLOW){
+            }else if(m_decMode == MODE_SLOW){
                 decRes = DecodeData();
             }else{
                 decRes = DecodeDataQuick();

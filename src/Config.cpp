@@ -40,7 +40,19 @@ void printDecCfg(Config cfg){
     }
 
     //decoder specific options
-    LOG("-m %d ", cfg.m_decMode);
+    switch(cfg.m_decMode)
+    {
+    case MODE_QUICK:
+        LOG("-m %s ", "quick");
+        break;
+    case MODE_MIXED:
+        LOG("-m %s ", "mixed");
+        break;
+    case MODE_SLOW:
+        LOG("-m %s ", "slow");
+        break;
+    }
+    //LOG("-m %d ", cfg.m_decMode);
     if(cfg.m_skipDupFrames){
         LOG("-k ");
     }

@@ -216,7 +216,7 @@ int32_t MTEncoder::ValidateConfig(Config& config){
 
     //qr
     LIMIT_VAR(config.m_qrScale, 1, 10);
-    LIMIT_VAR(config.m_eccLevel, 0, 3);
+    LIMIT_VAR(config.m_eccLevel, ECC_LEVEL_L, ECC_LEVEL_Q);
     /****
     config.m_qrVersion;//must be calculated in Init()
     ****/

@@ -21,7 +21,7 @@ int32_t MTDecoder::ValidateConfig(Config& config){
     LIMIT_VAR(config.m_frameWidth, 21, 1920);
 
     //stream
-    LIMIT_VAR(config.m_decMode, QUICK, SLOW);
+    LIMIT_VAR(config.m_decMode, MODE_QUICK, MODE_SLOW);
     //config.m_skipDupFrames;
 
     //system

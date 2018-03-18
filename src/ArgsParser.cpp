@@ -263,8 +263,9 @@ Config* ArgsParser::GetConfig(){
         //LOG("No ECC level is specified, using the lowest!\n");
         config.m_eccLevel = ECC_LEVEL_L;
     }else{
-        uint32_t l= stoi(it->second);
-        switch(l){
+        uint32_t l = stoi(it->second);
+        config.m_eccLevel = l;
+        /*switch(l){
         case ECC_LEVEL_L:
             config.m_eccLevel = ECC_LEVEL_L;
             break;
@@ -280,7 +281,7 @@ Config* ArgsParser::GetConfig(){
         default:
             config.m_eccLevel = ECC_LEVEL_L;
             break;
-        }
+        }*/
     }
 
     option = string("-r");

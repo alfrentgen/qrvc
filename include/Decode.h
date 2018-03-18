@@ -9,12 +9,6 @@
 #include <zbar.h>
 #include "Config.h"
 
-/*enum DecodeMode{
-    QUICK = 0,
-    MIXED = 1,
-    SLOW = 2,
-};*/
-
 using namespace std;
 
 class Decode : public Job
@@ -38,7 +32,7 @@ class Decode : public Job
         zbar::ImageScanner m_scanner;
         zbar::Image m_image;
         struct quirc *m_qr;
-        DecodeMode m_decMode;
+        int32_t m_decMode;
         int32_t m_ID;
         bool m_skipDup;
         vector<uint8_t>* m_pKeyFrame;
