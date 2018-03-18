@@ -11,7 +11,7 @@ static map<string, vector<string>> g_optionsMap {
     "-i - Input file name. If the option is omitted stdin is used. [stdin]",
     "-o - Output file name. If the option is omitted stdout is used. [stdout]",
     "-f - Frame size. <WidthxHeight> [1280x720]",
-    "-c - Ciphering on/off. If a value is given, it is treated as a key file  name. Otherwise key frame is the first one.",
+    "-c - Ciphering on/off. Given value is treated as a key file name, if none, key frame is the first one.",
     "-p - Chunks per working thread in a read/write cycle. The maximum is preferrable! <1-99> [8]",
     "-w - Number of working threads. <1-99> [number of CPUs]"
     }},

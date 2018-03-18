@@ -7,10 +7,11 @@ using namespace zbar;
 
 static int32_t g_idCounter = 0;
 
-Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* outQ, DecodeMode decMode, bool skipDup):
-    m_frameWidth(fWidth), m_frameHeight(fHeight), m_inQ(inQ), m_outQ(outQ), m_data(fWidth * fHeight),
-    m_image(fWidth, fHeight, string("GREY"), NULL, fWidth * fHeight), m_isWorking(true), m_decMode(decMode),
-    m_skipDup(skipDup)
+Decode::Decode(Config& config, InputQueue* inQ, OutputQueue* outQ):
+    m_frameWidth(config.m_frameWidth), m_frameHeight(config.m_frameHeight), m_inQ(inQ), m_outQ(outQ),
+    m_data(config.m_frameWidth * config.m_frameHeight),
+    m_image(config.m_frameWidth, config.m_frameHeight, string("GREY"), NULL, config.m_frameWidth * config.m_frameHeight),
+    m_isWorking(true), m_decMode(config.m_decMode), m_skipDup(config.m_skipDupFrames)
 {
     //ctor
     m_scanner.set_config(ZBAR_QRCODE, ZBAR_CFG_ENABLE, 1);
@@ -20,7 +21,7 @@ Decode::Decode(int32_t fWidth, int32_t fHeight, InputQueue* inQ, OutputQueue* ou
 	    perror("Failed to allocate memory");
 	    abort();
     }
-    if (quirc_resize(m_qr, fWidth, fHeight) < 0) {
+    if (quirc_resize(m_qr, config.m_frameWidth, config.m_frameHeight) < 0) {
 	    perror("Failed to allocate video memory");
 	    abort();
     }

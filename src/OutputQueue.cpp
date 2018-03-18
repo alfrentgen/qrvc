@@ -13,6 +13,10 @@ OutputQueue::~OutputQueue()
 {
     if(m_outStream != NULL && m_outStream != &cout){
         m_outStream->flush();
+        try{
+            ((ofstream*)m_outStream)->close();
+        }catch(...){
+        }
     }
 }
 

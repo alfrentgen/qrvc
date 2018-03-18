@@ -18,7 +18,10 @@ InputQueue::~InputQueue()
 {
     //dtor
     if(m_inStream != NULL && m_inStream != &cin){
-        ((ifstream*)m_inStream)->close();
+        try{
+            ((ifstream*)m_inStream)->close();
+        }catch(...){
+        }
     }
 }
 

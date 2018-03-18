@@ -64,21 +64,23 @@ int32_t MTEncoder::Init(Config& config){
     istream* inputStream = &cin;
     ostream* outputStream = &cout;
 
+    if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+        m_pKeyFileStream->close();
+    }
+    m_pKeyFileStream = NULL;
     if(config.m_cipheringOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
         if(!m_pKeyFileStream->good()){
             m_pKeyFileStream->close();
             return FAIL;
         }
-    }else{
-        m_pKeyFileStream = NULL;
     }
 
     if(config.m_ifName.size() != 0){
         ifs = new ifstream(config.m_ifName, ios_base::in | ios_base::binary);
         if (!ifs || !ifs->is_open()){
             ifs = NULL;
-            cerr << "Failed to open input stream.";
+            LOG("Failed to open input stream.");
             return FAIL;
         }
         inputStream = ifs;
@@ -88,7 +90,7 @@ int32_t MTEncoder::Init(Config& config){
         ofs = new ofstream(config.m_ofName, ios_base::out | ios_base::binary);
         if (!ofs || !ofs->is_open()){
             ofs = NULL;
-            cerr << "Failed to open output stream.";
+            LOG("Failed to open output stream.");
             return FAIL;
         }
         outputStream = ofs;
@@ -124,10 +126,6 @@ int32_t MTEncoder::Init(Config& config){
     vector<uint8_t> * const pKeyFrame = config.m_cipheringOn ? &m_keyQR : NULL;
 
     for(int i =0; i < config.m_nWorkingThreads; i++){
-        /*m_jobs[i] = new Encode(config.m_frameWidth, config.m_frameHeight, config.m_frameRepeats, config.m_nTrailingFrames,
-                                config.m_inverseFrame,
-                                m_inQ, m_outQ,
-                                config.m_qrVersion, config.m_eccLevel, config.m_qrScale, config.m_alignment);*/
         m_jobs[i] = new Encode(m_config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
     }
@@ -170,6 +168,13 @@ int32_t MTEncoder::Stop(){
     }
 
     m_threads.clear();
+    m_keyQR.clear();
+
+    if(m_pKeyFileStream && m_pKeyFileStream->is_open()){
+        m_pKeyFileStream->flush();
+        m_pKeyFileStream->close();
+    }
+    m_pKeyFileStream = NULL;
 
     //need to wait for threads to be stopped
     //and streams to be closed
@@ -181,6 +186,7 @@ int main(int argc, char** argv){
     if(argc <= 1){
         print_help(string("common"));
         print_help(string("encoder"));
+        LOG("\n");
         exit(0);
     }
 

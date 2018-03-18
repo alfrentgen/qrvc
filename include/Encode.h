@@ -17,8 +17,6 @@ using namespace std;
 class Encode : public Job
 {
     public:
-        /*Encode(int32_t fWidth, int32_t fHeight, int32_t frameRepeats, int32_t tailSize, bool invert,
-                InputQueue* inQ, OutputQueue* outQ, int32_t version, QRecLevel eccLevel, int32_t qrScale, int32_t alignment);*/
         Encode(Config& config, InputQueue* inQ, OutputQueue* outQ);
         virtual ~Encode();
         virtual int32_t Do() override;

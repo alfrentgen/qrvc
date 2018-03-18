@@ -24,17 +24,10 @@ public:
     int32_t ValidateConfig(Config& config);
 
 private:
-    int32_t Init(istream* is, ostream* os, int32_t frameWidth, int32_t frameHeight, DecodeMode decMode = MIXED,
-                    uint32_t framesPerThread = 0, uint32_t nThreads = 0, bool skipDup = false);
-
-private:
-    bool m_cypherOn;
-    int32_t m_nThreads;
     InputQueue* m_inQ;
     OutputQueue* m_outQ;
-    DecodeMode m_decMode;
-    vector<uint8_t> m_keyFrame;
 
+    vector<uint8_t> m_keyFrame;
     vector<Decode*> m_jobs;
     vector<thread> m_threads;
     ifstream* m_pKeyFileStream;
