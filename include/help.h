@@ -28,7 +28,7 @@ static map<string, vector<string>> g_optionsMap {
     "-r - Number of frame repetitions. <1-9> [1]",
     //'-n': ('Inverse frame colors. (Inversed frames are not supported in decoder.)','none','none'),
     "-a - Size of square alignment block. QR code is centered inside a frame in terms of alignment blocks. <0-64> [8]",
-    "-e - QR code error correction capability level. <0-3> [0]",
+    "-e - QR code error correction capability level. In the codec ECC levels 2 and 3 are depricated for QR code version 1.<0-3> [0]",
     "-s - QR code scale factor. <1-99> [4]"
     }}
 };

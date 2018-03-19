@@ -91,7 +91,7 @@ int32_t MTEncoder::Init(Config& config){
     config.m_qrVersion = version;
     int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
     if(nBytesToRead <= 0){
-        LOG("QR code version %d cannot be used with ECC level 2 and 3 due to 12 byte per frame data overhead.\n", version);
+        LOG("In the codec ECC levels 2 and 3 are depricated for QR code version %d.\n", version);
         return FAIL;
     }
 
