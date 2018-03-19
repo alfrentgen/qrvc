@@ -17,8 +17,6 @@
 #define COUNTER_SIZE 8
 #define HASHSUM_SIZE 4
 
-
-
 //using namespace std;
 class MTEncoder
 {

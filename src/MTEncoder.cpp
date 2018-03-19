@@ -2,24 +2,6 @@
 #include "utilities.h"
 #include "help.h"
 
-int estimateBitStreamSizeOfEntry(QRinput_List *entry, int version, int mqr)
-{
-	int bits = 0;
-	int l, m;
-	int num;
-
-	if(version == 0) version = 1;
-
-	bits = QRinput_estimateBitsMode8(entry->size);
-
-	l = QRspec_lengthIndicator(entry->mode, version);
-	m = 1 << l;
-	num = (entry->size + m - 1) / m;
-	bits += num * (MODE_INDICATOR_SIZE + l);
-
-	return bits;
-}
-
 uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLevel, uint32_t qrScale, uint32_t *retVersion){
     uint32_t minFrameDim = frameWidth > frameHeight ? frameHeight : frameWidth;
     //resolve input chunk size automatically
@@ -31,20 +13,14 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
         return 0;
     }
 
-    QRinput_List mockList;
-    mockList.mode = QR_MODE_8;
-    mockList.size = MAX_BIN_CHUNKSIZE + 1;
-    uint32_t minVersion;
-    do{
-        uint32_t bits = estimateBitStreamSizeOfEntry(&mockList, version, NOT_MQR);
-        minVersion = QRspec_getMinimumVersion((bits + 7) / 8, eccLevel);
-        mockList.size--;
-    }while(minVersion != version);
-
+    int32_t size = QRspec_getDataLength(version, eccLevel);
+    if(version > 9){
+        size -= (2 + 1);
+    }else{
+        size -= (1 + 1);
+    }
     *retVersion = version;
-    LOG("ECC level: %d\n", eccLevel);
-    LOG("Chunk size: %d\n", mockList.size);
-    return mockList.size;
+    return size;
 }
 
 MTEncoder::MTEncoder():
@@ -107,16 +83,20 @@ int32_t MTEncoder::Init(Config& config){
     int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment,
                                         config.m_eccLevel, config.m_qrScale, &version);
     if(!chunkSize || version > 40 || version <= 0){
+        LOG("version: %d, chunkSize: %d\n", version, chunkSize);
         LOG("Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n");
         return FAIL;
     }
-    //LOG("QR version: %d\n", version);
+
     config.m_qrVersion = version;
+    int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
+    if(nBytesToRead <= 0){
+        LOG("QR code version %d cannot be used with ECC level 2 and 3 due to 12 byte per frame data overhead.\n", version);
+        return FAIL;
+    }
 
     m_config = config;//accept config, as it is counted valid from now
     printEncCfg(m_config);
-
-    int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
     int32_t queueSize = config.m_framesPerThread * config.m_nWorkingThreads;
     m_inQ = new InputQueue(inputStream, queueSize, nBytesToRead);
     m_outQ = new OutputQueue(outputStream, queueSize, config.m_frameWidth * config.m_frameHeight);
