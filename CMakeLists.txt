@@ -136,6 +136,8 @@ endif()
 set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
 message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
 
-add_custom_target(create_tar ALL COMMAND
-    ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>")
+add_custom_target(create_tar ALL
+    COMMAND ${CMAKE_COMMAND} -E remove "-f" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
+    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt")
 add_dependencies(create_tar qrvd qrve)
