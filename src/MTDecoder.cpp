@@ -139,7 +139,7 @@ int32_t MTDecoder::Start(bool join){
 }
 
 int32_t MTDecoder::Stop(){
-    for(int i = 0; i < m_config.m_nWorkingThreads; i++){
+    for(int i = 0; i < m_jobs.size(); i++){
         m_jobs[i]->Stop();
     }
     for(uint32_t i = 0; i < m_threads.size(); i++){

@@ -140,7 +140,7 @@ int32_t MTEncoder::Start(bool join){
 }
 
 int32_t MTEncoder::Stop(){
-    for(int i = 0; i < m_config.m_nWorkingThreads; i++){
+    for(int i = 0; i < m_jobs.size(); i++){
         m_jobs[i]->Stop();
     }
     for(int i = 0; i < m_threads.size(); i++){

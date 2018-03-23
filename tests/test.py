@@ -6,8 +6,11 @@ from hashlib import md5
 common_opts = ' -p 99 '
 
 in_file = '1M.in'
+enc_file = '1M.enc'
 out_file = '1M.out'
 key_file = 'key.yuv'
+log_file='test.log'
+
 enc = 'qrve'
 dec = 'qrvd'
 
@@ -18,15 +21,16 @@ k_vals = ['', '-k']
 r_vals = ['', '-r 9']
 m_vals = ['-m slow', '-m mixed']
 
-rm_com = './rm'
+rm_com = 'rm'
+md5_com = 'md5sum'
 print(os.getcwd())
 
 def my_check_call(command):
-    with open("test.log", "w") as log:
+    with open(log_file, "a") as log:
         check_call(command, shell=True, stderr=log, stdout=log)
 
 def my_call(command):
-    with open("test.log", "w") as log:
+    with open(log_file, "a") as log:
         call(command, shell=True, stderr=log, stdout=log)
 
 def calc_md5(file_name):
@@ -38,12 +42,15 @@ def calc_md5(file_name):
         return md5_returned
 
 def verify(*file_names):
-    md5_in = calc_md5(in_file)
-    md5_out = calc_md5(out_file)
-    print('hashsum in:\t', md5_in)
-    print('hashsum out:\t', md5_out)
-    if md5_in != md5_out:
-        exit(0)
+    with open(log_file, "a") as log:
+        md5_in = calc_md5(in_file)
+        md5_out = calc_md5(out_file)
+        print('hashsum in:\t', md5_in)
+        print('hashsum out:\t', md5_out)
+        print('hashsum in:\t', md5_in, file=log, end='\n')
+        print('hashsum out:\t', md5_out, file=log, end='\n')
+        if md5_in != md5_out:
+            exit(0)
 
 def generate_files(*file_names):
     for fn in file_names:
@@ -59,6 +66,7 @@ def delete_files(*file_names):
     
 
 #the test body
+delete_files(log_file)
 for arch in archs:
     enc_name = '../build_linux_' + arch + '/' + enc
     dec_name = '../build_linux_' + arch + '/' + dec
@@ -66,10 +74,18 @@ for arch in archs:
         for c in c_vals:
             delete_files(in_file, out_file, key_file)
             generate_files(in_file)
-            left = enc_name + ' -i ' + in_file + ' ' + e + common_opts +' ' + c
-            right = dec_name + ' -o ' + out_file + common_opts + ' ' + c
-            test = left + ' | ' + right
-            print('running: ' + test)
-            my_check_call(test)
+
+            encode = enc_name + ' -i ' + in_file + ' -o ' + enc_file
+            encode = encode + ' ' + e + ' ' + c + common_opts
+
+            decode = dec_name + ' -i ' + enc_file + ' -o ' + out_file
+            decode = decode + ' ' + c + common_opts
+
+            print('running: ' + encode)
+            my_check_call(encode)
+            
+            print('running: ' + decode)
+            my_check_call(decode)
+            
             verify([in_file, out_file])
             print('OK!')
