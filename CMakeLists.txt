@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(USE_X86_32 "Build for x86 32 bits"	OFF)
 #option(USE_ARM_V8A "Build for ARMv8-A 64"	OFF)
-option(BUILD_STATIC "Static linking"	ON)
+#option(BUILD_STATIC "Static linking"	ON)
 
 #[[if(USE_ARM_V8A)
     #arm-linux-androideabi-gcc
@@ -21,16 +21,16 @@ option(BUILD_STATIC "Static linking"	ON)
     set(USE_X86_32 OFF)
 endif()]]
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic")
-set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic -fPIC")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic -fPIC")
 
-if(BUILD_STATIC)
+#[[if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
     #-static -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
-endif()
+endif()]]
 
 if(USE_X86_32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -march=i686")
@@ -43,14 +43,14 @@ else()
     set(TARBALL_ARCH "x86_64")
 endif()
 
-if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
+#[[if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
 			#The solution was found here https://github.com/dmlc/xgboost/issues/977.
     if(NOT BUILD_STATIC)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
     endif()
 	message(STATUS "MINGW CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
 	message(STATUS "MINGW CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
-endif()
+endif()]]
 
 message(STATUS "CMAKE_LINKER ${CMAKE_LINKER}")
 message(STATUS "CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_CXX_LINK_EXECUTABLE}")
