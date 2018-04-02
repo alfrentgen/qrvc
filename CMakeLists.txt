@@ -21,16 +21,17 @@ option(USE_X86_32 "Build for x86 32 bits"	OFF)
     set(USE_X86_32 OFF)
 endif()]]
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic -fPIC")
-set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -pthread -O3 -mtune=generic -fPIC")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC ")
+set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 
-#[[if(BUILD_STATIC)
+#if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
     #-static -pthread -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
-endif()]]
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
+    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libstdc++ -static-libgcc")
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
+#endif()
 
 if(USE_X86_32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -march=i686")
@@ -43,14 +44,14 @@ else()
     set(TARBALL_ARCH "x86_64")
 endif()
 
-#[[if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
+#if(MINGW)	#otherwise it breaks down on Windows due to dynamic linking to libstdc++*.dll as it can't find _ZNKSt7__cxx1115basic_stringbufIcSt11char_traitsIcESaIcEE3strEv.
 			#The solution was found here https://github.com/dmlc/xgboost/issues/977.
-    if(NOT BUILD_STATIC)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
-    endif()
-	message(STATUS "MINGW CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
-	message(STATUS "MINGW CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
-endif()]]
+    #if(NOT BUILD_STATIC)
+        #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
+    #endif()
+	#message(STATUS "MINGW CMAKE_EXE_LINKER_FLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
+	#message(STATUS "MINGW CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
+#endif()
 
 message(STATUS "CMAKE_LINKER ${CMAKE_LINKER}")
 message(STATUS "CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_CXX_LINK_EXECUTABLE}")
@@ -87,10 +88,12 @@ src/Config.cpp
 )
 
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
-target_link_libraries(qrvd quirc zbar_cut)
-add_dependencies(qrvd quirc zbar_cut)
-set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qrvd PUBLIC include)
+target_compile_options(qrvd PRIVATE -pthread)
+set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(qrvd PROPERTIES LINK_FLAGS "-pthread -lpthread")
+target_link_libraries(qrvd quirc zbar_cut)
+
 
 SET(MTENC_HDR
 include/pch.h
@@ -119,10 +122,12 @@ src/Config.cpp
 )
 
 add_executable(qrve ${MTENC_HDR} ${MTENC_SRC})
-target_link_libraries(qrve qrenc)
-add_dependencies(qrve qrenc)
-set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qrve PUBLIC include)
+target_compile_options(qrve PRIVATE -pthread)
+set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(qrve PROPERTIES LINK_FLAGS "-pthread -lpthread")
+target_link_libraries(qrve qrenc)
+
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
