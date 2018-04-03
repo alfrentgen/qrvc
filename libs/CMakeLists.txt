@@ -6,6 +6,23 @@ project("QR libraries" C CXX)
 #message(STATUS ${CMAKE_C_FLAGS})
 #message(STATUS ${CMAKE_EXE_LINKER_FLAGS})
 
+#using musl instead of glibc
+if(NOT MIGW)
+    if(USE_X86_32)
+        SET(MUSL_TARGET "i386")
+    else()
+        SET(MUSL_TARGET "x86_64")
+    endif()
+add_custom_target(musl ALL
+COMMAND ./configure "--prefix=${CMAKE_BINARY_DIR}/libs/musl --enable-optimize --enable-wrapper=gcc --enable-warnings --enable-visibility --target=${MUSL_TARGET}"
+#COMMAND /usr/bin/make clean
+#COMMAND make
+#COMMAND make install
+WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/musl
+VERBATIM
+)
+endif()
+
 add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
 
 set(ZBAR_LIB_PATH  ./zbar)
