@@ -10,14 +10,15 @@ project("QR libraries" C CXX)
 if(NOT MIGW)
     if(USE_X86_32)
         SET(MUSL_TARGET "i386")
+        SET(MUSL_CC "CC=gcc\ -m32")
     else()
         SET(MUSL_TARGET "x86_64")
     endif()
 add_custom_target(musl ALL
-COMMAND ./configure "--prefix=${CMAKE_BINARY_DIR}/libs/musl --enable-optimize --enable-wrapper=gcc --enable-warnings --enable-visibility --target=${MUSL_TARGET}"
-#COMMAND /usr/bin/make clean
-#COMMAND make
-#COMMAND make install
+./configure "--prefix=${CMAKE_BINARY_DIR}/libs/musl --enable-optimize --enable-wrapper=gcc --enable-warnings --enable-visibility --target=${MUSL_TARGET} ${MUSL_CC}"
+COMMAND /usr/bin/make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile" clean
+COMMAND make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile"
+#COMMAND make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile" install
 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/musl
 VERBATIM
 )
