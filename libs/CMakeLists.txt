@@ -8,15 +8,22 @@ project("QR libraries" C CXX)
 
 #using musl instead of glibc
 if(NOT MIGW)
+    SET(MUSL_CROSS_COMPILE "CROSS_COMPILE=' '") #a hack for setting empty crosscompile prefix
     if(USE_X86_32)
         SET(MUSL_TARGET "i386")
-        SET(MUSL_CC "CC=gcc\ -m32")
+        #SET(MUSL_CC "CC=gcc\ -m32") # a hack for cross compile using -m32 option of gcc built for x86_64
+        SET(MUSL_CFLAGS "-m32") # a hack for cross compile using -m32 option of gcc built for x86_64
     else()
         SET(MUSL_TARGET "x86_64")
     endif()
+list(APPEND MUSL_CFG_PARAMS "--prefix=${CMAKE_BINARY_DIR}/libs/musl" "--enable-optimize" "--enable-wrapper=gcc" "--enable-warnings" "--enable-visibility" "--target=${MUSL_TARGET}" "--build=${MUSL_TARGET}" "CFLAGS=${MUSL_CFLAGS}")
+message(STATUS "MUSL_TARGET=${MUSL_TARGET}")
+message(STATUS "MUSL_CFLAGS=${MUSL_CFLAGS}")
+message(STATUS "MUSL_CFG_PARAMS=${MUSL_CFG_PARAMS}")
 add_custom_target(musl ALL
-./configure "--prefix=${CMAKE_BINARY_DIR}/libs/musl --enable-optimize --enable-wrapper=gcc --enable-warnings --enable-visibility --target=${MUSL_TARGET} ${MUSL_CC}"
-COMMAND /usr/bin/make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile" clean
+COMMAND /usr/bin/make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile" distclean
+#COMMAND ./configure "--prefix=${CMAKE_BINARY_DIR}/libs/musl --enable-optimize --enable-wrapper=gcc --enable-warnings --enable-visibility --target=${MUSL_TARGET} ${MUSL_CC} ${MUSL_CROSS_COMPILE}"
+COMMAND ./configure ${MUSL_CFG_PARAMS}
 COMMAND make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile"
 #COMMAND make -f "${CMAKE_CURRENT_SOURCE_DIR}/musl/Makefile" install
 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/musl
