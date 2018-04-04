@@ -21,9 +21,9 @@ option(USE_X86_32 "Build for x86 32 bits"	OFF)
     set(USE_X86_32 OFF)
 endif()]]
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC")
-set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC ")
-set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC ")
+set(CMAKE_EXE_LINKER_FLAGS "-static -static-libstdc++ -static-libgcc")
 
 #if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
@@ -59,6 +59,9 @@ message(STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
+#set(MUSL_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/libs/musl/lib")
+#set(MUSL_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs/musl/include")
+#link_directories(${MUSL_LIB_DIR})
 add_subdirectory(libs)
 
 set(DEC_HDR
