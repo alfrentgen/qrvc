@@ -73,7 +73,7 @@ ${ZBAR_LIB_PATH}/zbar/symbol.c
 ${CMAKE_CURRENT_SOURCE_DIR}/qrdectxt_m.c #modified zbar/qrcode/qrdectxt.c
 )
 
-add_library(zbar_cut STATIC ${ZBAR_SRC} ${ZBAR_HDR})
+add_library(zbar_cut SHARED ${ZBAR_SRC} ${ZBAR_HDR})
 set_target_properties(zbar_cut PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(zbar_cut PUBLIC
 ${ZBAR_LIB_PATH}/zbar

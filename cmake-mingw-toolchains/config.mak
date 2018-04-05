@@ -57,7 +57,7 @@ LINUX_VER =
 # Recommended options for smaller build for deploying binaries:
 
 # COMMON_CONFIG += CFLAGS="-g0 -Os" CXXFLAGS="-g0 -Os" LDFLAGS="-s"
-# COMMON_CONFIG += CFLAGS="-fPIC" CXXFLAGS="-fPIC" LDFLAGS="-fPIC"
+# COMMON_CONFIG += CFLAGS="-fPIC -O3" CXXFLAGS="-fPIC -O3" LDFLAGS="-fPIC"
 
 # Recommended options for faster/simpler build:
 
@@ -71,4 +71,4 @@ GCC_CONFIG += --enable-threads=posix --enable-shared
 # where to look for source files.
 
 # COMMON_CONFIG += --with-debug-prefix-map=$(CURDIR)=
-MUSL_CONFIG += CFLAGS="-fPIC" CXXFLAGS="-fPIC" LDFLAGS="-fPIC"
+MUSL_CONFIG += CFLAGS="-fPIC -O3" CXXFLAGS="-fPIC -O3" LDFLAGS="-fPIC"
