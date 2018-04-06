@@ -7,8 +7,8 @@
 # There is no default TARGET; you must select one here or on the make
 # command line. Some examples:
 
-# TARGET = i486-linux-musl
- TARGET = x86_64-linux-musl
+ TARGET = i486-linux-musl
+# TARGET = x86_64-linux-musl
 # TARGET = arm-linux-musleabi
 # TARGET = arm-linux-musleabihf
 # TARGET = sh2eb-linux-muslfdpic
@@ -71,4 +71,4 @@ GCC_CONFIG += --enable-threads=posix --enable-shared
 # where to look for source files.
 
 # COMMON_CONFIG += --with-debug-prefix-map=$(CURDIR)=
-MUSL_CONFIG += CFLAGS="-fPIC -O3" CXXFLAGS="-fPIC -O3" LDFLAGS="-fPIC"
+MUSL_CONFIG += CFLAGS="-fPIE -fPIC -O3" CPPFLAGS="-fPIE -fPIC -O3" LDFLAGS="-fPIC -fPIE"

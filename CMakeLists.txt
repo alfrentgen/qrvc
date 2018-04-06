@@ -21,9 +21,9 @@ option(USE_X86_32 "Build for x86 32 bits"	OFF)
     set(USE_X86_32 OFF)
 endif()]]
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC")
-set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC ")
-set(CMAKE_EXE_LINKER_FLAGS "-static -static-libstdc++ -static-libgcc")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -fPIC ")
+set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 
 #if(BUILD_STATIC)
     #https://stackoverflow.com/questions/35116327/when-g-static-link-pthread-cause-segmentation-fault-why
@@ -95,7 +95,7 @@ target_include_directories(qrvd PUBLIC include)
 target_compile_options(qrvd PRIVATE -pthread)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(qrvd PROPERTIES LINK_FLAGS "-pthread -lpthread")
-target_link_libraries(qrvd quirc zbar_cut)
+target_link_libraries(qrvd -Wl,-Bdynamic quirc zbar_cut)
 
 
 SET(MTENC_HDR
@@ -129,7 +129,7 @@ target_include_directories(qrve PUBLIC include)
 target_compile_options(qrve PRIVATE -pthread)
 set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(qrve PROPERTIES LINK_FLAGS "-pthread -lpthread")
-target_link_libraries(qrve qrenc)
+target_link_libraries(qrve -Wl,-Bdynamic qrenc)
 
 
 #TESTS SECTION

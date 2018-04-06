@@ -73,7 +73,7 @@ ${ZBAR_LIB_PATH}/zbar/symbol.c
 ${CMAKE_CURRENT_SOURCE_DIR}/qrdectxt_m.c #modified zbar/qrcode/qrdectxt.c
 )
 
-add_library(zbar_cut STATIC ${ZBAR_SRC} ${ZBAR_HDR})
+add_library(zbar_cut SHARED ${ZBAR_SRC} ${ZBAR_HDR})
 set_target_properties(zbar_cut PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(zbar_cut PUBLIC
 ${ZBAR_LIB_PATH}/zbar
@@ -106,11 +106,12 @@ ${QUIRC_LIB_PATH}/lib/identify.c
 ${QUIRC_LIB_PATH}/lib/quirc.c
 )
 
-add_library(quirc STATIC ${QUIRC_SRC} ${QUIRC_HDR})
+add_library(quirc SHARED ${QUIRC_SRC} ${QUIRC_HDR})
 set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
 set_target_properties(quirc PROPERTIES FOLDER "libraries")
 target_compile_definitions(quirc PRIVATE QUIRC_MAX_REGIONS=65534)
+set_target_properties(quirc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
 
 set(QRENC_LIB_PATH  ./libqrencode)
 
@@ -139,7 +140,7 @@ ${QRENC_LIB_PATH}/rsecc.c
 ${QRENC_LIB_PATH}/split.c
 )
 
-add_library(qrenc STATIC ${QRENC_SRC} ${QRENC_HDR})
+add_library(qrenc SHARED ${QRENC_SRC} ${QRENC_HDR})
 set_target_properties(qrenc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(qrenc PUBLIC ${QRENC_LIB_PATH})
 #target_link_libraries(qrenc libc_musl.a)
@@ -157,3 +158,5 @@ target_compile_definitions(qrenc PRIVATE
 VERSION="3.9.0"
 )
 #endif()
+
+add_custom_target(libraries DEPENDS quirc zbar_cut qrenc)
