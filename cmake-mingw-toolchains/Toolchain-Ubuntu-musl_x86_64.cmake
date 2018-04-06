@@ -7,15 +7,16 @@
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(TOOLCHAIN_PREFIX x86_64-linux-musl)
+set(TOOLCHAINS_DIR /media/alf/storage1/toolchains)
 
 # cross compilers to use for C and C++
-set(CMAKE_C_COMPILER /opt/musl_toolch_x86_64/bin/${TOOLCHAIN_PREFIX}-gcc)
-set(CMAKE_CXX_COMPILER /opt/musl_toolch_x86_64/bin/${TOOLCHAIN_PREFIX}-g++)
+set(CMAKE_C_COMPILER ${TOOLCHAINS_DIR}/${TOOLCHAIN_PREFIX}/bin/${TOOLCHAIN_PREFIX}-gcc)
+set(CMAKE_CXX_COMPILER ${TOOLCHAINS_DIR}/${TOOLCHAIN_PREFIX}/bin/${TOOLCHAIN_PREFIX}-g++)
 #set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
 
 # target environment on the build host system
 #   set 1st to dir with the cross compiler's C/C++ headers/libs
-set(CMAKE_FIND_ROOT_PATH /opt/musl_toolch_x86_64)#/${TOOLCHAIN_PREFIX})
+set(CMAKE_FIND_ROOT_PATH ${TOOLCHAINS_DIR}/${TOOLCHAIN_PREFIX}/${TOOLCHAIN_PREFIX})#/${TOOLCHAIN_PREFIX})
 
 # modify default behavior of FIND_XXX() commands to
 # search for headers/libs in the target environment and
