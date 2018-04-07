@@ -80,6 +80,7 @@ ${ZBAR_LIB_PATH}/zbar
 ${ZBAR_LIB_PATH}/include
 ${ZBAR_LIB_PATH}/include/zbar
 ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
 
 if(MINGW)
 	target_link_libraries(zbar_cut iconv)
@@ -151,6 +152,7 @@ MAJOR_VERSION=3
 MINOR_VERSION=9
 MICRO_VERSION=0
 )
+set_target_properties(qrenc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
 #if(WIN32)
 #target_compile_definitions(qrenc PRIVATE VERSION="\\"3.9.0\\"")
 #else()*/
