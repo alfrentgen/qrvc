@@ -80,7 +80,8 @@ ${ZBAR_LIB_PATH}/zbar
 ${ZBAR_LIB_PATH}/include
 ${ZBAR_LIB_PATH}/include/zbar
 ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
+#set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
+set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-Wl,-Bstatic,-l:libstdc++.a,-l:libgcc.a -l:libc.a")
 
 if(MINGW)
 	target_link_libraries(zbar_cut iconv)
@@ -112,7 +113,8 @@ set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
 set_target_properties(quirc PROPERTIES FOLDER "libraries")
 target_compile_definitions(quirc PRIVATE QUIRC_MAX_REGIONS=65534)
-set_target_properties(quirc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
+#set_target_properties(quirc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
+set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-Wl,-Bstatic,-l:libstdc++.a,-l:libgcc.a -l:libc.a")
 
 set(QRENC_LIB_PATH  ./libqrencode)
 
@@ -152,7 +154,8 @@ MAJOR_VERSION=3
 MINOR_VERSION=9
 MICRO_VERSION=0
 )
-set_target_properties(qrenc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic -lc -Wl,-Bstatic -lstdc++")
+#set_target_properties(qrenc PROPERTIES LINK_FLAGS "-static -Wl,-Bstatic,-l:libc.a,-l:libstdc++.a")
+set_target_properties(zbar_cut PROPERTIES LINK_FLAGS "-Wl,-Bstatic,-l:libstdc++.a,-l:libgcc.a -l:libc.a")
 #if(WIN32)
 #target_compile_definitions(qrenc PRIVATE VERSION="\\"3.9.0\\"")
 #else()*/
