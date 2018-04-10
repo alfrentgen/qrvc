@@ -6,7 +6,7 @@
 #    *) cmake -DCMAKE_TOOLCHAIN_FILE=~/Toolchain-Ubuntu-mingw32.cmake ..
 
 set(CMAKE_SYSTEM_NAME Linux)
-set(TOOLCHAIN_PREFIX i486-linux-musl)
+set(TOOLCHAIN_PREFIX i686-linux-musl)
 set(TOOLCHAIN_DIR "/opt/${TOOLCHAIN_PREFIX}")
 
 # cross compilers to use for C and C++

@@ -8,6 +8,7 @@
 # command line. Some examples:
 
  TARGET = i486-linux-musl
+# TARGET = i686-linux-musl
 # TARGET = x86_64-linux-musl
 # TARGET = arm-linux-musleabi
 # TARGET = arm-linux-musleabihf
