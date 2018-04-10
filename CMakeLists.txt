@@ -22,6 +22,7 @@ else()
     set(TARBALL_ARCH "x86_64")
 endif()
 
+message(STATUS "CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH}")
 message(STATUS "CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_C_COMPILER ${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_LINKER ${CMAKE_LINKER}")
@@ -31,6 +32,9 @@ message(STATUS "CMAKE_C_FLAGS ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
 add_subdirectory(libs)
+add_custom_target(copy_libc ALL
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "${CMAKE_CURRENT_BINARY_DIR}/libs/libc.so"
+)
 
 set(DEC_HDR
 include/pch.h
@@ -63,6 +67,7 @@ target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'libs/libc.so'")
 target_link_libraries(qrvd quirc zbar_cut)
+add_dependencies(qrvd copy_libc)
 
 
 SET(MTENC_HDR
@@ -96,7 +101,7 @@ target_include_directories(qrve PUBLIC include)
 set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'libs/libc.so'")
 target_link_libraries(qrve qrenc)
-
+add_dependencies(qrve copy_libc)
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
@@ -113,5 +118,5 @@ message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
 add_custom_target(create_tar ALL
     COMMAND ${CMAKE_COMMAND} -E remove "-f" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
-    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt")
+    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt" "${CMAKE_CURRENT_BINARY_DIR}/libs/*.so")
 add_dependencies(create_tar qrvd qrve)
