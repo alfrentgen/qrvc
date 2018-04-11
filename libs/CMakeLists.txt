@@ -45,8 +45,6 @@ ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(MINGW)
 	target_link_libraries(zbar_cut iconv)
-else()
-    target_link_libraries(zbar_cut)
 endif()
 set_target_properties(zbar_cut PROPERTIES FOLDER "libraries")
 target_compile_definitions(zbar_cut PRIVATE
