@@ -5,9 +5,11 @@ from hashlib import md5
 
 common_opts = ' -p 99 '
 
-in_file = '1M.in'
-enc_file = '1M.enc'
-out_file = '1M.out'
+file_size = '1M' #in terms of 'head' utility
+
+in_file = file_size + '.in'
+enc_file = file_size + '.enc'
+out_file = file_size + '.out'
 key_file = 'key.yuv'
 log_file='test.log'
 
@@ -54,7 +56,7 @@ def verify(*file_names):
 
 def generate_files(*file_names):
     for fn in file_names:
-        my_check_call('head -c 1M < /dev/urandom >' + fn)
+        my_check_call('head -c '+ file_size + ' < /dev/urandom >' + fn)
 
 def delete_files(*file_names):
     for fn in file_names:
@@ -66,10 +68,11 @@ def delete_files(*file_names):
     
 
 #the test body
-delete_files(log_file)
 for arch in archs:
-    enc_name = '../build_linux_' + arch + '/' + enc
-    dec_name = '../build_linux_' + arch + '/' + dec
+    os.chdir('../build_linux_' + arch)
+    delete_files(log_file)
+    enc_name = './' + enc
+    dec_name = './' + dec
     for e in e_vals:
         for c in c_vals:
             delete_files(in_file, out_file, key_file)

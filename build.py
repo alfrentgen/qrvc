@@ -13,32 +13,32 @@ config = {
     'linux_i686' :
     {
         dir_key : 'build_linux_i686',
-        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=ON -DBUILD_STATIC=ON',
-        toolch_key : '',
+        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=ON -DUSE_MUSL=ON',
+        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../toolchains/Toolchain-Ubuntu-musl_x86_32.cmake"',
         prod_key : 'qrvc_linux_x86_32.tar.gz'
     },
 
     'windows_i686' :
     {
         dir_key : 'build_windows_i686',
-        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=ON -DBUILD_STATIC=ON',
-        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../cmake-mingw-toolchains/Toolchain-Ubuntu-mingw32.cmake"',
+        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=ON -DBUILD_STATIC=ON -DUSE_MUSL=OFF',
+        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../toolchains/Toolchain-Ubuntu-mingw32.cmake"',
         prod_key : 'qrvc_win_x86_32.tar.gz'
     },
 
     'linux_x86_64' :
     {
         dir_key : 'build_linux_x86_64',
-        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=OFF -DBUILD_STATIC=ON',
-        toolch_key : '',
+        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=OFF -DUSE_MUSL=ON',
+        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../toolchains/Toolchain-Ubuntu-musl_x86_64.cmake"',
         prod_key : 'qrvc_linux_x86_64.tar.gz'
     },
 
     'windows_x86_64' :
     {
         dir_key : 'build_windows_x86_64',
-        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=OFF -DBUILD_STATIC=ON',
-        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../cmake-mingw-toolchains/Toolchain-Ubuntu-mingw64.cmake"',
+        opt_key : '-G "CodeBlocks - Unix Makefiles" -DUSE_X86_32=OFF -DBUILD_STATIC=ON -DUSE_MUSL=OFF',
+        toolch_key : '-DCMAKE_TOOLCHAIN_FILE="../toolchains/Toolchain-Ubuntu-mingw64.cmake"',
         prod_key : 'qrvc_win_x86_64.tar.gz'
     }
 }

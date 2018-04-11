@@ -6,11 +6,18 @@ project("QR video codec" C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(USE_X86_32 "Build for x86 32 bits" OFF)
+option(USE_MUSL "Build using musl-cross-make" OFF)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -pthread -fsplit-stack")
-set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -pthread -fsplit-stack")
-set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc -pthread -fsplit-stack")
-set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc -pthread -fsplit-stack")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -pthread")
+set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -O3 -mtune=generic -pthread")
+set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc -pthread")
+set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc -pthread")
+if(USE_MUSL)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsplit-stack")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsplit-stack")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_C_FLAGS} -fsplit-stack")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_C_FLAGS} -fsplit-stack")
+endif()
 
 if(USE_X86_32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32 -march=i686 -mfpmath=sse -msse -msse2")
@@ -32,9 +39,16 @@ message(STATUS "CMAKE_C_FLAGS ${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS}")
 
 add_subdirectory(libs)
-add_custom_target(copy_libc ALL
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "${CMAKE_CURRENT_BINARY_DIR}/libs/libc.so"
-)
+
+if(USE_MUSL)
+    set(LD_MUSL_LINK "ld-musl.so")
+    add_custom_target(libc ALL
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "libs/libc.so"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "libs/libc.so"
+        COMMAND ln "-s" "./libs/libc.so" "${LD_MUSL_LINK}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endif()
 
 set(DEC_HDR
 include/pch.h
@@ -65,9 +79,11 @@ src/Config.cpp
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
 target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'libs/libc.so'")
 target_link_libraries(qrvd quirc zbar_cut)
-add_dependencies(qrvd copy_libc)
+if(USE_MUSL)
+    set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+    add_dependencies(qrvd libc)
+endif()
 
 
 SET(MTENC_HDR
@@ -99,9 +115,13 @@ src/Config.cpp
 add_executable(qrve ${MTENC_HDR} ${MTENC_SRC})
 target_include_directories(qrve PUBLIC include)
 set_target_properties(qrve PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'libs/libc.so'")
 target_link_libraries(qrve qrenc)
-add_dependencies(qrve copy_libc)
+if(USE_MUSL)
+    set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN/libs' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+    add_dependencies(qrve libc)
+endif()
+
+
 
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
@@ -115,8 +135,16 @@ endif()
 set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
 message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
 
+if(USE_MUSL)
+    set(LIBS_TO_TAR libs/*.so)
+elseif(MINGW)
+    set(LIBS_TO_TAR libs/*.dll)
+endif()
+
 add_custom_target(create_tar ALL
-    COMMAND ${CMAKE_COMMAND} -E remove "-f" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt"
-    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "${CMAKE_CURRENT_BINARY_DIR}/versions.txt" "${CMAKE_CURRENT_BINARY_DIR}/libs/*.so")
+    COMMAND ${CMAKE_COMMAND} -E remove "-f" "versions.txt"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "versions.txt"
+    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "versions.txt" "${LIBS_TO_TAR}" "${LD_MUSL_LINK}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 add_dependencies(create_tar qrvd qrve)
