@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 
 project("QR libraries" C CXX)
 
-add_definitions(-DZBAR_VERSION_MAJOR=0 -DZBAR_VERSION_MINOR=10)
-
 set(ZBAR_LIB_PATH  ./zbar)
 
 set(ZBAR_HDR

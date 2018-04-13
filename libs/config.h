@@ -1,3 +1,4 @@
-#include <inttypes.h>
+//#include <inttypes.h>
 #define ENABLE_QRCODE
-#define QR_BYTESASIS
+#define HAVE_SYS_TIME_H
+#define HAVE_INTTYPES_H
