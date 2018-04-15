@@ -5,6 +5,8 @@ message(STATUS ${GENERATOR})
 project("QR video codec" C CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_SKIP_RPATH TRUE)
 
 option(USE_X86_32 "Build for x86 32 bits" OFF)
 option(USE_MUSL "Build using musl-cross-make" OFF)
@@ -53,6 +55,7 @@ if(USE_MUSL)
     add_custom_target(libc ALL
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "libc.so"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_FIND_ROOT_PATH}/lib/libc.so" "libc.so"
+        COMMAND ${CMAKE_COMMAND} -E remove "-f" "${LD_MUSL_LINK}"
         COMMAND ln "-s" "./libc.so" "${LD_MUSL_LINK}"
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
@@ -146,9 +149,9 @@ set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
 message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
 
 if(USE_MUSL)
-    set(LIBS_TO_TAR ./*.so)
+    set(LIBS_TO_TAR *.so)
 elseif(MINGW)
-    set(LIBS_TO_TAR ./*.dll)
+    set(LIBS_TO_TAR *.dll)
 endif()
 
 add_custom_target(create_tar ALL
@@ -156,7 +159,7 @@ add_custom_target(create_tar ALL
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "versions.txt"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README" "README"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/licenses" "${CMAKE_BINARY_DIR}/licenses"
-    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "versions.txt" "README" "licenses" "${LIBS_TO_TAR}" "${LD_MUSL_LINK}"
+    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "versions.txt" "README" "licenses" "${LIBS_TO_TAR}" #"${LD_MUSL_LINK}"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 add_dependencies(create_tar qrvd qrve)

@@ -29,8 +29,8 @@ www.github.com/dlbeer/quirc
 www.musl-libc.org
 
 Windows versions of the software are built with mingw32-w64 cross compiler.
-However 32 bit version is not compatible with 64 bit Windows version.
-And both version can run on Windows 7 or higher.
+At least it works on wine, however 32 bit version is somehow not compatible with
+64 bit Windows version. The software can run on Windows 7 or higher.
 
 Linux versions of the software are build with musl based gcc cross compiler,
-and should work on any linux platform. But they was only tested on Ubuntu 16.04.
+and should work on any linux platform. But these were only tested on Ubuntu 16.04.
