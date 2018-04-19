@@ -95,7 +95,7 @@ src/Config.cpp
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
 target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(qrvd quirc zbar_cut)
+target_link_libraries(qrvd decquirc deczbar)
 if(USE_MUSL)
     set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
     add_dependencies(qrvd libc)

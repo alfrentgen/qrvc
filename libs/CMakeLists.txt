@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project("QR libraries" C CXX)
 
-set(ZBAR_LIB_PATH  ./zbar)
+set(ZBAR_LIB_PATH  ${CMAKE_CURRENT_SOURCE_DIR}/zbar)
 
 set(ZBAR_HDR
 ${ZBAR_LIB_PATH}/include/zbar.h
@@ -33,24 +33,24 @@ ${ZBAR_LIB_PATH}/zbar/symbol.c
 ${CMAKE_CURRENT_SOURCE_DIR}/qrdectxt_m.c #modified zbar/qrcode/qrdectxt.c
 )
 
-add_library(zbar_cut SHARED ${ZBAR_SRC} ${ZBAR_HDR})
-set_target_properties(zbar_cut PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(zbar_cut PUBLIC
+add_library(deczbar SHARED ${ZBAR_SRC} ${ZBAR_HDR})
+set_target_properties(deczbar PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(deczbar PUBLIC
 ${ZBAR_LIB_PATH}/zbar
 ${ZBAR_LIB_PATH}/include
 ${ZBAR_LIB_PATH}/include/zbar
 ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(MINGW)
-	target_link_libraries(zbar_cut iconv)
+	target_link_libraries(deczbar iconv)
 endif()
-set_target_properties(zbar_cut PROPERTIES FOLDER "libraries")
-target_compile_definitions(zbar_cut PRIVATE
+set_target_properties(deczbar PROPERTIES FOLDER "libraries")
+target_compile_definitions(deczbar PRIVATE
 ZBAR_VERSION_MAJOR=0
 ZBAR_VERSION_MINOR=10
 )
 
-set(QUIRC_LIB_PATH  quirc)
+set(QUIRC_LIB_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quirc)
 
 set(QUIRC_HDR
 ${QUIRC_LIB_PATH}/lib/quirc.h
@@ -65,18 +65,18 @@ ${CMAKE_CURRENT_SOURCE_DIR}/quirc_identify_m.c
 ${QUIRC_LIB_PATH}/lib/quirc.c
 )
 
-add_library(quirc SHARED ${QUIRC_SRC} ${QUIRC_HDR})
-set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
-set_target_properties(quirc PROPERTIES FOLDER "libraries")
+add_library(decquirc SHARED ${QUIRC_SRC} ${QUIRC_HDR})
+set_target_properties(decquirc PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(decquirc PUBLIC ${QUIRC_LIB_PATH}/lib)
+set_target_properties(decquirc PROPERTIES FOLDER "libraries")
 set(DFLOOD_FILL_MAX_DEPTH 4096)#QUIRC flood fill routine
-target_compile_definitions(quirc PRIVATE 
+target_compile_definitions(decquirc PRIVATE 
 QUIRC_MAX_REGIONS=65534
 FLOOD_FILL_MAX_DEPTH=${DFLOOD_FILL_MAX_DEPTH}
 )
 
 
-set(QRENC_LIB_PATH  ./libqrencode)
+set(QRENC_LIB_PATH  ${CMAKE_CURRENT_SOURCE_DIR}/libqrencode)
 
 SET(QRENC_HDR
 ${QRENC_LIB_PATH}/bitstream.h
@@ -118,4 +118,4 @@ target_compile_definitions(qrenc PRIVATE
 VERSION="3.9.0"
 )
 
-add_custom_target(libraries DEPENDS quirc zbar_cut qrenc)
+add_custom_target(libraries DEPENDS decquirc deczbar qrenc)
