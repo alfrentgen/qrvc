@@ -69,11 +69,7 @@ add_library(quirc SHARED ${QUIRC_SRC} ${QUIRC_HDR})
 set_target_properties(quirc PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(quirc PUBLIC ${QUIRC_LIB_PATH}/lib)
 set_target_properties(quirc PROPERTIES FOLDER "libraries")
-if(USE_X86_32)
-    set(DFLOOD_FILL_MAX_DEPTH 512)#QUIRC flood fill routine
-else()
-    set(DFLOOD_FILL_MAX_DEPTH 4096)#QUIRC flood fill routine
-endif()
+set(DFLOOD_FILL_MAX_DEPTH 4096)#QUIRC flood fill routine
 target_compile_definitions(quirc PRIVATE 
 QUIRC_MAX_REGIONS=65534
 FLOOD_FILL_MAX_DEPTH=${DFLOOD_FILL_MAX_DEPTH}

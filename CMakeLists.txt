@@ -16,7 +16,7 @@ set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ 
 set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 if(USE_MUSL)
-    set(MUSL_BUILD_FLAGS "-pthread -fsplit-stack")
+    set(MUSL_BUILD_FLAGS "-pthread")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MUSL_BUILD_FLAGS}")
