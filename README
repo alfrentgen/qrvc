@@ -1,3 +1,12 @@
+QRVC - QR code video codec
+Copyright (c) 2018 QRVC developer qrvideocodec@gmail.com
+
+LICENSE
+Permission to use, copy, modify, and/or distribute this software for
+any purpose with or without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in all
+copies.
+
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
 WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
@@ -7,19 +16,20 @@ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 
+NOTES
 For sake of integrity it is said, that this software uses following libraries:
 1) libzbar 0.10
 2) libqrencode 3.9.0
 3) quirc 1.0
-4) libwinpthread (windows build only)
+4) winpthreads (windows build only)
 5) musl libc (linux build only)
 
 Zbar and qrencode library are under LGPL license. Thus they have to be built as
-dynamic libraries, and they are. Until the whole source code of qrvc is open.
+dynamic libraries, and they are.
 
 Texts of libraries' licenses are in the "licenses" directory:
 LGPL.txt is for libzbar and libqrencode,
-winpthread_license.txt is for libwinpthread,
+winpthread_license.txt is for winpthreads (https://sourceforge.net/p/mingw-w64/code/6184/tree/trunk/mingw-w64-libraries/winpthreads/COPYING),
 musl_copyright.txt is for musl libc.
 
 Links for getting libraries' source code:
@@ -29,8 +39,8 @@ www.github.com/dlbeer/quirc
 www.musl-libc.org
 
 Windows versions of the software are built with mingw32-w64 cross compiler.
-At least it works on wine, however 32 bit version is somehow not compatible with
-64 bit Windows version. The software can run on Windows 7 or higher.
+The software can run on Windows XP or higher.
 
 Linux versions of the software are build with musl based gcc cross compiler,
-and should work on any linux platform. But these were only tested on Ubuntu 16.04.
+and should work on any linux platform. However, these were only tested on
+Ubuntu 16.04.
