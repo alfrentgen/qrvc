@@ -163,8 +163,10 @@ add_custom_target(create_tar ALL
     COMMAND ${CMAKE_COMMAND} -E remove "-f" "versions.txt"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/versions.txt" "versions.txt"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README" "README"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "LICENSE"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/licenses" "${CMAKE_BINARY_DIR}/licenses"
-    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "versions.txt" "README" "licenses" "${LIBS_TO_TAR}" #"${LD_MUSL_LINK}"
+    COMMAND ${CMAKE_COMMAND} -E tar "-cfvz" "${TARBALL_NAME}.tar.gz" "$<TARGET_FILE:qrve>" "$<TARGET_FILE:qrvd>" "versions.txt" "LICENSE"
+    "README" "licenses" "${LIBS_TO_TAR}"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 add_dependencies(create_tar qrvd qrve)
