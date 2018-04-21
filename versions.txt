@@ -1,2 +1,5 @@
+version 0.5.1
+    dynamically linked libraries
+    musl libc for linux
 version 0.5.0
-    basic implementation.
+    basic implementation

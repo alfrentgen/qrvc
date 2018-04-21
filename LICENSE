@@ -1,12 +1,10 @@
-Libraries used:
-zbar 0.10 www.github.com/ZBar
-qrencode 3.9.0 www.fukuchi.org/works/qrencode/
-quirc 1.0 www.github.com/dlbeer/quirc/
-winpthread www.mingw-w64.org/
-musl libc www.musl-libc.org
+QRVC - QR code video codec
+Copyright (c) 2018 QRVC developer qrvideocodec@gmail.com
 
-Texts of librarie's licenses are in the "licenses" directory.
-
+Permission to use, copy, modify, and/or distribute this software for
+any purpose with or without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in all
+copies.
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
 WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED

@@ -1,0 +1,9 @@
+musl libc has DEFAULT_STACK_SIZE=80K, for preveting stack overflow crashes
+we should use stack at least 512K(4096 flood_fill() invocations 96 bytes frame
+), but it's better make stack size 1M.
+Using musl-cross-make:
+1) Place config.mak and specify target and other options in it.
+2) do "make extract_all" for getting sources
+3) open pthread_impl.h in musl source and redefine DEFAULT_STACK_SIZE=1048576
+4) make
+5) make install
