@@ -1,0 +1,24 @@
+Simpole pipeline GUI
+Frame with two switching menus for encode and decode.
+Encode menu:
+    input radiobutton: infile or process(any)
+    input file/process: txt field with filename to encode or process command line
+    qrve options: txt field
+    v-compressor command: executable name specified(if none generate to output file)
+    v-compressor options: txt field
+    outfile: txt field with fn(if none generate stdout)
+    
+Decode menu:
+    input radiobutton: infile or process(v-decompressor)
+    
+    input file: txt field with filename to decode
+    or
+    v-decompressor command: executable name specified
+    v-decompressor options: txt field
+    
+    qrvd options: txt field
+    outfile: txt field with fn(if none generate stdout)
+
+Main button: Start/Stop
+
+CFG file with common options for qrve/d and vcompressor/decompressor options
