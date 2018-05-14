@@ -1,10 +1,11 @@
-#import  os
-#working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
-#os.chdir(working_path)
+import  os
+from steganography import *
+working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
+os.chdir(working_path)
 
 dest = open('sample.yuv', 'wb')
 qr = open('1M_1280x720.yuv', 'rb')
-anim = open('BAO.yuv', 'rb')
+anim = open('anim.yuv', 'rb')
 anim_frame = 66
 threshold = 0x7fffff
 width = int(1280)
@@ -30,38 +31,23 @@ anim.seek(anim_offset + luma_size + chroma_size)
 anim_v = anim.read(chroma_size)
 anim_v = bytearray(anim_v)
 
-plane = anim_v
+anim.seek(anim_offset)
+anim_frame = anim.read(luma_size + 2 * chroma_size)
+anim_frame = bytearray(anim_frame)
+print(len(anim_frame))
 
 try:
-    for i in range(luma_size):
-        lum_raw = int(i/width)
-        lum_col = int(i%width)
-        ch_raw = int((i/width)/2)
-        ch_col = int((i%width)/2)
-        ch_width = int(width/2)
-        ch_i = int(ch_raw * ch_width + ch_col)
+    #algorithm_2_chroma(anim_u, qr_luma, width, height, mask)
+    #algorithm_2_luma(anim_y, qr_luma, width, height, mask)
 
-        if plane[ch_i] in range(64, 128):
-            if qr_luma[i] == 0:
-                plane[ch_i] -= 64
-            elif qr_luma[i] == 255:
-                plane[ch_i] += 64
-            
-        if plane[ch_i] in range(128, 128 + 64):
-            if qr_luma[i] == 0:
-                plane[ch_i] -= 64
-            elif qr_luma[i] == 255:
-                plane[ch_i] += 64
+    mask = 0x00000003
+    synth_frame = algorithm_3(anim_frame, width, height, qr_luma, mask)
 except Exception as ex:
-    print("exception")
-finally:
-    print(len(anim_y), len(anim_u),len(anim_v))
-    print(i, lum_raw, lum_col)
-    print(ch_i, ch_raw, ch_col)
+    raise
     
-    synth_frame = anim_y + anim_u + anim_v
+#synth_frame = anim_y + anim_u + anim_v
 
-    dest.write(synth_frame)
-    dest.close()
-    qr.close()
-    anim.close()
+dest.write(synth_frame)
+dest.close()
+qr.close()
+anim.close()
