@@ -167,40 +167,89 @@ def algorithm_4_chroma(frame, frame_width, frame_height, qr_plane):
         u = int(plane_u[ch_i] & 0xffffffC0)  #11000000b
         v = int(plane_v[ch_i] & 0xffffffC0)  #11000000b
         
-        #val = int(plane_y[i] & 0xfffffff8)#11111000b
-        #val = val.to_bytes(4, 'little', signed=True)
-        #plane_y[i] = val[0]
+        val = int(plane_y[i] & 0xfffffff8)#11111000b
+        val = val.to_bytes(4, 'little', signed=True)
+        plane_y[i] = val[0]
             
         if qr_plane[i] == 0: #black
             if y != 0 or y != 128:
                 #signal somehow that inversion is needed
-                #val += 2
-                #val = val.to_bytes(4, 'little', signed=True)
-                #plane_y[i] = val[0]
+                val += 2
+                val = val.to_bytes(4, 'little', signed=True)
+                plane_y[i] = val[0]
         elif qr_plane[i] == 255: #white
             if y != 64 or y != 192:
                 #signal somehow that inversion is needed
-                #val += 5
-                #val = val.to_bytes(4, 'little', signed=True)
-                #plane_y[i] = val[0]
+                val += 5
+                val = val.to_bytes(4, 'little', signed=True)
+                plane_y[i] = val[0]
 
     new_frame = plane_y + plane_u + plane_v
     return new_frame
 
 #####
-def calc_diff(pixel, neighbour):
-    diff = 0
-    l = len(neighbour)
-    for n in neighbour:
-        diff += n
-    diff += pixel
-    diff = diff/(l + 1) - pixel
-    return int(diff)
+def calc_mean(pixels):
+    l = len(pixels)
+    summ = int(0)
+    for p in pixels:
+        summ += p
+    return int(summ/len(pixels))
+
+def change_pels(pels, bit):
+    try:
+        inc = 1
+        if bit == 255:
+            inc = -1
+        for i in range(1, 4):
+            if (pels[i] < 255) and(pels[i] > 0):
+                pels[i] = pels[i] - inc
+        if (pels[1] < 255) and(pels[1] > 0):
+                pels[i] = pels[i] + inc
+    except:
+        print(pels[i], bit)
+        raise
+        
+    return
+
+def render_pels(plane, stride, idx, threshold, bit_val):
+    print(idx)
+    p = plane
+    inds = (idx, idx + 1, idx - 1, idx + stride, idx - stride)
+    pels = bytearray();
+    for i in inds:
+        pels.append(p[i])
+    
+    thr = int(threshold)
+    cur_pel = int(p[idx])
+    mean_pel = int(calc_mean(pels))
+
+    try:
+        if bit_val == 0:
+            while mean_pel - cur_pel <= thr:
+                #print('under thr')
+                print('cur_pel - mean_pel = ', mean_pel - cur_pel)
+                change_pels(pels, bit_val)
+                mean_pel = int(calc_mean(pels))
+        elif bit_val == 255:
+            while cur_pel - mean_pel >= -thr:
+                #print('above thr')
+                print('cur_pel - mean_pel = ', cur_pel - mean_pel)
+                change_pels(pels, bit_val)
+                mean_pel = int(calc_mean(pels))
+                
+        for j in range(0, len(inds)):
+            p[inds[j]] = pels[j]
+
+    except:
+        print(pels, len(pels))
+        raise
+
+    return
 
 def algorithm_5(frame, frame_width, frame_height, qr_plane, threshold):
     print("algorithm_5")
     thr = int(threshold)
-    lum_size = int(frame_width * frame_height)
+    luma_size = int(frame_width * frame_height)
     lum_width = int(frame_width)
     
     chroma_size = int(luma_size/4)
@@ -212,8 +261,8 @@ def algorithm_5(frame, frame_width, frame_height, qr_plane, threshold):
     print(len(plane_y), len(plane_u), len(plane_v), len(qr_plane))
     print(frame_width, frame_height)
 
-    for i in range(0:frame_height:4):    
-        for j in range(0:frame_width:4):
+    for i in range(0,frame_height,4):    
+        for j in range(0,frame_width,4):
             lum_raw = int(i)
             lum_col = int(j)
             lum_i = int(lum_raw * lum_width + lum_col)
@@ -222,23 +271,8 @@ def algorithm_5(frame, frame_width, frame_height, qr_plane, threshold):
             ch_col = int(j/2)
             ch_i = int(ch_raw * ch_width + ch_col)
 
-            y = int(plane_y[lum_i])
-            u = int(plane_u[ch_i])
-            v = int(plane_v[ch_i])
-            diff = calc_diff()
-            
-            if qr_plane[lum_i] == 0: #black
-                if diff < thr
-                    #signal somehow that inversion is needed
-                    #val += 2
-                    #val = val.to_bytes(4, 'little', signed=True)
-                    #plane_y[i] = val[0]
-            elif qr_plane[i] == 255: #white
-                if diff > -thr
-                    #signal somehow that inversion is needed
-                    #val += 5
-                    #val = val.to_bytes(4, 'little', signed=True)
-                    #plane_y[i] = val[0]
+            idx = int(lum_i + lum_width + 1)
+            render_pels(plane_y, lum_width, idx, 16, qr_plane[lum_i])
 
     new_frame = plane_y + plane_u + plane_v
     return new_frame

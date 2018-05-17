@@ -1,7 +1,7 @@
 import  os
 from steganography import *
-working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
-os.chdir(working_path)
+#working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
+#os.chdir(working_path)
 
 dest = open('sample.yuv', 'wb')
 qr = open('1M_1280x720.yuv', 'rb')
@@ -40,8 +40,10 @@ try:
     #algorithm_2_chroma(anim_u, qr_luma, width, height, mask)
     #algorithm_2_luma(anim_y, qr_luma, width, height, mask)
 
-    mask = 0x00000003
-    synth_frame = algorithm_3(anim_frame, width, height, qr_luma, mask)
+    #mask = 0x00000003
+    #synth_frame = algorithm_3(anim_frame, width, height, qr_luma, mask)
+    #synth_frame = algorithm_4_chroma(anim_frame, width, height, qr_luma)
+    synth_frame = algorithm_5(anim_frame, width, height, qr_luma, 8)
 except Exception as ex:
     raise
     
