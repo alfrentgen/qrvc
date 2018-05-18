@@ -200,11 +200,16 @@ def change_pels(pels, bit):
         inc = 1
         if bit == 255:
             inc = -1
-        for i in range(1, 4):
+
+        #neighbourpels
+        for i in range(1, len(pels)):
             if (pels[i] < 255) and(pels[i] > 0):
-                pels[i] = pels[i] - inc
-        if (pels[1] < 255) and(pels[1] > 0):
                 pels[i] = pels[i] + inc
+
+        #selected pel
+        if (pels[0] < 255) and(pels[0] > 0):
+                pels[0] = pels[0] - inc
+                
     except:
         print(pels[i], bit)
         raise
@@ -212,7 +217,7 @@ def change_pels(pels, bit):
     return
 
 def render_pels(plane, stride, idx, threshold, bit_val):
-    print(idx)
+    #print(idx)
     p = plane
     inds = (idx, idx + 1, idx - 1, idx + stride, idx - stride)
     pels = bytearray();
@@ -224,18 +229,28 @@ def render_pels(plane, stride, idx, threshold, bit_val):
     mean_pel = int(calc_mean(pels))
 
     try:
+        n = 0
         if bit_val == 0:
             while mean_pel - cur_pel <= thr:
                 #print('under thr')
-                print('cur_pel - mean_pel = ', mean_pel - cur_pel)
+                n += 1
+                if n > 256:
+                    print('mean_pel - cur_pel = ', mean_pel - cur_pel)
+                    print(pels)
+                    print(cur_pel)
                 change_pels(pels, bit_val)
                 mean_pel = int(calc_mean(pels))
+                cur_pel = int(pels[0])
         elif bit_val == 255:
-            while cur_pel - mean_pel >= -thr:
+            while mean_pel - cur_pel >= -thr:
                 #print('above thr')
-                print('cur_pel - mean_pel = ', cur_pel - mean_pel)
+                n += 1
+                if n > 256:
+                    print('cur_pel - mean_pel = ', cur_pel - mean_pel)
+                    print(cur_pel)
                 change_pels(pels, bit_val)
                 mean_pel = int(calc_mean(pels))
+                cur_pel = int(pels[0])
                 
         for j in range(0, len(inds)):
             p[inds[j]] = pels[j]
@@ -272,7 +287,7 @@ def algorithm_5(frame, frame_width, frame_height, qr_plane, threshold):
             ch_i = int(ch_raw * ch_width + ch_col)
 
             idx = int(lum_i + lum_width + 1)
-            render_pels(plane_y, lum_width, idx, 16, qr_plane[lum_i])
+            render_pels(plane_y, lum_width, idx, thr, qr_plane[lum_i])
 
     new_frame = plane_y + plane_u + plane_v
     return new_frame

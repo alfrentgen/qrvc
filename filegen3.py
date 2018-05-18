@@ -1,7 +1,7 @@
 import  os
 from steganography import *
-#working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
-#os.chdir(working_path)
+working_path = '/media/alf/storage1/qrvc/qrvc_linux_x86_64'
+os.chdir(working_path)
 
 dest = open('sample.yuv', 'wb')
 qr = open('1M_1280x720.yuv', 'rb')
