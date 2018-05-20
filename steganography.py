@@ -195,38 +195,64 @@ def calc_mean(pixels):
         summ += p
     return int(summ/len(pixels))
 
-def change_pels(pels, bit):
+def change_pels(pels, neigh, bit):
     try:
         inc = 1
         if bit == 255:
             inc = -1
 
         #neighbourpels
-        for i in range(1, len(pels)):
-            if (pels[i] < 255) and(pels[i] > 0):
-                pels[i] = pels[i] + inc
+        for i in range(0, len(neigh)):
+            if (neigh[i] < 255) and(neigh[i] > 0):
+                neigh[i] = neigh[i] + inc
 
         #selected pel
-        if (pels[0] < 255) and(pels[0] > 0):
-                pels[0] = pels[0] - inc
-                
+        for i in range(0, len(pels)):
+            if (pels[0] < 255) and(pels[0] > 0):
+                    pels[i] = pels[i] - inc
+                    
     except:
+        print(len(pels))
+        print(len(neigh))
         print(pels[i], bit)
         raise
-        
+
     return
 
 def render_pels(plane, stride, idx, threshold, bit_val):
     #print(idx)
     p = plane
-    inds = (idx, idx + 1, idx - 1, idx + stride, idx - stride)
-    pels = bytearray();
-    for i in inds:
+    pels_inds = (idx,
+                 #idx + 1, idx + stride,
+                 idx + stride + 1)# 4 inner pels
+
+    neigh_inds = (
+                #idx - stride,
+                idx - stride + 1,#two top border pels
+                idx - stride - 1,
+                #idx - 1,
+                idx + stride - 1,
+                #idx + 2 * stride - 1,#left border
+                idx - stride + 2,
+                #idx + 2,
+                idx + stride + 2,
+                #idx + 2 * stride + 2,#right border
+                idx + 2 * stride,
+                #idx + 2 * stride + 1
+                )#two bottom border pels
+
+    pels = bytearray()
+    for i in pels_inds:
         pels.append(p[i])
+
+    neigh = bytearray()
+    for i in neigh_inds:
+        neigh.append(p[i])
     
     thr = int(threshold)
-    cur_pel = int(p[idx])
-    mean_pel = int(calc_mean(pels))
+    #cur_pel = int(p[idx])
+    mean_pel = int(calc_mean(neigh))
+    cur_pel = int(calc_mean(pels))
 
     try:
         n = 0
@@ -238,9 +264,9 @@ def render_pels(plane, stride, idx, threshold, bit_val):
                     print('mean_pel - cur_pel = ', mean_pel - cur_pel)
                     print(pels)
                     print(cur_pel)
-                change_pels(pels, bit_val)
-                mean_pel = int(calc_mean(pels))
-                cur_pel = int(pels[0])
+                change_pels(pels, neigh, bit_val)
+                mean_pel = int(calc_mean(neigh))
+                cur_pel = int(calc_mean(pels))#int(pels[0])
         elif bit_val == 255:
             while mean_pel - cur_pel >= -thr:
                 #print('above thr')
@@ -248,15 +274,19 @@ def render_pels(plane, stride, idx, threshold, bit_val):
                 if n > 256:
                     print('cur_pel - mean_pel = ', cur_pel - mean_pel)
                     print(cur_pel)
-                change_pels(pels, bit_val)
-                mean_pel = int(calc_mean(pels))
-                cur_pel = int(pels[0])
+                change_pels(pels, neigh, bit_val)
+                mean_pel = int(calc_mean(neigh))
+                cur_pel = int(calc_mean(pels))#int(pels[0])
                 
-        for j in range(0, len(inds)):
-            p[inds[j]] = pels[j]
+        for j in range(0, len(pels_inds)):
+            p[pels_inds[j]] = pels[j]
+        for j in range(0, len(neigh_inds)):
+            p[neigh_inds[j]] = neigh[j]
 
     except:
         print(pels, len(pels))
+        print(pels_inds)
+        print(neigh_inds)
         raise
 
     return
