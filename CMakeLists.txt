@@ -117,6 +117,7 @@ include/MTEncoder.h
 include/utilities.h
 include/utilities_c.h
 include/help.h
+include/steganography.h
 )
 
 SET(MTENC_SRC
@@ -128,6 +129,7 @@ src/inputQueue.cpp
 src/OutputQueue.cpp
 src/MTEncoder.cpp
 src/Config.cpp
+src/steganography.cpp
 )
 
 add_executable(qrve ${MTENC_HDR} ${MTENC_SRC})
