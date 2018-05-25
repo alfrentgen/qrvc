@@ -36,7 +36,7 @@ vector<uint8_t> generateQRPath(int32_t qrWidth, function<vector<uint8_t>(int32_t
         return generateDefaultQRPath(qrWidth);
 }
 
-int32_t getStride(int32_t size){
+int32_t getUnitsCount(int32_t size){
     int32_t units = size/STEG_UNIT_SIZE - 1;
 
     int32_t borderSize = size%STEG_UNIT_SIZE;
@@ -46,37 +46,56 @@ int32_t getStride(int32_t size){
     return units;
 }
 
-vector<tuple<uint8_t, uint8_t>> generateDefaultFramePath_NoKey(int32_t frameWidth, int32_t frameHeight){
-    vector<tuple<uint8_t, uint8_t>> path(0);
+vector<uint8_t> generateDefaultFramePath_NoKey(int32_t frameWidth, int32_t frameHeight){
+    vector<uint8_t> path(0);
     //left and top borders should be at least 4 pels sized
     //right and bottom borders should be not zero
     //A steg unit is 4x4 pels
     //border pixels(units) must not be used
-    int32_t strideX = getStride(frameWidth);
-    int32_t strideY = getStride(frameHeight);
+    int32_t strideX = getUnitsCount(frameWidth);
+    int32_t strideY = getUnitsCount(frameHeight);
 
     return path;
 }
 
-vector<tuple<uint8_t, uint8_t>> generateDefaultFramePath_Key(int32_t frameWidth, int32_t frameHeight){
-    vector<tuple<uint8_t, uint8_t>> path(0);
+vector<uint8_t> generateDefaultFramePath_Key(int32_t frameWidth, int32_t frameHeight){
+    vector<uint8_t> path(0);
     //left and top borders should be at least 4 pels sized
     //right and bottom borders should be not zero
     //A steg unit is 4x4 pels
     //border pixels(units) must not be used
-    int32_t strideX = getStride(frameWidth);
-    int32_t strideY = getStride(frameHeight);
+    int32_t unitsX = getUnitsCount(frameWidth);
+    int32_t unitsY = getUnitsCount(frameHeight);
+    //int32_t nUnits = strideX * strideY;
+    vector<uint8_t> xIndeces(unitsX);
+    vector<uint8_t> yIndeces(unitsY);
 
+    for(int i = 1; i <= unitsX; i++){
+        xIndeces[i] = i;
+    }
 
+    for(int i = 1; i <= unitsY; i++){
+        yIndeces[i] = i;
+    }
+
+    std::random_shuffle(xIndeces.begin(), xIndeces.end());
+    std::random_shuffle(yIndeces.begin(), yIndeces.end());
+
+    int32_t nTaps = unitsX < unitsY ? unitsX : unitsY;
+    path.resize(2 * nTaps);
+    for(int i = 0; i < nTaps; i++){
+        path[2 * i] = xIndeces[i];
+        path[2 * i + 1] = yIndeces[i];
+    }
     //Just generating random  matrix
 
     return path;
 }
 
 //tuple<raw, column>
-vector<tuple<uint8_t, uint8_t>> generateFramePath(int32_t frameWidth, int32_t frameHeight,
-    function<vector<tuple<uint8_t, uint8_t>>(int32_t, int32_t)>* defaultAlg,
-    function<vector<tuple<uint8_t, uint8_t>>(int32_t, int32_t)>* customAlg)
+vector<uint8_t> generateFramePath(int32_t frameWidth, int32_t frameHeight,
+    function<vector<uint8_t>(int32_t, int32_t)>* defaultAlg,
+    function<vector<uint8_t>(int32_t, int32_t)>* customAlg)
 {
     if(customAlg)
         return (*customAlg)(frameWidth, frameHeight);
