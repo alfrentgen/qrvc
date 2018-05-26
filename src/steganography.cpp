@@ -102,3 +102,12 @@ vector<uint8_t> generateFramePath(int32_t frameWidth, int32_t frameHeight,
     else
         return (*defaultAlg)(frameWidth, frameHeight);
 }
+
+int32_t StegaModule::Hide(uint8_t* frame, int32_t width, int32_t height, uint8_t* qrCode, int32_t qrwWidth){
+
+}
+
+int32_t StegaModule::GeneratePaths(int32_t frameWidth, int32_t frameHight, int32_t qrWidth){
+
+    return 0;
+}
