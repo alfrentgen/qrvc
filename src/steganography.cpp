@@ -2,6 +2,10 @@
 
 #define STEG_UNIT_SIZE 4
 
+void changeUnit(uint8_t* pUnitPel){
+    ;
+}
+
 vector<uint8_t> spiralMatrix(int32_t qrWidth){
     //currentIdx
     vector<uint8_t> indeces(0);
@@ -103,11 +107,22 @@ vector<uint8_t> generateFramePath(int32_t frameWidth, int32_t frameHeight,
         return (*defaultAlg)(frameWidth, frameHeight);
 }
 
-int32_t StegaModule::Hide(uint8_t* frame, int32_t width, int32_t height, uint8_t* qrCode, int32_t qrwWidth){
-
+int32_t StegaModule::Hide(uint8_t* frame, int32_t width, int32_t height, uint8_t* qrCode, int32_t qrWidth){
+    ;
 }
 
-int32_t StegaModule::GeneratePaths(int32_t frameWidth, int32_t frameHight, int32_t qrWidth){
-
+int32_t StegaModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidth, bool keyFlag){
+    m_frameWidth = frameWidth;
+    m_frameHeight = frameHeight;
+    m_qrWidth = qrWidth;
+    m_keyFlag = keyFlag;
+    if(keyFlag){
+        m_framePath = generateFramePath(m_frameWidth, m_frameHeight,
+                      generateDefaultFramePath_Key, nullptr);
+    }else{
+        m_framePath = generateFramePath(m_frameWidth, m_frameHeight,
+                      generateDefaultFramePath_NoKey, nullptr);
+    }
+    m_qrPath = generateQRPath(m_qrWidth, nullptr);
     return 0;
 }
