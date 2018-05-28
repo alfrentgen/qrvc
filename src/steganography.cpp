@@ -2,10 +2,6 @@
 
 #define STEG_UNIT_SIZE 4
 
-void changeUnit(uint8_t* pUnitPel){
-    ;
-}
-
 vector<uint8_t> spiralMatrix(int32_t qrWidth){
     //currentIdx
     vector<uint8_t> indeces(0);
@@ -70,7 +66,7 @@ vector<uint8_t> generateDefaultFramePath_Key(int32_t frameWidth, int32_t frameHe
     //border pixels(units) must not be used
     int32_t unitsX = getUnitsCount(frameWidth);
     int32_t unitsY = getUnitsCount(frameHeight);
-    //int32_t nUnits = strideX * strideY;
+
     vector<uint8_t> xIndeces(unitsX);
     vector<uint8_t> yIndeces(unitsY);
 
@@ -82,6 +78,7 @@ vector<uint8_t> generateDefaultFramePath_Key(int32_t frameWidth, int32_t frameHe
         yIndeces[i] = i;
     }
 
+    //Just generating random  matrix
     std::random_shuffle(xIndeces.begin(), xIndeces.end());
     std::random_shuffle(yIndeces.begin(), yIndeces.end());
 
@@ -91,7 +88,6 @@ vector<uint8_t> generateDefaultFramePath_Key(int32_t frameWidth, int32_t frameHe
         path[2 * i] = xIndeces[i];
         path[2 * i + 1] = yIndeces[i];
     }
-    //Just generating random  matrix
 
     return path;
 }
@@ -102,15 +98,53 @@ vector<uint8_t> generateFramePath(int32_t frameWidth, int32_t frameHeight,
     function<vector<uint8_t>(int32_t, int32_t)>* customAlg)
 {
     if(customAlg)
-        return (*customAlg)(frameWidth, frameHeight);
+        return ((*customAlg)(frameWidth, frameHeight));
     else
-        return (*defaultAlg)(frameWidth, frameHeight);
+        return ((*defaultAlg)(frameWidth, frameHeight));
 }
 
-int32_t StegaModule::Hide(uint8_t* frame, int32_t width, int32_t height, uint8_t* qrCode, int32_t qrWidth){
-    ;
+int32_t calc_mean(uint8_t* pixels, int32_t size){
+    int32_t sum = 0;
+    for(int i = 0; i < size; i++)
+        sum += pixels[i];
+    return sum/size;
 }
 
+//4x4 pels unit
+void changeUnit(uint8_t* pUnitPel, uint8_t bit){
+    /*int8_t inc = 1;
+    if(bit){
+        inc = -1;
+    }
+
+    #neighbourpels
+    for i in range(0, len(neigh)):
+        if (neigh[i] < 255) and(neigh[i] > 0):
+            neigh[i] = neigh[i] + inc
+    for()
+
+    #selected pel
+    for i in range(0, len(pels)):
+        if (pels[0] < 255) and(pels[0] > 0):
+                pels[i] = pels[i] - inc
+
+    return;*/
+}
+
+int32_t StegaModule::Hide(uint8_t* frame, int32_t frameWidth, int32_t frameHeight, uint8_t* qrCode, int32_t qrWidth){
+    int32_t qrSize = qrWidth * qrWidth;
+    for(int i = 0; i < qrSize; i++){
+        uint8_t qrIdx = m_qrPath[i];
+        uint8_t frUnitPosX = m_framePath[2 * i];
+        uint8_t frUnitPosY = m_framePath[2 * i + 1];
+        uint8_t* pUnit = &frame[frUnitPosY * STEG_UNIT_SIZE * frameWidth + frUnitPosX * STEG_UNIT_SIZE];
+
+        changeUnit(pUnit, qrCode[qrIdx]);
+    }
+}
+
+//returns -1 if qrPath is longer than framePath,
+//because there are not enough units in a frame to hide each dot of QR code
 int32_t StegaModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidth, bool keyFlag){
     m_frameWidth = frameWidth;
     m_frameHeight = frameHeight;
@@ -124,5 +158,8 @@ int32_t StegaModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWid
                       generateDefaultFramePath_NoKey, nullptr);
     }
     m_qrPath = generateQRPath(m_qrWidth, nullptr);
-    return 0;
+
+    if(m_qrPath.size() > m_framePath.size())
+        return FAIL;
+    return OK;
 }
