@@ -10,6 +10,8 @@ typedef struct StegUnit{
     int32_t threshold;
     vector<int32_t> neighInds;
     vector<int32_t> coreInds;
+    vector<uint8_t*> neighPels;
+    vector<uint8_t*> corePels;
     StegUnit():
         bit(false), pUnit(nullptr), neighInds(0), coreInds(0){}
 } StegUnit_t;

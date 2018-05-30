@@ -100,28 +100,44 @@ int32_t calc_mean(uint8_t* pixels, int32_t size){
     return sum/size;
 }
 
+changePels(uint8_t* pels, int32_t nPels, int32_t diff){
+    int32_t absDiff = abs(diff);
+    for(int32_t i = 0; i < nPels; i++){
+        if(diff < 0 && pels[i] >=  absDiff){
+            pels += diff;
+        }else if(diff > 0 && pels[i] < (255 - absDiff)) {
+            pels += diff;
+        }
+    }
+}
+
 //4x4 pels unit
-void changeUnit(StegUnit& unit){
-    int8_t inc = 1;
+void renderUnit(StegUnit& unit){
+    int8_t diff = 1;
     if(unit.bit){
-        inc = -1;
+        diff = -1;
     }
 
-    /*vector<uint8_t*> pCorePels = {unit};
+    vector<uint8_t*> pCorePels = {unit};
     int32_t meanCore = calc_mean();
     int32_t meanNeigh = calc_mean();
-    for(){}*/
 
-    /*#neighbourpels
-    for i in range(0, len(neigh)):
-        if (neigh[i] < 255) and(neigh[i] > 0):
-            neigh[i] = neigh[i] + inc
-    for()
-
-    #selected pel
-    for i in range(0, len(pels)):
-        if (pels[0] < 255) and(pels[0] > 0):
-                pels[i] = pels[i] - inc*/
+    if(unit.bit == 0){
+        while(meanNeigh - meanCore <= unit.threshold){
+            changePels(,,);
+            changePels(,,);
+            meanCore = calc_mean();
+            meanNeigh = calc_mean();
+        }
+    }
+    else{
+        while(meanNeigh - meanCore >= -unit.threshold){
+            changePels(,,);
+            changePels(,,);
+            meanCore = calc_mean();
+            meanNeigh = calc_mean();
+        }
+    }
 
     return;
 }
@@ -140,6 +156,9 @@ int32_t StegaModule::Hide(uint8_t* frame, uint8_t* qrCode){
         };
     unit.coreInds = {stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};
 
+    unit.corePels.resize(unit.coreInds.size(), nullptr;
+    unit.neighPels.resize(unit.neighInds.size(), nullptr);
+
     for(int i = 0; i < qrSize; i++){
         int32_t qrIdx = m_qrPath[i];
         int32_t unitPosX = m_framePath[2 * i];
@@ -149,8 +168,15 @@ int32_t StegaModule::Hide(uint8_t* frame, uint8_t* qrCode){
         uint8_t qrDot = qrCode[qrIdx];
         unit.bit = qrDot;
         unit.pUnit = pUnit;
+        for(int32_t i = 0; i < unit.coreInds.size(); i++){
+            unit.corePels[unit.pUnit + unitCoreInds[i]]
+        }
 
-        changeUnit(unit);
+        for(int32_t i = 0; i < unit.neighInds.size(); i++){
+            unit.neighPels[unit.pUnit + unitNeighInds[i]]
+        }
+
+        renderUnit(unit);
     }
 }
 
