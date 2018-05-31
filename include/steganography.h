@@ -16,7 +16,7 @@ typedef struct StegUnit{
         bit(false), pUnit(nullptr), neighInds(0), coreInds(0){}
 } StegUnit_t;
 
-class StegaModule{
+class StegModule{
 public:
     int32_t Hide(uint8_t* frame, uint8_t* qrCode);
     int32_t Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidth, int32_t threshold, bool keyFlag);

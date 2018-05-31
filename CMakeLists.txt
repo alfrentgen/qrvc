@@ -11,6 +11,8 @@ set(CMAKE_SKIP_RPATH TRUE)
 option(USE_X86_32 "Build for x86 32 bits" OFF)
 option(USE_MUSL "Build using musl-cross-make" OFF)
 
+option(ENABLE_TESTS "Enable tests" OFF)
+
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -mtune=generic")
 set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -mtune=generic")
 set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
@@ -172,3 +174,8 @@ add_custom_target(create_tar ALL
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 add_dependencies(create_tar qrvd qrve)
+
+if(ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
