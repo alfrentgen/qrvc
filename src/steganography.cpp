@@ -6,21 +6,27 @@ vector<int32_t> spiralMatrix(int32_t qrWidth){
     //currentIdx
     vector<int32_t> indeces(0);
 
-    int32_t sideLength = qrWidth - 1;
+    int32_t sideLength = qrWidth;
     int32_t index = 0;
+    int32_t stride = 1;
 
     while(sideLength > 0){
-
         for(int i = 0; i < 4; i++){
             int32_t direction = (i >= 2) ? -1 : 1;
-            int32_t stride = i%2 ? sideLength : 1;
+            stride = i%2 ? qrWidth : 1;
             int32_t diff = direction * stride;
 
-            for(int j = 0; j < sideLength; j++){
-                indeces.push_back(index + diff);
+            for(int j = 0; j < sideLength-1; j++){
+                indeces.push_back(index);
+                index += diff;
             }
         }
+        index += stride + 1;
         sideLength -= 2;
+    }
+    if(sideLength == 1){
+        index -= (stride + 1);
+        indeces.push_back(index);
     }
     return indeces;
 }
@@ -74,12 +80,24 @@ vector<int32_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight
 
     int32_t nTaps = unitsX < unitsY ? unitsX : unitsY;
     cout << nTaps << endl;
-    vector<int32_t> path(2*nTaps, 0);
+    vector<int32_t> path(2*nTaps*nTaps, 0);
 
-    for(int i = 0; i < nTaps; i++){
-        path[2 * i] = xIndeces[i];
-        path[2 * i + 1] = yIndeces[i];
+    for(int i = 0; i < nTaps; i++){//raw
+        for(int j = 0; j < nTaps; j++){//column
+            path[2 * i * nTaps + 2 * j] = xIndeces[i];
+            path[2 * i * nTaps + 2 * j + 1] = yIndeces[j];
+            //LOG("%d, %d\n", path[i * 2 * nTaps + 2 * j], path[i * 2 * nTaps + 2 * j + 1]);
+        }
     }
+    /*for(int i = 0; i < nTaps; i++){
+        for(int j = 0; j < nTaps; j++){
+            LOG("%d, %d\n", path[i * 2 * nTaps + 2 * j], path[i * 2 * nTaps + 2 * j + 1]);
+        }
+    }*/
+    /*for(int32_t idx : path){
+        LOG("%d,", idx);
+    }*/
+    LOG("defGenPATH\n");
 
     return path;
 }
@@ -89,10 +107,14 @@ vector<int32_t> generateFramePath(int32_t frameWidth, int32_t frameHeight, bool 
     function<vector<int32_t>(int32_t, int32_t, bool)>* defaultAlg,
     function<vector<int32_t>(int32_t, int32_t, bool)>* customAlg)
 {
-    if(customAlg)
-        return (*customAlg)(frameWidth, frameHeight, keyFlag);
-    else
-        return (*defaultAlg)(frameWidth, frameHeight, keyFlag);
+    function<vector<int32_t>(int32_t, int32_t, bool)>& alg = customAlg ? *customAlg : *defaultAlg;
+    vector<int32_t> path = alg(frameWidth, frameHeight, keyFlag);
+    /*for(int32_t idx : path){
+        LOG("%d,", idx);
+    }
+    LOG("genFramePATH\n");*/
+
+    return path;
 }
 
 int32_t calc_mean(uint8_t* pixels, int32_t size){
@@ -106,9 +128,9 @@ void changePels(uint8_t* pels, int32_t nPels, int32_t diff){
     int32_t absDiff = abs(diff);
     for(int32_t i = 0; i < nPels; i++){
         if(diff < 0 && pels[i] >=  absDiff){
-            pels += diff;
+            pels[i] += diff;
         }else if(diff > 0 && pels[i] < (255 - absDiff)) {
-            pels += diff;
+            pels[i] += diff;
         }
     }
 }
@@ -124,12 +146,14 @@ void renderUnit(StegUnit& unit){
         int8_t dir = -1;
     }
     diff *= dir;
-
+    //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
     while(dir*(meanCore - meanNeigh) <= unit.threshold){
             changePels(unit.corePels[0], unit.corePels.size(), diff);
             changePels(unit.neighPels[0], unit.neighPels.size(), -diff);
             meanCore = calc_mean(unit.corePels[0], unit.corePels.size());
             meanNeigh = calc_mean(unit.neighPels[0], unit.neighPels.size());
+            //LOG("unit.threshold=%d\n", unit.threshold);
+            //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
     }
 
     /*if(unit.bit == 0){
@@ -172,9 +196,11 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
     unit.neighPels.resize(unit.neighInds.size(), nullptr);
 
     for(int i = 0; i < qrSize; i++){
+        //LOG("%d\n",i);
         int32_t qrIdx = m_qrPath[i];
         int32_t unitPosX = m_framePath[2 * i];
         int32_t unitPosY = m_framePath[2 * i + 1];
+        LOG("%d, %d\n", unitPosX, unitPosY);
 
         uint8_t* pUnit = &frame[unitPosY * unitSize * stride + unitPosX * unitSize];
         uint8_t qrDot = qrCode[qrIdx];
@@ -187,7 +213,15 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
         for(int32_t i = 0; i < unit.neighInds.size(); i++){
             unit.neighPels[i] = unit.pUnit + unit.neighInds[i];
         }
-
+        //LOG("Rendering Unit #%d\n",i);
+        /*for(auto idx : unit.coreInds){
+            LOG("%d, ", idx);
+        }
+        LOG("\n");
+        for(auto idx : unit.neighInds){
+            LOG("%d, ", idx);
+        }
+        LOG("\n");*/
         renderUnit(unit);
     }
 }
