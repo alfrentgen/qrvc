@@ -117,20 +117,20 @@ vector<int32_t> generateFramePath(int32_t frameWidth, int32_t frameHeight, bool 
     return path;
 }
 
-int32_t calc_mean(uint8_t* pixels, int32_t size){
+int32_t calc_mean(uint8_t** pixels, int32_t size){
     int32_t sum = 0;
     for(int i = 0; i < size; i++)
-        sum += pixels[i];
+        sum += *pixels[i];
     return sum/size;
 }
 
-void changePels(uint8_t* pels, int32_t nPels, int32_t diff){
+void changePels(uint8_t** pels, int32_t nPels, int32_t diff){
     int32_t absDiff = abs(diff);
     for(int32_t i = 0; i < nPels; i++){
-        if(diff < 0 && pels[i] >=  absDiff){
-            pels[i] += diff;
-        }else if(diff > 0 && pels[i] < (255 - absDiff)) {
-            pels[i] += diff;
+        if(diff < 0 && *pels[i] >=  absDiff){
+            *pels[i] += diff;
+        }else if(diff > 0 && *pels[i] < (255 - absDiff)) {
+            *pels[i] += diff;
         }
     }
 }
@@ -138,20 +138,20 @@ void changePels(uint8_t* pels, int32_t nPels, int32_t diff){
 //4x4 pels unit
 void renderUnit(StegUnit& unit){
 
-    int32_t meanCore = calc_mean(unit.corePels[0], unit.corePels.size());
-    int32_t meanNeigh = calc_mean(unit.neighPels[0], unit.neighPels.size());
+    int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+    int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
     int8_t diff = 1;
     int8_t dir = 1;
     if(unit.bit == 0){
-        int8_t dir = -1;
+        dir = -1;
     }
     diff *= dir;
-    //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
+    //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
     while(dir*(meanCore - meanNeigh) <= unit.threshold){
-            changePels(unit.corePels[0], unit.corePels.size(), diff);
-            changePels(unit.neighPels[0], unit.neighPels.size(), -diff);
-            meanCore = calc_mean(unit.corePels[0], unit.corePels.size());
-            meanNeigh = calc_mean(unit.neighPels[0], unit.neighPels.size());
+            changePels(unit.corePels.data(), unit.corePels.size(), diff);
+            changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
+            meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+            meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
             //LOG("unit.threshold=%d\n", unit.threshold);
             //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
     }
@@ -200,7 +200,7 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
         int32_t qrIdx = m_qrPath[i];
         int32_t unitPosX = m_framePath[2 * i];
         int32_t unitPosY = m_framePath[2 * i + 1];
-        LOG("%d, %d\n", unitPosX, unitPosY);
+        //LOG("%d, %d\n", unitPosX, unitPosY);
 
         uint8_t* pUnit = &frame[unitPosY * unitSize * stride + unitPosX * unitSize];
         uint8_t qrDot = qrCode[qrIdx];
@@ -238,8 +238,8 @@ int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidt
     function<vector<int32_t>(int32_t, int32_t, bool)> defFramePathGen(generateDefaultFramePath);
     m_framePath = generateFramePath(m_frameWidth, m_frameHeight, m_keyFlag, &defFramePathGen, nullptr);
     m_qrPath = generateQRPath(m_qrWidth, nullptr);
-    if(m_qrPath.size() > m_framePath.size()){
-        LOG("%d\t%d\n", m_qrPath.size(), m_framePath.size());
+    LOG("%d\t%d\n", m_qrPath.size(), m_framePath.size());
+    if(2 * m_qrPath.size() > m_framePath.size()){
         return FAIL;
     }
     return OK;
