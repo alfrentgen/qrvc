@@ -20,7 +20,7 @@ int32_t main(){
     for(int i = 0; i < qrCode.size(); i++){
         qrCode[i] = bool(i%2) * 255;
     }
-    std::random_shuffle(qrCode.begin(),qrCode.end());
+    //std::random_shuffle(qrCode.begin(),qrCode.end());
 
     cout << "init\n";
     int32_t res = module.Init(WIDTH, HEIGHT, QR_WIDTH, THRESHOLD, KEY_PRESENTED);

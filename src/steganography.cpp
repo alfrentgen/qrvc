@@ -73,9 +73,12 @@ vector<int32_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight
     }
 
     if(keyFlag){
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
             //Just generating random  matrix
-            std::random_shuffle(xIndeces.begin(), xIndeces.end());
-            std::random_shuffle(yIndeces.begin(), yIndeces.end());
+            std::shuffle(xIndeces.begin(), xIndeces.end(), std::default_random_engine(seed));
+            std::shuffle(yIndeces.begin(), yIndeces.end(), std::default_random_engine(seed));
+            //std::random_shuffle(xIndeces.begin(), xIndeces.end());
+            //std::random_shuffle(yIndeces.begin(), yIndeces.end());
     }
 
     int32_t nTaps = unitsX < unitsY ? unitsX : unitsY;
