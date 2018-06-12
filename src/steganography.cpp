@@ -298,3 +298,14 @@ int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidt
     }
     return OK;
 }
+
+int32_t writeFramePath(vector<uint8_t> path, char* fileName){
+    FILE* file = fopen(fileName, "wb");
+    fwrite(path.data(), sizeof(uint8_t), path.size(), file);
+    return ferror(file);
+}
+
+vector<uint8_t> readFramePath(char* fileName){
+    vector<uint8_t> path(0);
+    return path;
+}

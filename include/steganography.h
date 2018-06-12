@@ -35,6 +35,10 @@ vector<int32_t> generateFramePath(int32_t frameWidth, int32_t frameHeight, bool 
     function<vector<int32_t>(int32_t, int32_t, bool)>* defaultAlg,
     function<vector<int32_t>(int32_t, int32_t, bool)>* customAlg);
 
+int32_t writeFramePath(vector<uint8_t> path, char* fileName);
+
+vector<uint8_t> readFramePath(char* fileName);
+
 //vector<uint8_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight);
 //vector<uint8_t> generateDefaultFrameKeyPath(int32_t frameWidth, int32_t frameHeight);
 
