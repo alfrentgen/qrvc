@@ -2,6 +2,16 @@
 
 #define DEF_STEG_UNIT_SIZE 4
 
+vector<int32_t> Matrix2D(int32_t qrWidth){
+    vector<int32_t> indeces(0);
+    for(int i = 0; i < qrWidth; i++){
+        for(int j = 0; j < qrWidth; j++){
+            indeces.push_back(i* qrWidth + j);
+        }
+    }
+    return indeces;
+}
+
 vector<int32_t> spiralMatrix(int32_t qrWidth){
     //currentIdx
     vector<int32_t> indeces(0);
@@ -32,6 +42,7 @@ vector<int32_t> spiralMatrix(int32_t qrWidth){
 }
 
 vector<int32_t> generateDefaultQRPath(int32_t qrWidth){
+    //return Matrix2D(qrWidth);
     return spiralMatrix(qrWidth);
 }
 
@@ -52,12 +63,14 @@ int32_t getUnitsCount(int32_t size){
     return units;
 }
 
-vector<int32_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight, bool keyFlag){
+vector<int32_t> old_generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight, bool keyFlag){
     //vector<int32_t> path(0);
     //left and top borders should be at least 4 pels sized
     //right and bottom borders should be not zero
     //A steg unit is 4x4 pels
     //border pixels(units) must not be used
+
+
     int32_t unitsX = getUnitsCount(frameWidth);
     int32_t unitsY = getUnitsCount(frameHeight);
 
@@ -101,6 +114,44 @@ vector<int32_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight
         LOG("%d,", idx);
     }*/
     LOG("defGenPATH\n");
+
+    return path;
+}
+
+vector<int32_t> generateDefaultFramePath(int32_t frameWidth, int32_t frameHeight, bool keyFlag){
+    //vector<int32_t> path(0);
+    //left and top borders should be at least 4 pels sized
+    //right and bottom borders should be not zero
+    //A steg unit is 4x4 pels
+    //border pixels(units) must not be used
+    int32_t unitsX = frameWidth / DEF_STEG_UNIT_SIZE;
+    int32_t unitsY = frameHeight / DEF_STEG_UNIT_SIZE;
+    int32_t nUnits = (unitsX - 2) * (unitsY - 2);//subtract left, right, top and bottom borders
+
+    vector<int32_t> indeces(nUnits);
+
+    int n = 0;
+    for(int y = 1; y < unitsY - 1; y++){
+        for(int x = 1; x < unitsX - 1; x++){
+            indeces[n] = y * unitsX + x;
+            n++;
+        }
+    }
+
+    if(keyFlag){
+            //Just generating random  matrix
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::shuffle(indeces.begin(), indeces.end(), std::default_random_engine(seed));
+    }
+
+
+    cout << nUnits << endl;
+    vector<int32_t> path(2 * nUnits, 0);
+
+    for(int i = 0; i < indeces.size(); i++){
+        path[2 * i] = indeces[i] % unitsX;
+        path[2 * i + 1] = indeces[i] / unitsX;
+    }
 
     return path;
 }
@@ -203,7 +254,7 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
         int32_t qrIdx = m_qrPath[i];
         int32_t unitPosX = m_framePath[2 * i];
         int32_t unitPosY = m_framePath[2 * i + 1];
-        //LOG("%d, %d\n", unitPosX, unitPosY);
+        //LOG("%d, %d, %d,%d\n", unitPosX, unitPosY, qrIdx, qrCode[qrIdx]);
 
         uint8_t* pUnit = &frame[unitPosY * unitSize * stride + unitPosX * unitSize];
         uint8_t qrDot = qrCode[qrIdx];
