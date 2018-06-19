@@ -18,6 +18,7 @@ typedef struct Config {
     bool    m_cipheringOn;
     bool    m_inverseFrame;
     bool    m_skipDupFrames;
+    bool    m_stegModeOn;
 
     int32_t m_frameWidth;
     int32_t m_frameHeight;
@@ -37,6 +38,7 @@ typedef struct Config {
     string  m_ifName;
     string  m_ofName;
     string  m_keyFileName;
+    string  m_stegFileName;
 
     Config() :
         m_frameWidth(1280),
@@ -54,7 +56,9 @@ typedef struct Config {
         m_skipDupFrames(false),
         m_ifName(),
         m_ofName(),
-        m_keyFileName()
+        m_keyFileName(),
+        m_stegModeOn(false),
+        m_stegFileName()
     {}
 
 } Config;

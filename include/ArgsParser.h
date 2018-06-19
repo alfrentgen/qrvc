@@ -9,7 +9,7 @@ using namespace std;
 class ArgsParser
 {
     public:
-        vector<string> m_options;
+        //vector<string> m_options;
         map<string, string> m_parsedOptions;
 
     public:

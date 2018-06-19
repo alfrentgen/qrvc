@@ -2,7 +2,40 @@
 
 using namespace std;
 
-ArgsParser::ArgsParser() :
+vector<string> g_options({ string("-i"),
+            string("-o"),
+            string("-f"),
+            string("-c"),
+            string("-p"),
+            string("-w"),
+            string("-m"),
+            string("-e"),
+            string("-t"),
+            string("-s"),
+            string("-r"),
+            string("-n"),
+            string("-k"),
+            string("-a"),
+            string("--stg")
+            });
+
+string& inFileOpt = g_options[0];//input file name
+string& outFileOpt = g_options[1];//output file name
+string& sizeOpt = g_options[2];//frame size -s NxN
+string& cypherOpt = g_options[3];//cyphering on/off
+string& chunksPerThOpt = g_options[4];//chunks per thread
+string& workersNumberOpt = g_options[5];//number of threads
+string& decModeOpt = g_options[6];//decode library
+string& errorLevelOpt = g_options[7];//error correction level
+string& tailOpt = g_options[8];//number of tail frames
+string& qrScaleOpt = g_options[9];//qr scale
+string& repeatOpt = g_options[10];//frame repetition
+string& inverseOpt = g_options[11];//inverse frame
+string& skipOpt = g_options[12];//skip duplicated frames in decoder
+string& alignOpt = g_options[13];//alignment of left top corner
+string& stegOpt = g_options[14];//steganography option
+
+ArgsParser::ArgsParser() /*:
     m_options({ string("-i"),
                 string("-o"),
                 string("-f"),
@@ -16,8 +49,9 @@ ArgsParser::ArgsParser() :
                 string("-r"),
                 string("-n"),
                 string("-k"),
-                string("-a")
-                })
+                string("-a"),
+                string("--stg")
+                })*/
 {
     //ctor
 }
@@ -30,7 +64,7 @@ ArgsParser::~ArgsParser()
 int ArgsParser::parseOptions(int argc, char **argv){
     int n = 0;
 
-    string& inFileOpt = m_options[0];//input file name
+    /*string& inFileOpt = m_options[0];//input file name
     string& outFileOpt = m_options[1];//output file name
     string& sizeOpt = m_options[2];//frame size -s NxN
     string& cypherOpt = m_options[3];//cyphering on/off
@@ -44,6 +78,7 @@ int ArgsParser::parseOptions(int argc, char **argv){
     string& inverseOpt = m_options[11];//inverse frame
     string& skipOpt = m_options[12];//skip duplicated frames in decoder
     string& alignOpt = m_options[13];//alignment of left top corner
+    string& stegOpt = m_options[14];//steganography option*/
 
     string optionVal;
     string option;
@@ -153,6 +188,13 @@ int ArgsParser::parseOptions(int argc, char **argv){
                 LOG("Code alignment should be in 0-99. Terminated.\n");
                 return FAIL;
             }
+        }else
+        if(option == stegOpt){
+            pattern = "^.*$";
+            if(CheckOptionVal() != OK){
+                optionVal.clear();//empty file name means no special file for key frame
+                m_parsedOptions[option] = optionVal;
+            }
         }
         else{
             LOG("Wrong option. Terminated!\n");
@@ -167,7 +209,7 @@ map<string, string>& ArgsParser::getOptions(){
 }
 
 bool ArgsParser::IsOptionName(string& str){
-    for (auto & element : m_options) {
+    for (auto & element : g_options) {
         if(element == str){
             //cerr << element << ": option value missed\n";
             return true;
@@ -197,44 +239,33 @@ Config* ArgsParser::GetConfig(){
 
     map<string, string>& optionsMap = getOptions();
     //opening IS and OS
-    string option = string("-i");
-    map<string, string>::iterator it = optionsMap.find(option);
+    map<string, string>::iterator it = optionsMap.find(inFileOpt);
     if(it == optionsMap.end()){
-        //LOG("Input filename is not specified, reading from stdin.\n");
         config.m_ifName.clear();
     }else{
         config.m_ifName = it->second;
-        //LOG("Input file name: %s\n", config.m_ifName.c_str());
     }
 
-    option = string("-o");
-    it = optionsMap.find(option);
+    it = optionsMap.find(outFileOpt);
     if(it == optionsMap.end()){
-        //LOG("Output filename is not specified, writing to stdout.\n");
         config.m_ofName.clear();
     }else{
         config.m_ofName = it->second;
-        //LOG("Output file name: %s\n", config.m_ofName.c_str());
     }
 
-    option = string("-c");
-    it = optionsMap.find(option);
+    it = optionsMap.find(cypherOpt);
     if(it == optionsMap.end()){
-        //LOG("Cyphering is disabled.\n");
         config.m_cipheringOn = false;
         config.m_keyFileName.clear();
     }else{
-        //LOG("Cyphering is enabled.\n");
         config.m_cipheringOn = true;
         config.m_keyFileName = it->second;
     }
 
-    option = string("-f");
-    it = optionsMap.find(option);
+    it = optionsMap.find(sizeOpt);
     if(it == optionsMap.end()){
         config.m_frameWidth = 1280;
         config.m_frameHeight = 720;
-        //LOG("No frame size is specified, using %dx%d.\n", config.m_frameWidth, config.m_frameHeight);
     }else{
         string sizeStr = it->second;
         regex exp = regex("\\d{1,4}");
@@ -248,19 +279,15 @@ Config* ArgsParser::GetConfig(){
         }
     }
 
-    option = string("-s");
-    it = optionsMap.find(option);
+    it = optionsMap.find(qrScaleOpt);
     if(it == optionsMap.end()){
-        //LOG("No qr scale is specified, using 4.\n");
         config.m_qrScale = 4;
     }else{
         config.m_qrScale = stoi(it->second);
     }
 
-    option = string("-e");
-    it = optionsMap.find(option);
+    it = optionsMap.find(errorLevelOpt);
     if(it == optionsMap.end()){
-        //LOG("No ECC level is specified, using the lowest!\n");
         config.m_eccLevel = ECC_LEVEL_L;
     }else{
         uint32_t l = stoi(it->second);
@@ -284,10 +311,8 @@ Config* ArgsParser::GetConfig(){
         }*/
     }
 
-    option = string("-r");
-    it = optionsMap.find(option);
+    it = optionsMap.find(repeatOpt);
     if(it == optionsMap.end()){
-        //LOG("No number of frame repeats is specified, using 1.\n");
         config.m_frameRepeats = 1;
     }else{
         config.m_frameRepeats = stoi(it->second);
@@ -296,13 +321,10 @@ Config* ArgsParser::GetConfig(){
         }else if(config.m_frameRepeats > 99){
             config.m_frameRepeats = 100;
         }
-        //LOG("Number of frame repeats is %d\n", config.m_frameRepeats);
     }
 
-    option = string("-t");
-    it = optionsMap.find(option);
+    it = optionsMap.find(tailOpt);
     if(it == optionsMap.end()){
-        //LOG("No number of trailing frame is specified, using 10.\n");
         config.m_nTrailingFrames = 10;
     }else{
         config.m_nTrailingFrames = stoi(it->second);
@@ -311,34 +333,27 @@ Config* ArgsParser::GetConfig(){
         }else if(config.m_nTrailingFrames > 99){
             config.m_nTrailingFrames = 100;
         }
-        //LOG("Number of trailing frames is %d\n", config.m_nTrailingFrames);
     }
 
-    option = string("-p");
-    it = optionsMap.find(option);
+    it = optionsMap.find(chunksPerThOpt);
     if(it != optionsMap.end()){
         config.m_framesPerThread = stoi(it->second);
     }else{
-        //LOG("No number of frames per thread is specified, using 8.\n");
         config.m_framesPerThread = 8;
     }
 
-    option = string("-w");
-    it = optionsMap.find(option);
+    it = optionsMap.find(workersNumberOpt);
     if(it != optionsMap.end()){
         config.m_nWorkingThreads = stoi(it->second);
     }else{
-        //LOG("No number of working threads is specified, ");
         config.m_nWorkingThreads = 0;
     }
     if(config.m_nWorkingThreads <= 0){
         config.m_nWorkingThreads = std::thread::hardware_concurrency();
         config.m_nWorkingThreads = (config.m_nWorkingThreads == 0) ? 2 : config.m_nWorkingThreads;
     }
-    //LOG("using %d.\n", config.m_nWorkingThreads);
 
-    option = string("-m");
-    it = optionsMap.find(option);
+    it = optionsMap.find(decModeOpt);
     if(it != optionsMap.end()){
         if(it->second == string("quick")){
             config.m_decMode = MODE_QUICK;
@@ -349,7 +364,6 @@ Config* ArgsParser::GetConfig(){
         }
     }else{
         config.m_decMode = MODE_MIXED;
-        //LOG("No mode is specified, using mixed mode.\n");
     }
 
     /*option = string("-n");
@@ -362,20 +376,15 @@ Config* ArgsParser::GetConfig(){
         config.m_inverseFrame = true;
     }*/
 
-    option = string("-k");
-    it = optionsMap.find(option);
+    it = optionsMap.find(skipOpt);
     if(it == optionsMap.end()){
-        //LOG("Duplicated frames skipping is disabled.\n");
         config.m_skipDupFrames = false;
     }else{
-        //LOG("Duplicated frames skipping is enabled.\n");
         config.m_skipDupFrames = true;
     }
 
-    option = string("-a");
-    it = optionsMap.find(option);
+    it = optionsMap.find(alignOpt);
     if(it == optionsMap.end()){
-        //LOG("No alignment value is specified, using 8.\n");
         config.m_alignment = 8;
     }else{
         config.m_alignment = stoi(it->second);
@@ -384,7 +393,15 @@ Config* ArgsParser::GetConfig(){
         }else if(config.m_alignment > 99){
             config.m_alignment = 100;
         }
-        //LOG("Number of frame repeats is %d\n", config.m_frameRepeats);
+    }
+
+    it = optionsMap.find(stegOpt);
+    if(it == optionsMap.end()){
+        config.m_stegModeOn = false;
+        config.m_stegFileName.clear();
+    }else{
+        config.m_stegModeOn = true;
+        config.m_stegFileName = it->second;
     }
 
     return &config;

@@ -105,14 +105,6 @@ vector<int32_t> old_generateDefaultFramePath(int32_t frameWidth, int32_t frameHe
             //LOG("%d, %d\n", path[i * 2 * nTaps + 2 * j], path[i * 2 * nTaps + 2 * j + 1]);
         }
     }
-    /*for(int i = 0; i < nTaps; i++){
-        for(int j = 0; j < nTaps; j++){
-            LOG("%d, %d\n", path[i * 2 * nTaps + 2 * j], path[i * 2 * nTaps + 2 * j + 1]);
-        }
-    }*/
-    /*for(int32_t idx : path){
-        LOG("%d,", idx);
-    }*/
     LOG("defGenPATH\n");
 
     return path;

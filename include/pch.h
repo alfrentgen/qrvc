@@ -14,6 +14,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include <random>
 
 #include <functional>
 #include <cstdlib>
