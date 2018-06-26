@@ -149,8 +149,12 @@ int32_t MTEncoder::Start(bool join){
         if(stegKeyOS.bad()){
             return FAIL;
         }
-        vector<uint8_t>
-        stegKeyOS.write(m_stegModule.m_framePath.data(), m_stegModule.m_framePath.size());
+        vector<uint8_t> framePath8bit(0);
+        for(int32_t i = 0; i < m_stegModule.m_framePath.size(); i++){
+            framePath8bit.push_back((uint8_t)m_stegModule.m_framePath[i]);
+        }
+        stegKeyOS.write(framePath8bit.data(), framePath8bit.size());
+
         //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_config.m_nWorkingThreads; i++){
         //LOG("Strating thread #%d.\n", i);

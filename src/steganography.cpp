@@ -1,7 +1,5 @@
 #include "steganography.h"
 
-#define DEF_STEG_UNIT_SIZE 4
-
 vector<int32_t> Matrix2D(int32_t qrWidth){
     vector<int32_t> indeces(0);
     for(int i = 0; i < qrWidth; i++){
@@ -284,7 +282,7 @@ int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidt
     function<vector<int32_t>(int32_t, int32_t, bool)> defFramePathGen(generateDefaultFramePath);
     m_framePath = generateFramePath(m_frameWidth, m_frameHeight, m_keyFlag, &defFramePathGen, nullptr);
     m_qrPath = generateQRPath(m_qrWidth, nullptr);
-    LOG("%d\t%d\n", m_qrPath.size(), m_framePath.size());
+    //LOG("%d\t%d\n", m_qrPath.size(), m_framePath.size());
     if(2 * m_qrPath.size() > m_framePath.size()){
         return FAIL;
     }

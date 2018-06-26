@@ -5,6 +5,7 @@
 using namespace std;
 
 #define RANDOM_PATH true
+#define DEF_STEG_UNIT_SIZE 4
 
 typedef struct StegUnit{
     bool bit;
