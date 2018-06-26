@@ -47,7 +47,7 @@ int32_t Encode::Do(){
 
         if(result == INQ_EMPTY_AND_DEPLETED){
             lckInQ.unlock();
-            return 0;
+            return OK;
         }else
         if(result == INQ_EMPTY){
             int32_t loaded = m_inQ->Load(!DROP_TAIL);
@@ -76,8 +76,11 @@ int32_t Encode::Do(){
         }
 
         if(m_stegModule){
-            EncodeData();
+            int32_t result = EncodeData();
             lckInQ.unlock();
+            if(result == FAIL){
+                return OK;
+            }
         }else
         if(m_data.m_frameID == 0 && m_pKey){
             EncodeData();
@@ -98,7 +101,7 @@ int32_t Encode::Do(){
         lckOutQ.unlock();
     }
     m_isWorking.clear();
-    return 0;
+    return OK;
 }
 
 void Encode::Stop(){
@@ -106,7 +109,6 @@ void Encode::Stop(){
 }
 
 uint32_t Encode::EncodeData(){
-
     vector<uint8_t>& inChunk = m_data.m_inBuffer;
     vector<uint8_t>& rawFrame = m_data.m_outBuffer;
     uint8_t arrFrameID[8] = {0};
@@ -139,6 +141,7 @@ uint32_t Encode::EncodeData(){
         rawFrame.resize(frameSize * m_frameRepeats, 0);
         cin.read(rawFrame.data(), frameSize);
         if(cin.bad()){
+            QRcode_free(pQR);
             return FAIL;
         }
 
@@ -148,6 +151,7 @@ uint32_t Encode::EncodeData(){
             frameIt += frameSize;
             copy_n(rawFrame.begin(), frameSize, frameIt);
         }
+        QRcode_free(pQR);
         return OK;
     }
 
@@ -238,7 +242,7 @@ uint32_t Encode::EncodeData(){
 
     //mem leakage is unwanted
     QRcode_free(pQR);
-    return 0;
+    return OK;
 }
 
 void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
