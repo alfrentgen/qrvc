@@ -4,6 +4,8 @@
 
 using namespace std;
 
+#define RANDOM_PATH true
+
 typedef struct StegUnit{
     bool bit;
     uint8_t* pUnit;

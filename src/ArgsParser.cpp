@@ -169,7 +169,7 @@ int ArgsParser::parseOptions(int argc, char **argv){
             }
         } else
         if(option == repeatOpt){
-            pattern = "^\\d[1-9]$";
+            pattern = "^\\d$";
             if(CheckOptionVal() != OK){
                 LOG("Number of frame repeats should be in rage 0-9. Terminated.\n");
                 return FAIL;
@@ -190,10 +190,10 @@ int ArgsParser::parseOptions(int argc, char **argv){
             }
         }else
         if(option == stegOpt){
-            pattern = "^.*$";
+            pattern = "^\\d{1,3}$";
             if(CheckOptionVal() != OK){
-                optionVal.clear();//empty file name means no special file for key frame
-                m_parsedOptions[option] = optionVal;
+                LOG("Steganography threshold must be in 0-255. Terminated.\n");
+                return FAIL;
             }
         }
         else{
@@ -398,10 +398,10 @@ Config* ArgsParser::GetConfig(){
     it = optionsMap.find(stegOpt);
     if(it == optionsMap.end()){
         config.m_stegModeOn = false;
-        config.m_stegFileName.clear();
+        config.m_stegThreshold = 0;
     }else{
         config.m_stegModeOn = true;
-        config.m_stegFileName = it->second;
+        config.m_stegThreshold = stoi(it->second);
     }
 
     return &config;

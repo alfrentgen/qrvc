@@ -4,7 +4,7 @@
 #define HEIGHT 720
 #define QR_WIDTH 177
 #define THRESHOLD 8
-#define KEY_PRESENTED false
+#define KEY_PRESENTED true//false
 
 void dump(char* fName, uint8_t* signal, uint32_t size) {
 	FILE* dumpFile = fopen(fName, "wb");

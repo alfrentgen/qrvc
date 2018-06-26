@@ -75,6 +75,10 @@ int32_t Encode::Do(){
             continue;
         }
 
+        if(m_stegModule){
+            EncodeData();
+            lckInQ.unlock();
+        }else
         if(m_data.m_frameID == 0 && m_pKey){
             EncodeData();
             lckInQ.unlock();
@@ -126,9 +130,27 @@ uint32_t Encode::EncodeData(){
 
     //encode data
     QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
-
     uint8_t* pQRData = pQR->data;
     int32_t qrWidth = pQR->width;
+
+    if(m_stegModule){
+        frameSize = m_frameWidth * m_frameHeight;
+        frameSize += frameSize/2;
+        rawFrame.resize(frameSize * m_frameRepeats, 0);
+        cin.read(rawFrame.data(), frameSize);
+        if(cin.bad()){
+            return FAIL;
+        }
+
+        m_stegModule->Hide(rawFrame.data(), pQRData);
+        auto frameIt = rawFrame.begin();
+        for(int i = 1; i < m_frameRepeats; i++){
+            frameIt += frameSize;
+            copy_n(rawFrame.begin(), frameSize, frameIt);
+        }
+        return OK;
+    }
+
     uint32_t xOffset;
     uint32_t yOffset;
 
@@ -222,6 +244,10 @@ uint32_t Encode::EncodeData(){
 void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
     m_pKey = pKeyFrame;
     m_pKeyFileStream = pKeyFileOS;
+}
+
+void Encode::SetStegParams(StegModule* pStegModule){
+    m_stegModule = pStegModule;
 }
 
 void Encode::FillFrames(vector<uint8_t>& frames, int32_t frameSize, int32_t xOffset, int32_t yOffset, int32_t frameRepeats,

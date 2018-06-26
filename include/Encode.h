@@ -5,6 +5,7 @@
 #include "inputQueue.h"
 #include "OutputQueue.h"
 #include "Config.h"
+#include "steganography.h"
 
 extern "C" {
     #include <qrencode.h>
@@ -22,6 +23,7 @@ class Encode : public Job
         virtual int32_t Do() override;
         virtual void Stop() override;
         void SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS);
+        void SetStegParams(StegModule* stegModule);
 
     protected:
         uint32_t m_frameWidth;
@@ -44,6 +46,7 @@ class Encode : public Job
         int32_t m_alignment;
         vector<uint8_t>* m_pKey;
         ofstream* m_pKeyFileStream;
+        StegModule* m_stegModule;
 
     protected:
         virtual uint32_t EncodeData();

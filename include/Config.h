@@ -34,11 +34,12 @@ typedef struct Config {
     int32_t m_alignment;
 
     int32_t m_decMode;
+    int32_t  m_stegThreshold;
 
     string  m_ifName;
     string  m_ofName;
     string  m_keyFileName;
-    string  m_stegFileName;
+
 
     Config() :
         m_frameWidth(1280),
@@ -58,7 +59,7 @@ typedef struct Config {
         m_ofName(),
         m_keyFileName(),
         m_stegModeOn(false),
-        m_stegFileName()
+        m_stegThreshold(8)
     {}
 
 } Config;

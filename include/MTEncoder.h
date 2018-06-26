@@ -35,6 +35,7 @@ private:
     vector<uint8_t> m_keyQR;
     ofstream* m_pKeyFileStream;
     Config m_config;
+    StegModule m_stegModule;
 
     vector<Encode*> m_jobs;
     vector<thread> m_threads;

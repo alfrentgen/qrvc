@@ -91,12 +91,34 @@ int32_t MTEncoder::Init(Config& config){
     config.m_qrVersion = version;
     int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
     if(nBytesToRead <= 0){
-        LOG("In the codec ECC levels 2 and 3 are depricated for QR code version %d.\n", version);
+        LOG("In the codec ECC levels 2 and 3 are deprecated for QR code version %d.\n", version);
         return FAIL;
     }
 
+#define STEG_ON
+#ifdef STEG_ON
+    StegModule* pStegModule = nullptr;
+    if(config.m_stegModeOn){
+        if(inputStream == &cin){//can't treat cin as main data input, due to using it for steg data
+            LOG("In steg mode standard input stream can only be used for hiding video input.\n");
+            return FAIL;
+        }
+        if(config.m_stegThreshold == 0){
+            config.m_stegThreshold = 8;
+        }
+        config.m_qrScale = 4;
+        int32_t qrWidth = QRspec_getWidth(version);
+        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, qrWidth, config.m_stegThreshold, RANDOM_PATH);
+        if(res == FAIL){
+            return FAIL;
+        }
+        pStegModule = &m_stegModule;
+    }
+#endif
+
     m_config = config;//accept config, as it is counted valid from now
     printEncCfg(m_config);
+
     int32_t queueSize = config.m_framesPerThread * config.m_nWorkingThreads;
     m_inQ = new InputQueue(inputStream, queueSize, nBytesToRead);
     m_outQ = new OutputQueue(outputStream, queueSize, config.m_frameWidth * config.m_frameHeight);
@@ -110,6 +132,9 @@ int32_t MTEncoder::Init(Config& config){
     for(int i =0; i < config.m_nWorkingThreads; i++){
         m_jobs[i] = new Encode(m_config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
+#ifdef STEG_ON
+        m_jobs[i]->SetStegParams(pStegModule);
+#endif
     }
 
     return OK;
@@ -119,6 +144,13 @@ int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
+        string keyFileName = m_config.m_ifName + "_steg.key";
+        ofstream stegKeyOS(keyFileName, ios_base::out | ios_base::binary);
+        if(stegKeyOS.bad()){
+            return FAIL;
+        }
+        vector<uint8_t>
+        stegKeyOS.write(m_stegModule.m_framePath.data(), m_stegModule.m_framePath.size());
         //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_config.m_nWorkingThreads; i++){
         //LOG("Strating thread #%d.\n", i);
