@@ -95,8 +95,6 @@ int32_t MTEncoder::Init(Config& config){
         return FAIL;
     }
 
-#define STEG_ON
-#ifdef STEG_ON
     StegModule* pStegModule = nullptr;
     if(config.m_stegModeOn){
         if(inputStream == &cin){//can't treat cin as main data input, due to using it for steg data
@@ -114,7 +112,6 @@ int32_t MTEncoder::Init(Config& config){
         }
         pStegModule = &m_stegModule;
     }
-#endif
 
     m_config = config;//accept config, as it is counted valid from now
     printEncCfg(m_config);
@@ -132,9 +129,7 @@ int32_t MTEncoder::Init(Config& config){
     for(int i =0; i < config.m_nWorkingThreads; i++){
         m_jobs[i] = new Encode(m_config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
-#ifdef STEG_ON
         m_jobs[i]->SetStegParams(pStegModule);
-#endif
     }
 
     return OK;

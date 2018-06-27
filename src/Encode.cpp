@@ -76,11 +76,10 @@ int32_t Encode::Do(){
         }
 
         if(m_stegModule){
-            int32_t result = EncodeData();
+            ReadStegData();
             lckInQ.unlock();
-            if(result == FAIL){
-                return OK;
-            }
+
+            EncodeStegData();
         }else
         if(m_data.m_frameID == 0 && m_pKey){
             EncodeData();
@@ -108,52 +107,46 @@ void Encode::Stop(){
     m_isWorking.clear();
 }
 
-uint32_t Encode::EncodeData(){
-    vector<uint8_t>& inChunk = m_data.m_inBuffer;
-    vector<uint8_t>& rawFrame = m_data.m_outBuffer;
+void putFrameID(Chunk& chunk){
+    vector<uint8_t>& inBuffer = chunk.m_inBuffer;
     uint8_t arrFrameID[8] = {0};
-    uint8_t arrHashSum[4] = {0};
-    uint8_t color = m_invertColors ? WHITE : BLACK;
-    int32_t frameSize = m_frameWidth * m_frameHeight;
-
-    //put frame ID in data to encode little endian(lesser byte first)
     for(int i = 0; i < 8; i++){
         int32_t shift = 8 * i;
-        arrFrameID[i] = (uint8_t)((m_data.m_frameID >> shift) & (uint64_t)0xff);
+        arrFrameID[i] = (uint8_t)((chunk.m_frameID >> shift) & (uint64_t)0xff);
     }
-    inChunk.insert(inChunk.begin(), arrFrameID, arrFrameID + sizeof(arrFrameID));
-    //calc and put hashsum in data to encode little endian(lesser byte first)
-    uint32_t hashsum = m_data.CalcHashsum(inChunk.data(), inChunk.size());
+    inBuffer.insert(inBuffer.begin(), arrFrameID, arrFrameID + sizeof(arrFrameID));
+    return;
+}
+
+void putHashsum(Chunk& chunk){
+    vector<uint8_t>& inBuffer = chunk.m_inBuffer;
+    uint8_t arrHashSum[4] = {0};
+    uint32_t hashsum = chunk.CalcHashsum(inBuffer.data(), inBuffer.size());
     for(int i = 0; i < 4; i++){
         int32_t shift = 8 * i;
         arrHashSum[i] = (uint8_t)((hashsum >> shift) & (uint32_t)0xff);
     }
-    inChunk.insert(inChunk.end(), arrHashSum, arrHashSum + sizeof(arrHashSum));
+    inBuffer.insert(inBuffer.end(), arrHashSum, arrHashSum + sizeof(arrHashSum));
+    return;
+}
+
+uint32_t Encode::EncodeData(){
+    vector<uint8_t>& inBuffer = m_data.m_inBuffer;
+    vector<uint8_t>& rawFrame = m_data.m_outBuffer;
+
+    uint8_t color = m_invertColors ? WHITE : BLACK;
+    int32_t frameSize = m_frameWidth * m_frameHeight;
+
+    //put frame ID in data to encode little endian(lesser byte first)
+    putFrameID(m_data);
+
+    //calc and put hashsum in data to encode little endian(lesser byte first)
+    putHashsum(m_data);
 
     //encode data
-    QRcode* pQR = QRcode_encodeData(inChunk.size(), (unsigned char*)inChunk.data(), m_version, m_eccLevel);
+    QRcode* pQR = QRcode_encodeData(inBuffer.size(), (unsigned char*)inBuffer.data(), m_version, m_eccLevel);
     uint8_t* pQRData = pQR->data;
     int32_t qrWidth = pQR->width;
-
-    if(m_stegModule){
-        frameSize = m_frameWidth * m_frameHeight;
-        frameSize += frameSize/2;
-        rawFrame.resize(frameSize * m_frameRepeats, 0);
-        cin.read(rawFrame.data(), frameSize);
-        if(cin.bad()){
-            QRcode_free(pQR);
-            return FAIL;
-        }
-
-        m_stegModule->Hide(rawFrame.data(), pQRData);
-        auto frameIt = rawFrame.begin();
-        for(int i = 1; i < m_frameRepeats; i++){
-            frameIt += frameSize;
-            copy_n(rawFrame.begin(), frameSize, frameIt);
-        }
-        QRcode_free(pQR);
-        return OK;
-    }
 
     uint32_t xOffset;
     uint32_t yOffset;
@@ -248,6 +241,41 @@ uint32_t Encode::EncodeData(){
 void Encode::SetCypheringParams(vector<uint8_t>* pKeyFrame, ofstream* pKeyFileOS){
     m_pKey = pKeyFrame;
     m_pKeyFileStream = pKeyFileOS;
+}
+
+uint32_t Encode::EncodeStegData(){
+    vector<uint8_t>& inBuffer = m_data.m_inBuffer;
+    //put frame ID in data to encode little endian(lesser byte first)
+    putFrameID(m_data);
+    //calc and put hashsum in data to encode little endian(lesser byte first)
+    putHashsum(m_data);
+
+    //encode data
+    QRcode* pQR = QRcode_encodeData(inBuffer.size(), (unsigned char*)inBuffer.data(), m_version, m_eccLevel);
+    uint8_t* pQRData = pQR->data;
+    int32_t qrWidth = pQR->width;
+
+    int32_t frameSize = m_frameWidth * m_frameHeight;
+    frameSize += frameSize/2;//YUV420, add 1/4 for U and 1/4 for V planes
+    uint8_t* pRawFrame = m_data.m_outBuffer.data();
+    for(int i = 0; i < m_frameRepeats; i++){
+        m_stegModule->Hide(pRawFrame, pQRData);
+        pRawFrame += frameSize;
+    }
+    QRcode_free(pQR);
+    return OK;
+}
+
+uint32_t Encode::ReadStegData(){
+    vector<uint8_t>& rawFrame = m_data.m_outBuffer;
+    int32_t frameSize = m_frameWidth * m_frameHeight;
+    frameSize += frameSize/2;//YUV420, add 1/4 for U and 1/4 for V planes
+    rawFrame.resize(frameSize * m_frameRepeats, 128);
+    cin.read(rawFrame.data(), frameSize * m_frameRepeats);
+    if(cin.bad()){
+        return FAIL;
+    }
+    return OK;
 }
 
 void Encode::SetStegParams(StegModule* pStegModule){

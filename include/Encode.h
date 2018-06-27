@@ -50,6 +50,8 @@ class Encode : public Job
 
     protected:
         virtual uint32_t EncodeData();
+        uint32_t EncodeStegData();
+        uint32_t ReadStegData();
 
     private:
         void FillFrames(vector<uint8_t>& frames, int32_t frameSize, int32_t xOffset, int32_t yOffset, int32_t frameRepeats,
