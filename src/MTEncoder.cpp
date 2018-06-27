@@ -139,16 +139,18 @@ int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
-        string keyFileName = m_config.m_ifName + "_steg.key";
-        ofstream stegKeyOS(keyFileName, ios_base::out | ios_base::binary);
-        if(stegKeyOS.bad()){
-            return FAIL;
+        if(m_config.m_stegModeOn){
+            string keyFileName = m_config.m_ifName + ".stg";
+            ofstream stegKeyOS(keyFileName, ios_base::out | ios_base::binary);
+            if(stegKeyOS.bad()){
+                return FAIL;
+            }
+            vector<uint8_t> framePath8bit(0);
+            for(int32_t i = 0; i < m_stegModule.m_framePath.size(); i++){
+                framePath8bit.push_back((uint8_t)m_stegModule.m_framePath[i]);
+            }
+            stegKeyOS.write(framePath8bit.data(), framePath8bit.size());
         }
-        vector<uint8_t> framePath8bit(0);
-        for(int32_t i = 0; i < m_stegModule.m_framePath.size(); i++){
-            framePath8bit.push_back((uint8_t)m_stegModule.m_framePath[i]);
-        }
-        stegKeyOS.write(framePath8bit.data(), framePath8bit.size());
 
         //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_config.m_nWorkingThreads; i++){
