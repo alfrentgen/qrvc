@@ -294,3 +294,16 @@ vector<uint8_t> readFramePath(char* fileName){
     vector<uint8_t> path(0);
     return path;
 }
+
+int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
+    uint32_t minFramePathLength = 2 * (m_qrWidth * m_qrWidth);
+    if(size < minFramePathLength){
+        return FAIL;
+    }
+
+    m_framePath.resize(0);
+    for(uint32_t i = 0; i < size; i++){
+        m_framePath.push_back((int32_t)path[i]);
+    }
+    return OK;
+}

@@ -40,7 +40,6 @@ typedef struct Config {
     string  m_ofName;
     string  m_keyFileName;
 
-
     Config() :
         m_frameWidth(1280),
         m_frameHeight(720),

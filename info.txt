@@ -1,5 +1,8 @@
 working on the steganography options:
 
-ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.bin -o short.yuv --stg 8
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -o 1M_stg.yuv --stg th=8
 
-ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg 8 | ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i - -c:v libx264 -pix_fmt yuv420p short_steg.mp4 2>/dev/null
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg th=8 | ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i - -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+
+--stg option cancels out -c option, and --stg kf="filename" param cancels out -c "filename" param
+

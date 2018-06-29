@@ -46,6 +46,7 @@ int32_t MTEncoder::Init(Config& config){
         m_pKeyFileStream->close();
     }
     m_pKeyFileStream = NULL;
+    config.m_cipheringOn = config.m_stegModeOn ? false : config.m_cipheringOn;
     if(config.m_cipheringOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ofstream(config.m_keyFileName, ios_base::out | ios_base::binary);
         if(!m_pKeyFileStream->good()){
@@ -95,6 +96,7 @@ int32_t MTEncoder::Init(Config& config){
         return FAIL;
     }
 
+    //configurign steganography module
     StegModule* pStegModule = nullptr;
     if(config.m_stegModeOn){
         if(inputStream == &cin){//can't treat cin as main data input, due to using it for steg data
@@ -111,6 +113,26 @@ int32_t MTEncoder::Init(Config& config){
             return FAIL;
         }
         pStegModule = &m_stegModule;
+        //if file exists and can be read, try to read frame path from it and give it to steg module
+        if(config.m_keyFileName.size()){
+            ifstream ifs(config.m_keyFileName, ios_base::in | ios_base::binary);
+            vector<uint8_t> framePath(0);
+            if(ifs.good()){
+                while (ifs.good()) {
+                    framePath.push_back((uint8_t)ifs.get());
+                }
+                uint32_t minFramePathLength = 2 * qrWidth * qrWidth;
+                if(m_stegModule.SetCustomFramePath(framePath.data(), framePath.size()) != OK){
+                    LOG("Not enough length of frame path: %d, should be %d!\n", framePath.size(), minFramePathLength);
+                    return FAIL;
+                }
+            }else{
+                LOG("Cannot read steganography key file!\n");
+                return FAIL;
+            }
+        }else{
+            LOG("Using generated steganography key file.\n");
+        }
     }
 
     m_config = config;//accept config, as it is counted valid from now
@@ -139,10 +161,11 @@ int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
-        if(m_config.m_stegModeOn){
+        if(m_config.m_stegModeOn && m_config.m_keyFileName.size() == 0){//write steg key file
             string keyFileName = m_config.m_ifName + ".stg";
             ofstream stegKeyOS(keyFileName, ios_base::out | ios_base::binary);
             if(stegKeyOS.bad()){
+                LOG("Cannot write steganography key file \"%s\"! Terminate!\n", keyFileName.c_str());
                 return FAIL;
             }
             vector<uint8_t> framePath8bit(0);

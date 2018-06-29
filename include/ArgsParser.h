@@ -22,6 +22,7 @@ class ArgsParser
     protected:
     private:
         bool IsOptionName(string& val);
+        int32_t ParseStegParams(vector<string>& params);
 };
 
 #endif // ARGSPARSER_H

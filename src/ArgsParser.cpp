@@ -35,23 +35,11 @@ string& skipOpt = g_options[12];//skip duplicated frames in decoder
 string& alignOpt = g_options[13];//alignment of left top corner
 string& stegOpt = g_options[14];//steganography option
 
-ArgsParser::ArgsParser() /*:
-    m_options({ string("-i"),
-                string("-o"),
-                string("-f"),
-                string("-c"),
-                string("-p"),
-                string("-w"),
-                string("-m"),
-                string("-e"),
-                string("-t"),
-                string("-s"),
-                string("-r"),
-                string("-n"),
-                string("-k"),
-                string("-a"),
-                string("--stg")
-                })*/
+map<const char*, const char*> g_stegOpts({ { "th", "\\d{1,3}$"} , {"kf", ".*$" } });
+string stgThOpt("th");
+string stgKeyFileOpt("kf");
+
+ArgsParser::ArgsParser()
 {
     //ctor
 }
@@ -61,24 +49,38 @@ ArgsParser::~ArgsParser()
     //dtor.h
 }
 
+int32_t ArgsParser::ParseStegParams(vector<string>& params){
+    if(params.size() == 0){
+        return;
+    }
+
+    for(string param : params){
+        bool found = false;
+        for (/*map<const char*, const char*>::iterator*/auto it = g_stegOpts.begin(); it != g_stegOpts.end(); ++it){
+            string leftPat = string("^(") + string(it->first) + string("=)");
+            string rightPat = string("(") + string(it->second) + string(")$");
+            string strPat = leftPat + rightPat;
+            regex pattern(strPat);
+            smatch m;
+            //LOG("%s\n", param.c_str());
+            //LOG("%s\n", strPat.c_str());
+            if(regex_search(param, m, pattern)){
+                //LOG("For param \"%s\" parsed: \"%s\"\n", param.c_str(), m[2]);
+                m_parsedOptions[string(it->first)] = m[2];
+                found = true;
+                break;
+            }
+        }
+        if(found == false){
+            //LOG("Nothing has been parsed for: \"%s\"\n", param.c_str());
+            return FAIL;
+        }
+    }
+    return OK;
+}
+
 int ArgsParser::parseOptions(int argc, char **argv){
     int n = 0;
-
-    /*string& inFileOpt = m_options[0];//input file name
-    string& outFileOpt = m_options[1];//output file name
-    string& sizeOpt = m_options[2];//frame size -s NxN
-    string& cypherOpt = m_options[3];//cyphering on/off
-    string& chunksPerThOpt = m_options[4];//chunks per thread
-    string& workersNumberOpt = m_options[5];//number of threads
-    string& decModeOpt = m_options[6];//decode library
-    string& errorLevelOpt = m_options[7];//error correction level
-    string& tailOpt = m_options[8];//number of tail frames
-    string& qrScaleOpt = m_options[9];//qr scale
-    string& repeatOpt = m_options[10];//frame repetition
-    string& inverseOpt = m_options[11];//inverse frame
-    string& skipOpt = m_options[12];//skip duplicated frames in decoder
-    string& alignOpt = m_options[13];//alignment of left top corner
-    string& stegOpt = m_options[14];//steganography option*/
 
     string optionVal;
     string option;
@@ -190,9 +192,19 @@ int ArgsParser::parseOptions(int argc, char **argv){
             }
         }else
         if(option == stegOpt){
-            pattern = "^\\d{1,3}$";
-            if(CheckOptionVal() != OK){
-                LOG("Steganography threshold must be in 0-255. Terminated.\n");
+            m_parsedOptions[option] = string("1");
+            ++n;
+            vector<string> stegParams(0);
+            while(n < argc){
+                string param = string(argv[n]);
+                if(IsOptionName(param)){
+                    break;
+                }
+                stegParams.push_back(param);
+                n++;
+            }
+            if(ParseStegParams(stegParams) != OK){
+                LOG("Wrong steganography parameters given!\n");
                 return FAIL;
             }
         }
@@ -401,7 +413,19 @@ Config* ArgsParser::GetConfig(){
         config.m_stegThreshold = 0;
     }else{
         config.m_stegModeOn = true;
-        config.m_stegThreshold = stoi(it->second);
+        map<string, string>::iterator it = optionsMap.find(stgThOpt);
+        if(it == optionsMap.end()){
+            config.m_stegThreshold = 8;
+        }else{
+            config.m_stegThreshold = stoi(it->second);
+        }
+
+        it = optionsMap.find(stgKeyFileOpt);
+        if(it == optionsMap.end()){
+            config.m_keyFileName = string();//string(config.m_ifName) + string(.stg);
+        }else{
+            config.m_keyFileName = it->second;
+        }
     }
 
     return &config;
