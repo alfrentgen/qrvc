@@ -35,9 +35,10 @@ string& skipOpt = g_options[12];//skip duplicated frames in decoder
 string& alignOpt = g_options[13];//alignment of left top corner
 string& stegOpt = g_options[14];//steganography option
 
-map<const char*, const char*> g_stegOpts({ { "th", "\\d{1,3}$"} , {"kf", ".*$" } });
+map<const char*, const char*> g_stegOpts({ { "th", "\\d{1,3}$"} , {"kf", ".*$" },  {"up", "[oxj]$"} });
 string stgThOpt("th");
 string stgKeyFileOpt("kf");
+string stgUnitPatOpt("up");
 
 ArgsParser::ArgsParser()
 {
@@ -197,7 +198,9 @@ int ArgsParser::parseOptions(int argc, char **argv){
             vector<string> stegParams(0);
             while(n < argc){
                 string param = string(argv[n]);
+
                 if(IsOptionName(param)){
+                    n--;
                     break;
                 }
                 stegParams.push_back(param);
@@ -210,6 +213,7 @@ int ArgsParser::parseOptions(int argc, char **argv){
         }
         else{
             LOG("Wrong option. Terminated!\n");
+            LOG("Stopped on option %s\n", option.c_str());
             return FAIL;
         }
     }
@@ -413,7 +417,7 @@ Config* ArgsParser::GetConfig(){
         config.m_stegThreshold = 0;
     }else{
         config.m_stegModeOn = true;
-        map<string, string>::iterator it = optionsMap.find(stgThOpt);
+        it = optionsMap.find(stgThOpt);
         if(it == optionsMap.end()){
             config.m_stegThreshold = 8;
         }else{
@@ -425,6 +429,14 @@ Config* ArgsParser::GetConfig(){
             config.m_keyFileName = string();//string(config.m_ifName) + string(.stg);
         }else{
             config.m_keyFileName = it->second;
+        }
+
+        it = optionsMap.find(stgUnitPatOpt);
+        if(it == optionsMap.end()){
+            config.m_unitPattern = 'o';
+        }else{
+            config.m_unitPattern = it->second[0];
+            //LOG("up=\"%c\"\n", config.m_unitPattern);
         }
     }
 

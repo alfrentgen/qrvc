@@ -17,6 +17,7 @@ void printEncCfg(Config cfg){
         LOG("th=%d ", cfg.m_stegThreshold);
         string s = keyFileName.size() ? keyFileName : inFileName + string(".stg");
         LOG("kf=\"%s\" ", s.c_str());
+        LOG("up=\"%c\" ", cfg.m_unitPattern);
     }else if(cfg.m_cipheringOn){
         LOG("-c %s ", keyFileName.c_str());
     }

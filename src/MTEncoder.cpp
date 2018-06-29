@@ -133,6 +133,7 @@ int32_t MTEncoder::Init(Config& config){
         }else{
             LOG("Using generated steganography key file.\n");
         }
+        m_stegModule.SetUnitPattern(config.m_unitPattern);
     }
 
     m_config = config;//accept config, as it is counted valid from now

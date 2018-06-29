@@ -88,8 +88,6 @@ vector<int32_t> old_generateDefaultFramePath(int32_t frameWidth, int32_t frameHe
             //Just generating random  matrix
             std::shuffle(xIndeces.begin(), xIndeces.end(), std::default_random_engine(seed));
             std::shuffle(yIndeces.begin(), yIndeces.end(), std::default_random_engine(seed));
-            //std::random_shuffle(xIndeces.begin(), xIndeces.end());
-            //std::random_shuffle(yIndeces.begin(), yIndeces.end());
     }
 
     int32_t nTaps = unitsX < unitsY ? unitsX : unitsY;
@@ -151,10 +149,6 @@ vector<int32_t> generateFramePath(int32_t frameWidth, int32_t frameHeight, bool 
 {
     function<vector<int32_t>(int32_t, int32_t, bool)>& alg = customAlg ? *customAlg : *defaultAlg;
     vector<int32_t> path = alg(frameWidth, frameHeight, keyFlag);
-    /*for(int32_t idx : path){
-        LOG("%d,", idx);
-    }
-    LOG("genFramePATH\n");*/
 
     return path;
 }
@@ -197,27 +191,51 @@ void renderUnit(StegUnit& unit){
             //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
     }
 
-    /*if(unit.bit == 0){
-        //while(meanNeigh - meanCore <= unit.threshold){
-        while(dir*(meanCore - meanNeigh) <= unit.threshold){
-            changePels(unit.corePels.data(), unit.corePels.size(), diff);
-            changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
-            meanCore = calc_mean();
-            meanNeigh = calc_mean();
-        }
-    }
-    else{
-        //while(meanNeigh - meanCore >= -unit.threshold){
-        while(dir*(meanCore - meanNeigh) <= unit.threshold){
-            changePels(unit.corePels.data(), unit.corePels.size(), diff);
-            changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
-            meanCore = calc_mean();
-            meanNeigh = calc_mean();
-        }
-    }*/
-
     return;
 }
+
+void fillUnitIndeces_O(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
+        core = vector<int32_t>{stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};
+        neigh = vector<int32_t>{
+        0, 1, 2, 3,//top border
+        stride, 2*stride,//left border
+        stride + 3, 2*stride + 3,//right border
+        3*stride, 3*stride + 1, 3*stride + 2, 3*stride + 3 //bottom border
+        };
+}
+
+void fillUnitIndeces_X(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
+
+        core = vector<int32_t>{ 0, 1,                       //top left square
+                                stride, stride + 1,
+                                2*stride + 2, 2*stride + 3, //bottom right square
+                                3*stride + 2, 3*stride + 3};
+
+        neigh = vector<int32_t>{2, 3,                   //top right square
+                                stride + 2, stride + 3,
+                                2*stride, 2*stride + 1, //bottom left square
+                                3*stride, 3*stride + 1};
+}
+
+void fillUnitIndeces_J(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
+
+        core = vector<int32_t>{ 0, 1, stride, stride + 1//top left square
+                                };
+
+        neigh = vector<int32_t>{2, 3,                   //top right square
+                                stride + 2, stride + 3,
+                                2*stride, 2*stride + 1,//bottom left square
+                                3*stride, 3*stride + 1,
+                                2*stride + 2, 2*stride + 3,//bottom right square
+                                3*stride + 2, 3*stride + 3
+                                };
+}
+
+map<char, function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>> unitIdxFill ={
+{char('o'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_O)},
+{char('x'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_X)},
+{char('j'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_J)}
+};
 
 int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
     int32_t qrSize = m_qrWidth * m_qrWidth;
@@ -225,16 +243,18 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
     int32_t unitSize = DEF_STEG_UNIT_SIZE;
     StegUnit unit;
     unit.threshold = m_threshold;
-    unit.neighInds = vector<int32_t>{
+    /*unit.neighInds = vector<int32_t>{
         0, 1, 2, 3,//top border
         stride, 2*stride,//left border
         stride + unitSize - 1, 2*stride + unitSize - 1,//right border
         3*stride, 3*stride + 1, 3*stride + 2, 3*stride + 3 //bottom border
         };
-    unit.coreInds = {stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};
+    unit.coreInds = vector<int32_t>{stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};*/
 
-    unit.corePels.resize(unit.coreInds.size(), nullptr);
-    unit.neighPels.resize(unit.neighInds.size(), nullptr);
+    /*unit.corePels.resize(unit.coreInds.size(), nullptr);
+    unit.neighPels.resize(unit.neighInds.size(), nullptr);*/
+    unit.corePels.resize(m_coreIndeces.size(), nullptr);
+    unit.neighPels.resize(m_neighIndeces.size(), nullptr);
     for(int i = 0; i < qrSize; i++){
         //LOG("%d\n",i);
         int32_t qrIdx = m_qrPath[i];
@@ -245,22 +265,22 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
         uint8_t qrDot = qrCode[qrIdx];
         unit.bit = qrDot;
         unit.pUnit = pUnit;
-        for(int32_t i = 0; i < unit.coreInds.size(); i++){
+        /*for(int32_t i = 0; i < unit.coreInds.size(); i++){
             unit.corePels[i] = unit.pUnit + unit.coreInds[i];
         }
 
         for(int32_t i = 0; i < unit.neighInds.size(); i++){
             unit.neighPels[i] = unit.pUnit + unit.neighInds[i];
+        }*/
+
+        for(int32_t i = 0; i < m_coreIndeces.size(); i++){
+            unit.corePels[i] = unit.pUnit + m_coreIndeces[i];
         }
-        //LOG("Rendering Unit #%d\n",i);
-        /*for(auto idx : unit.coreInds){
-            LOG("%d, ", idx);
+
+        for(int32_t i = 0; i < m_neighIndeces.size(); i++){
+            unit.neighPels[i] = unit.pUnit + m_neighIndeces[i];
         }
-        LOG("\n");
-        for(auto idx : unit.neighInds){
-            LOG("%d, ", idx);
-        }
-        LOG("\n");*/
+
         renderUnit(unit);
     }
 }
@@ -279,6 +299,9 @@ int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidt
     m_qrPath = generateQRPath(m_qrWidth, nullptr);
 
     if(2 * m_qrPath.size() > m_framePath.size()){
+        return FAIL;
+    }
+    if(SetUnitPattern(m_unitPat) != OK){
         return FAIL;
     }
     return OK;
@@ -306,4 +329,20 @@ int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
         m_framePath.push_back((int32_t)path[i]);
     }
     return OK;
+}
+
+int32_t StegModule::SetUnitPattern(char up){
+    auto it = unitIdxFill.find(up);
+    if(it != unitIdxFill.end()){
+        it->second(m_frameWidth, m_coreIndeces, m_neighIndeces);
+        m_unitPat = up;
+    }else{
+        return FAIL;
+    }
+    return OK;
+}
+
+StegModule::StegModule() :
+m_unitPat('o')
+{
 }

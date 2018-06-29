@@ -34,7 +34,8 @@ typedef struct Config {
     int32_t m_alignment;
 
     int32_t m_decMode;
-    int32_t  m_stegThreshold;
+    int32_t m_stegThreshold;
+    char    m_unitPattern;
 
     string  m_ifName;
     string  m_ofName;
@@ -58,8 +59,9 @@ typedef struct Config {
         m_ofName(),
         m_keyFileName(),
         m_stegModeOn(false),
-        m_stegThreshold(8)
-    {}
+        m_stegThreshold(8),
+        m_unitPattern('o')
+        {}
 
 } Config;
 
