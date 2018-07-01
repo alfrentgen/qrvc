@@ -19,6 +19,7 @@ class Decode : public Job
         virtual int32_t Do() override;
         virtual void Stop() override;
         void SetCypheringParams(vector<uint8_t>* pKeyFrame);
+        void SetStegParams(StegModule* stegModule);
 
     protected:
         uint32_t m_frameWidth;
@@ -36,6 +37,7 @@ class Decode : public Job
         int32_t m_ID;
         bool m_skipDup;
         vector<uint8_t>* m_pKeyFrame;
+        StegModule* m_stegModule;
 
         chrono::time_point<chrono::steady_clock> m_t1;
         chrono::time_point<chrono::steady_clock> m_t2;
@@ -44,6 +46,7 @@ class Decode : public Job
     protected:
         virtual uint32_t DecodeData();
         virtual uint32_t DecodeDataQuick();
+        virtual uint32_t DecodeDataSteg();
 
     private:
         uint32_t ExtractHashsum();

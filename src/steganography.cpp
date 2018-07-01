@@ -285,6 +285,15 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
     }
 }
 
+int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
+    for(int idx = 0; m_framePath.size(); idx+=2){
+        ;
+    }
+    m_framePath;
+    m_qrPath;
+    return OK;
+}
+
 //returns -1 if qrPath is longer than framePath,
 //because there are not enough units in a frame to hide each dot of QR code
 int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidth, int32_t threshold, bool keyFlag){
@@ -307,23 +316,41 @@ int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidt
     return OK;
 }
 
-int32_t writeFramePath(vector<uint8_t> path, char* fileName){
-    FILE* file = fopen(fileName, "wb");
-    fwrite(path.data(), sizeof(uint8_t), path.size(), file);
-    return ferror(file);
+int32_t StegModule::WriteFramePath(string fileName){
+    string keyFileName = fileName + ".stg";
+    ofstream ofs(keyFileName, ios_base::out | ios_base::binary);
+    if(ofs.bad()){
+        LOG("Cannot write steganography key file \"%s\"! Terminate!\n", keyFileName.c_str());
+        return FAIL;
+    }
+    vector<uint8_t> framePath8bit(0);
+    for(int32_t i = 0; i < m_framePath.size(); i++){
+        framePath8bit.push_back((uint8_t)m_framePath[i]);
+    }
+    ofs.write(framePath8bit.data(), framePath8bit.size());
+    return OK;
 }
 
-vector<uint8_t> readFramePath(char* fileName){
-    vector<uint8_t> path(0);
-    return path;
+int32_t StegModule::ReadFramePath(string fileName){
+    ifstream ifs(fileName, ios_base::in | ios_base::binary);
+    vector<uint8_t> framePath(0);
+    if(ifs.bad()){
+        LOG("Cannot read steganography key file!\n");
+        return FAIL;
+    }
+    while (ifs.good()) {
+        framePath.push_back((uint8_t)ifs.get());
+    }
+    uint32_t minFramePathLength = 2 * m_qrWidth * m_qrWidth;
+    return SetCustomFramePath(framePath.data(), framePath.size());
 }
 
 int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
     uint32_t minFramePathLength = 2 * (m_qrWidth * m_qrWidth);
     if(size < minFramePathLength){
+        LOG("Not enough length of frame path: %d, must be at least %d!\n", size, minFramePathLength);
         return FAIL;
     }
-
     m_framePath.resize(0);
     for(uint32_t i = 0; i < size; i++){
         m_framePath.push_back((int32_t)path[i]);

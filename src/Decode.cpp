@@ -324,3 +324,7 @@ uint64_t Decode::ExtractChunkID(){
 void Decode::SetCypheringParams(vector<uint8_t>* pKeyFrame){
     m_pKeyFrame = pKeyFrame;
 }
+
+void Decode::SetStegParams(StegModule* pStegModule){
+    m_stegModule = pStegModule;
+}

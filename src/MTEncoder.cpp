@@ -115,7 +115,10 @@ int32_t MTEncoder::Init(Config& config){
         pStegModule = &m_stegModule;
         //if file exists and can be read, try to read frame path from it and give it to steg module
         if(config.m_keyFileName.size()){
-            ifstream ifs(config.m_keyFileName, ios_base::in | ios_base::binary);
+            if(m_stegModule.ReadFramePath(config.m_keyFileName) == FAIL){
+                return FAIL;
+            }
+            /*ifstream ifs(config.m_keyFileName, ios_base::in | ios_base::binary);
             vector<uint8_t> framePath(0);
             if(ifs.good()){
                 while (ifs.good()) {
@@ -129,9 +132,13 @@ int32_t MTEncoder::Init(Config& config){
             }else{
                 LOG("Cannot read steganography key file!\n");
                 return FAIL;
-            }
+            }*/
         }else{
             LOG("Using generated steganography key file.\n");
+            string keyFileName = m_config.m_ifName + ".stg";
+            if(m_stegModule.WriteFramePath(keyFileName) == FAIL){
+                return FAIL;
+            }
         }
         m_stegModule.SetUnitPattern(config.m_unitPattern);
     }
@@ -162,8 +169,9 @@ int32_t MTEncoder::Start(bool join){
 
     m_threads.clear();
     try{
-        if(m_config.m_stegModeOn && m_config.m_keyFileName.size() == 0){//write steg key file
+        /*if(m_config.m_stegModeOn && m_config.m_keyFileName.size() == 0){//write steg key file
             string keyFileName = m_config.m_ifName + ".stg";
+            m_stegModule.WriteFramePath(keyFileName);
             ofstream stegKeyOS(keyFileName, ios_base::out | ios_base::binary);
             if(stegKeyOS.bad()){
                 LOG("Cannot write steganography key file \"%s\"! Terminate!\n", keyFileName.c_str());
@@ -174,7 +182,7 @@ int32_t MTEncoder::Start(bool join){
                 framePath8bit.push_back((uint8_t)m_stegModule.m_framePath[i]);
             }
             stegKeyOS.write(framePath8bit.data(), framePath8bit.size());
-        }
+        }*/
 
         //LOG("Strating %d threads.\n", m_nThreads);
         for(int i = 0; i < m_config.m_nWorkingThreads; i++){

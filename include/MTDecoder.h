@@ -32,6 +32,7 @@ private:
     vector<thread> m_threads;
     ifstream* m_pKeyFileStream;
     Config m_config;
+    StegModule m_stegModule;
 };
 
 #endif // MTDECODER_H

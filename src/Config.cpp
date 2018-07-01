@@ -42,7 +42,12 @@ void printDecCfg(Config cfg){
     LOG("-o %s ", outFileName.c_str());
     LOG("-w %d ", cfg.m_nWorkingThreads);
     LOG("-p %d ", cfg.m_framesPerThread);
-    if(cfg.m_cipheringOn){
+
+    if(cfg.m_stegModeOn){
+        LOG("--stg ");
+        LOG("kf=\"%s\" ", keyFileName.c_str());
+        LOG("up=\"%c\" ", cfg.m_unitPattern);
+    }else if(cfg.m_cipheringOn){
         LOG("-c %s ", keyFileName.c_str());
     }
 

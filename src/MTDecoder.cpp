@@ -49,6 +49,7 @@ int32_t MTDecoder::Init(Config& config){
         m_pKeyFileStream->close();
     }
     m_pKeyFileStream = NULL;
+    config.m_cipheringOn = config.m_stegModeOn ? false : config.m_cipheringOn;
     if(config.m_cipheringOn && !config.m_keyFileName.empty()){
         m_pKeyFileStream = new ifstream(config.m_keyFileName, ios_base::in | ios_base::binary);
         if(!m_pKeyFileStream->good()){
@@ -81,11 +82,24 @@ int32_t MTDecoder::Init(Config& config){
         return FAIL;
     }
 
+    int32_t frameSize = config.m_frameWidth * config.m_frameHeight;
+    StegModule* pStegModule = nullptr;
+    if(config.m_stegModeOn){
+        config.m_qrScale = 4;
+        int32_t qrWidth = QRspec_getWidth(version);
+        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, qrWidth, config.m_stegThreshold, RANDOM_PATH);
+        res |= m_stegModule.ReadFramePath(config.m_keyFileName);
+        if(res == FAIL){
+            return FAIL;
+        }
+        frameSize += config.m_frameWidth * config.m_frameHeight/2;//YUV420
+        m_stegModule.SetUnitPattern(config.m_unitPattern);
+        pStegModule = &m_stegModule;
+    }
+
     m_config = config;
     printDecCfg(m_config);
 
-    int32_t queueSize = config.m_framesPerThread * config.m_nWorkingThreads;
-    int32_t frameSize = config.m_frameWidth * config.m_frameHeight;
     if(m_pKeyFileStream){
         m_keyFrame.resize(frameSize);
         m_pKeyFileStream->read(m_keyFrame.data(), frameSize);
@@ -101,6 +115,7 @@ int32_t MTDecoder::Init(Config& config){
     }
     vector<uint8_t>* pkeyFrame = config.m_cipheringOn ? &m_keyFrame : NULL;
 
+    int32_t queueSize = config.m_framesPerThread * config.m_nWorkingThreads;
     m_inQ = new InputQueue(inputStream, queueSize, frameSize);
     m_outQ = new OutputQueue(outputStream, queueSize, frameSize);
 
