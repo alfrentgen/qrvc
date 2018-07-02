@@ -10,6 +10,7 @@ set(CMAKE_SKIP_RPATH TRUE)
 
 option(USE_X86_32 "Build for x86 32 bits" OFF)
 option(USE_MUSL "Build using musl-cross-make" OFF)
+#option(USE_NATIVE "Build using native GCC toolset" OFF)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
@@ -17,13 +18,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -fexceptions -fpermissive -static-libstdc+
 set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ -static-libgcc -mtune=generic")
 set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
-if(USE_MUSL)
-    set(MUSL_BUILD_FLAGS "-pthread")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MUSL_BUILD_FLAGS}")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MUSL_BUILD_FLAGS}")
-else()
+
+if(USE_MINGW)
     set(MINGW_BUILD_FLAGS "-static -pthread")
     if(USE_X86_32)
         set(MINGW_BUILD_FLAGS "-O1 -fno-builtin-memmove ${MINGW_BUILD_FLAGS}")
@@ -34,6 +30,12 @@ else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MINGW_BUILD_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MINGW_BUILD_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS "-static")
+else()
+    set(MUSL_BUILD_FLAGS "-pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 ${MUSL_BUILD_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MUSL_BUILD_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MUSL_BUILD_FLAGS}")
 endif()
 
 if(USE_X86_32)
@@ -98,11 +100,11 @@ add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
 target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(qrvd decquirc deczbar)
-if(USE_MUSL)
+if(USE_MINGW)
+    set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,--allow-multiple-definition")
+elseif(USE_MUSL)
     set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
     add_dependencies(qrvd libc)
-else()
-    set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,--allow-multiple-definition")
 endif()
 
 
@@ -143,25 +145,19 @@ if(USE_MUSL)
     add_dependencies(qrve libc)
 endif()
 
-
-
 #TESTS SECTION
 set(TESTS_PATH  ${CMAKE_SOURCE_DIR}/tests)
 
 #package making target
 if(MINGW)
     set(TARBALL_NAME qrvc_win)
+    set(LIBS_TO_TAR *.dll)
 else()
     set(TARBALL_NAME qrvc_linux)
+    set(LIBS_TO_TAR *.so)
 endif()
 set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
 message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
-
-if(USE_MUSL)
-    set(LIBS_TO_TAR *.so)
-elseif(MINGW)
-    set(LIBS_TO_TAR *.dll)
-endif()
 
 add_custom_target(create_tar ALL
     COMMAND ${CMAKE_COMMAND} -E remove "-f" "versions.txt"
@@ -179,3 +175,4 @@ if(ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+

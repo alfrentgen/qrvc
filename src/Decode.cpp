@@ -153,6 +153,8 @@ skipDecyph:
             }
         }
 
+        m_stegModule;
+
         if(m_skipDup && duplicated){
             m_data.m_rendered = false;
         }else{

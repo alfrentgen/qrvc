@@ -23,7 +23,7 @@ class StegModule{
 public:
     StegModule();
     int32_t Hide(uint8_t* frame, uint8_t* qrCode);
-    int32_t Reveal(uint8_t* frame, uint8_t* qrCode)
+    int32_t Reveal(uint8_t* frame, uint8_t* qrCode);
     int32_t Init(int32_t frameWidth, int32_t frameHeight, int32_t qrWidth, int32_t threshold, bool keyFlag);
     int32_t SetCustomFramePath(uint8_t* path, uint32_t size);
     int32_t SetUnitPattern(char up);
