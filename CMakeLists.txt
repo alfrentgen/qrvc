@@ -83,6 +83,7 @@ include/MTDecoder.h
 include/utilities.h
 include/utilities_c.h
 include/help.h
+include/steganography.h
 )
 
 set(DEC_SRC
@@ -94,6 +95,7 @@ src/inputQueue.cpp
 src/OutputQueue.cpp
 src/MTDecoder.cpp
 src/Config.cpp
+src/steganography.cpp
 )
 
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})

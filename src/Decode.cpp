@@ -153,11 +153,18 @@ skipDecyph:
             }
         }
 
-        m_stegModule;
-
         if(m_skipDup && duplicated){
             m_data.m_rendered = false;
         }else{
+#ifdef STEG_DECODE
+            if(m_stegModule){
+                vector& frame = m_data.m_inBuffer;
+                int32_t qrWidth = m_stegModule.m_qrWidth;
+                vector<uint8_t> qrCode(qrWidth * qrWidth);
+                m_stegModule.Reveal(frame, qrCode.data());
+                makeFrame(frame, qrCode);
+            }
+#endif
             int32_t decRes;
             if(m_decMode == MODE_QUICK){
                 decRes = DecodeDataQuick();
@@ -299,8 +306,12 @@ uint32_t Decode::DecodeDataQuick(){
         m_data.m_rendered = false;
     }
 
-    return 0;
+    return OK;
 }
+
+/*uint32_t Decode::DecodeDataSteg(){
+    return OK;
+}*/
 
 uint32_t Decode::ExtractHashsum(){
     //extracting hashsum

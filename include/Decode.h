@@ -8,6 +8,7 @@
 #include <quirc_internal.h>
 #include <zbar.h>
 #include "Config.h"
+#include "steganography.h"
 
 using namespace std;
 
@@ -46,7 +47,7 @@ class Decode : public Job
     protected:
         virtual uint32_t DecodeData();
         virtual uint32_t DecodeDataQuick();
-        virtual uint32_t DecodeDataSteg();
+        //virtual uint32_t DecodeDataSteg();
 
     private:
         uint32_t ExtractHashsum();
