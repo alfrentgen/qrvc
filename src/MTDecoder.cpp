@@ -86,8 +86,7 @@ int32_t MTDecoder::Init(Config& config){
     StegModule* pStegModule = nullptr;
     if(config.m_stegModeOn){
         config.m_qrScale = 4;
-        int32_t qrWidth = QRspec_getWidth(version);???
-        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, qrWidth, config.m_stegThreshold, RANDOM_PATH);
+        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold);
         res |= m_stegModule.ReadFramePath(config.m_keyFileName);
         if(res == FAIL){
             return FAIL;
@@ -122,7 +121,7 @@ int32_t MTDecoder::Init(Config& config){
     m_threads.clear();
     m_jobs.resize(config.m_nWorkingThreads);
 
-    for(int i =0; i < config.m_nWorkingThreads; i++){
+    for(int i=0; i < config.m_nWorkingThreads; i++){
         m_jobs[i] = new Decode(config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pkeyFrame);
         m_jobs[i]->SetStegParams(pStegModule);

@@ -108,14 +108,14 @@ int32_t MTEncoder::Init(Config& config){
         }
         config.m_qrScale = 4;
         int32_t qrWidth = QRspec_getWidth(version);
-        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, qrWidth, config.m_stegThreshold, RANDOM_PATH);
+        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold, qrWidth, RANDOM_PATH);
         if(res == FAIL){
             return FAIL;
         }
         pStegModule = &m_stegModule;
         //if file exists and can be read, try to read frame path from it and give it to steg module
         if(config.m_keyFileName.size()){
-            if(m_stegModule.ReadFramePath(config.m_keyFileName) == FAIL){
+            if(m_stegModule.ReadFramePath(config.m_keyFileName, CHECK_PATH_LENGTH) == FAIL){
                 return FAIL;
             }
             /*ifstream ifs(config.m_keyFileName, ios_base::in | ios_base::binary);
