@@ -9,7 +9,7 @@ using namespace std;
 #define CHECK_PATH_LENGTH true
 
 typedef struct StegUnit{
-    bool bit;
+    uint8_t bit;
     uint8_t* pUnit;
     int32_t threshold;
     vector<int32_t> neighInds;

@@ -156,6 +156,7 @@ skipDecyph:
         if(m_skipDup && duplicated){
             m_data.m_rendered = false;
         }else{
+#define STEG_DECODE
 #ifdef STEG_DECODE
             if(m_stegModule){
                 vector& frame = m_data.m_inBuffer;

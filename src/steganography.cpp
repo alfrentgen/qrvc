@@ -172,24 +172,37 @@ void changePels(uint8_t** pels, int32_t nPels, int32_t diff){
 }
 
 //4x4 pels unit
-void renderUnit(StegUnit& unit){
+void renderUnit(StegUnit& unit, bool hide = true){
     int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
     int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-    int8_t diff = 1;
-    int8_t dir = 1;
-    if(unit.bit == 0){
-        dir = -1;
+    if(hide){
+        int8_t diff = 1;
+        int8_t dir = 1;
+        if(unit.bit == 0){
+            dir = -1;
+        }
+        diff *= dir;
+        //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
+        while(dir*(meanCore - meanNeigh) <= unit.threshold){
+                changePels(unit.corePels.data(), unit.corePels.size(), diff);
+                changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
+                meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+                meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
+                //LOG("unit.threshold=%d\n", unit.threshold);
+                //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
+        }
+    }else{
+        if(meanCore - meanNeigh > 0){
+            unit.bit = 1;
+        }else{
+            unit.bit = 0;
+        }
     }
-    diff *= dir;
-    //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
-    while(dir*(meanCore - meanNeigh) <= unit.threshold){
-            changePels(unit.corePels.data(), unit.corePels.size(), diff);
-            changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
-            meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
-            meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-            //LOG("unit.threshold=%d\n", unit.threshold);
-            //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
-    }
+
+    return;
+}
+
+void getQRDot(StegUnit& unit){
 
     return;
 }
@@ -269,15 +282,23 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
 }
 
 int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
-    m_frameHeight;
-    m_frameWidth;
+    StegUnit unit;
+    unit.corePels.resize(m_coreIndeces.size(), nullptr);
+    unit.neighPels.resize(m_neighIndeces.size(), nullptr);
     uint32_t size = m_framePath.size()/2;
     for(int i = 0; i < size; i++){
         int8_t x = m_framePath[2*i];
         int8_t y = m_framePath[2*i+1];
+        unit.pUnit = frame + y * DEF_STEG_UNIT_SIZE * m_frameWidth + x * DEF_STEG_UNIT_SIZE;
+        for(int32_t i = 0; i < m_coreIndeces.size(); i++){
+            unit.corePels[i] = unit.pUnit + m_coreIndeces[i];
+        }
+        for(int32_t i = 0; i < m_neighIndeces.size(); i++){
+            unit.neighPels[i] = unit.pUnit + m_neighIndeces[i];
+        }
+        renderUnit(unit, false);
+        qrCode[m_qrPath[i]] = unit.bit;
     }
-    m_framePath;
-    m_qrPath;
     return OK;
 }
 
@@ -347,7 +368,8 @@ int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
     for(uint32_t i = 0; i < size; i++){
         m_framePath.push_back((int32_t)path[i]);
     }
-    m_qrWidth = sqrt(size);
+    m_qrWidth = sqrt(size/2);
+    m_qrPath = generateQRPath(m_qrWidth, nullptr);
     return OK;
 }
 
