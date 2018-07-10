@@ -159,10 +159,10 @@ skipDecyph:
 #define STEG_DECODE
 #ifdef STEG_DECODE
             if(m_stegModule){
-                vector& frame = m_data.m_inBuffer;
-                int32_t qrWidth = m_stegModule.m_qrWidth;
+                vector<uint8_t>& frame = m_data.m_inBuffer;
+                int32_t qrWidth = m_stegModule->m_qrWidth;
                 vector<uint8_t> qrCode(qrWidth * qrWidth);
-                m_stegModule.Reveal(frame, qrCode.data());
+                m_stegModule->Reveal(frame.data(), qrCode.data());
                 makeFrame(frame, qrCode);
             }
 #endif
