@@ -47,7 +47,7 @@ class Decode : public Job
     protected:
         virtual uint32_t DecodeData();
         virtual uint32_t DecodeDataQuick();
-        //virtual uint32_t DecodeDataSteg();
+        uint32_t DecodeDataSteg(uint8_t* qrCode, int32_t size);
 
     private:
         uint32_t ExtractHashsum();

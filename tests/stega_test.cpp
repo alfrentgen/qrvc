@@ -23,7 +23,7 @@ int32_t main(){
     //std::random_shuffle(qrCode.begin(),qrCode.end());
 
     cout << "init\n";
-    int32_t res = module.Init(WIDTH, HEIGHT, QR_WIDTH, THRESHOLD, KEY_PRESENTED);
+    int32_t res = module.Init(WIDTH, HEIGHT, QR_WIDTH, THRESHOLD, !KEY_PRESENTED);
     int i = 0;
     /*for(int32_t idx : module.m_qrPath){
         i++;

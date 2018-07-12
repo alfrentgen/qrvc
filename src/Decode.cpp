@@ -156,6 +156,7 @@ skipDecyph:
         if(m_skipDup && duplicated){
             m_data.m_rendered = false;
         }else{
+            int32_t decRes;
 #define STEG_DECODE
 #ifdef STEG_DECODE
             if(m_stegModule){
@@ -163,10 +164,9 @@ skipDecyph:
                 int32_t qrWidth = m_stegModule->m_qrWidth;
                 vector<uint8_t> qrCode(qrWidth * qrWidth);
                 m_stegModule->Reveal(frame.data(), qrCode.data());
-                makeFrame(frame, qrCode);
-            }
+                DecodeDataSteg(qrCode.data(), qrWidth);
+            }else
 #endif
-            int32_t decRes;
             if(m_decMode == MODE_QUICK){
                 decRes = DecodeDataQuick();
             }else if(m_decMode == MODE_SLOW){
@@ -260,6 +260,7 @@ uint32_t Decode::DecodeDataQuick(){
 
     quirc_end(m_qr);
     int32_t num_codes = quirc_count(m_qr);
+    //LOG("num_codes=%d\n", num_codes);
 
     if(num_codes == 0){
         LOG("QUICK: Decoding chunk #%llu, decoded %d symbols. Nothing was decoded!\n", m_data.m_frameID, num_codes);
@@ -279,7 +280,7 @@ uint32_t Decode::DecodeDataQuick(){
 	    err = quirc_decode(&code, &data);
 	    if (err){
 		    LOG("Quick decode failed: %s\n", quirc_strerror(err));
-		    return -1;
+		    return FAIL;
 	    }
 	    else{
 		    int32_t outBufferSize = m_data.m_outBuffer.size();
@@ -292,7 +293,7 @@ uint32_t Decode::DecodeDataQuick(){
     if(m_data.m_outBuffer.size() < 12 ){
         LOG("Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
         m_data.m_rendered = false;
-        return -1;
+        return FAIL;
     }
 
     //extracting chunk ID
@@ -310,9 +311,57 @@ uint32_t Decode::DecodeDataQuick(){
     return OK;
 }
 
-/*uint32_t Decode::DecodeDataSteg(){
-    return OK;
-}*/
+uint32_t Decode::DecodeDataSteg(uint8_t* qrCode, int32_t size){
+    quirc_code quircCode;
+    struct quirc_data data;
+    uint32_t decResult = OK;
+
+    memset(&quircCode, 0, sizeof(quircCode));
+    memset(&data, 0, sizeof(data));
+
+    quircCode.size = size;
+    /* The number of cells across in the QR-code. The cell bitmap
+	 * is a bitmask giving the actual values of cells. If the cell
+	 * at (x, y) is black, then the following bit is set:
+	 *
+	 *     cell_bitmap[i >> 3] & (1 << (i & 7))
+	 *
+	 * where i = (y * size) + x.
+	 */
+    for(int i = 0; i < size*size; i++){
+        if(qrCode[i] == 0){
+            quircCode.cell_bitmap[i >> 3] & (1 << (i & 7));//where i = (y * size) + x
+        }
+    }
+    quirc_decode_error_t err = quirc_decode(&quircCode, &data);
+    if (err){
+        LOG("Quick decode failed: %s\n", quirc_strerror(err));
+        return FAIL;
+    }else{
+        int32_t outBufferSize = m_data.m_outBuffer.size();
+        m_data.m_outBuffer.assign(data.payload, data.payload + data.payload_len);
+    }
+
+    if(m_data.m_outBuffer.size() < 12 ){
+        LOG("Decoded data size %llu < 12 bytes. Not enough to get checksum and frame ID.\n", m_data.m_outBuffer.size());
+        m_data.m_rendered = false;
+        decResult = FAIL;
+    }
+
+    //extracting chunk ID
+    m_data.m_chunkID = ExtractChunkID();
+
+    //extracting hashsum
+    m_data.m_outHash = ExtractHashsum();
+
+    m_data.m_rendered = true;
+    if(m_data.m_outBuffer.size() == 12 ){
+        LOG("Decoded data size %llu bytes. Nothing to write out! Will be skipped.\n", m_data.m_outBuffer.size());
+        m_data.m_rendered = false;
+    }
+
+    return decResult;
+}
 
 uint32_t Decode::ExtractHashsum(){
     //extracting hashsum
