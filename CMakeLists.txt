@@ -19,7 +19,7 @@ set(CMAKE_C_FLAGS "-std=gnu11 -Wall -fexceptions -fpermissive -static-libstdc++ 
 set(CMAKE_SHARED_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libstdc++ -static-libgcc")
 
-if(USE_MINGW)
+if(MINGW)
     set(MINGW_BUILD_FLAGS "-static -pthread")
     if(USE_X86_32)
         set(MINGW_BUILD_FLAGS "-O1 -fno-builtin-memmove ${MINGW_BUILD_FLAGS}")
@@ -102,11 +102,13 @@ add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
 target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(qrvd decquirc deczbar)
-if(USE_MINGW)
+if(MINGW)
     set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,--allow-multiple-definition")
 elseif(USE_MUSL)
     set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
     add_dependencies(qrvd libc)
+else()#NATIVE
+    set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
 endif()
 
 
@@ -145,6 +147,8 @@ target_link_libraries(qrve qrenc)
 if(USE_MUSL)
     set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
     add_dependencies(qrve libc)
+else()#NATIVE
+    set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
 endif()
 
 #TESTS SECTION

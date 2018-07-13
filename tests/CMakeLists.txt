@@ -15,9 +15,10 @@ add_executable(steg_module_test
 				${STEG_SRCS}
                 )
 target_include_directories(steg_module_test PRIVATE ${INC_DIR})
-add_dependencies(steg_module_test libc)
-set_target_properties(steg_module_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
-target_link_libraries(steg_module_test )
+if(USE_MUSL)
+    add_dependencies(steg_module_test libc)
+    set_target_properties(steg_module_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+endif()
 				
 add_test(NAME steg_module_test COMMAND steg_module_test WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
 set_property(TARGET	steg_module_test PROPERTY FOLDER "Tests")
@@ -32,8 +33,10 @@ add_executable(stegencdec_test
                 )
 target_include_directories(stegencdec_test PRIVATE ${INC_DIR})
 target_link_libraries(stegencdec_test decquirc deczbar qrenc)
-add_dependencies(stegencdec_test libc)
-set_target_properties(stegencdec_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+if(USE_MUSL)
+    add_dependencies(stegencdec_test libc)
+    set_target_properties(stegencdec_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+endif()
 				
 add_test(NAME stegencdec_test COMMAND stegencdec_test WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
 set_property(TARGET	stegencdec_test PROPERTY FOLDER "Tests")
