@@ -9,18 +9,25 @@ extern "C" {
     #include <qrinput.h>
 }
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define WIDTH 640//1280
+#define HEIGHT 480//720
 #define QR_WIDTH 177
 #define QR_SCALE 4
 #define THRESHOLD 8
-#define KEY_PRESENTED true//false
 
 void dump(char* fName, uint8_t* signal, uint32_t size) {
 	FILE* dumpFile = fopen(fName, "wb");
 	fwrite((void*)signal, sizeof(uint8_t), size, dumpFile);
 	fclose(dumpFile);
 	return;
+}
+
+void fillDot(uint8_t* pDot, int32_t stride, int32_t scale, uint8_t color){
+    for(int y = 0; y < scale; y++){
+        for(int x = 0; x < scale; x++){
+            pDot[y * stride + x] = color;
+        }
+    }
 }
 
 uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLevel, uint32_t qrScale, uint32_t *retVersion){
@@ -46,9 +53,10 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
 
 int32_t main(){
     //setting up
-    QRecLevel eccLevel = ECC_LEVEL_Q;
+    QRecLevel eccLevel = ECC_LEVEL_L;
     uint32_t version = 0;
     uint32_t chunkSize = getChunkSize(WIDTH, HEIGHT, eccLevel, QR_SCALE, &version);
+    LOG("Chunk size = %d\n", chunkSize);
     int32_t qrWidth = QRspec_getWidth(version);
     //generating chunk
     vector<uint8_t> chunk(chunkSize);
@@ -64,6 +72,24 @@ int32_t main(){
     if(qrWidth != pQR->width){
         return FAIL;
     }
+
+    //for manual check output code image generation
+    /*int8_t bgColor = 255;
+    int8_t drawColor = 0;
+    vector<uint8_t> qrFrame(WIDTH * HEIGHT, bgColor);
+    uint32_t offsetX = QR_SCALE;
+    uint32_t offsetY = QR_SCALE;
+    uint8_t* pRaw = qrFrame.data() + offsetY * WIDTH;
+    for(int y = 0; y < qrWidth; y++){
+        uint8_t* pDot = pRaw + offsetX;
+        for(int x = 0; x < qrWidth; x++){
+            uint8_t val = (0x01 & pQRData[x + y * qrWidth]) ? drawColor : bgColor;
+            fillDot(pDot + x*QR_SCALE, WIDTH, QR_SCALE, val);
+        }
+        pRaw += QR_SCALE * WIDTH;
+    }
+    dump("EncodedFrame.yuv", qrFrame.data(), qrFrame.size());*/
+
     //decoding
     quirc_code quircCode;
     struct quirc_data data;
@@ -71,8 +97,8 @@ int32_t main(){
     memset(&data, 0, sizeof(data));
     quircCode.size = qrWidth;
     for(int i = 0; i < qrWidth*qrWidth; i++){
-        if(pQRData[i] != 0){
-            quircCode.cell_bitmap[i >> 3] & (1 << (i & 7));//where i = (y * size) + x
+        if((0x01 & pQRData[i])){
+            quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
         }
     }
     quirc_decode_error_t err = quirc_decode(&quircCode, &data);
@@ -83,8 +109,16 @@ int32_t main(){
         decChunk.assign(data.payload, data.payload + data.payload_len);
     }
 
+    if(decChunk.size() != chunk.size()){
+        printf("Chunks sizes are not equal!\n");
+        return -1;
+    }
+    if(memcmp(decChunk.data(), chunk.data(), decChunk.size() != 0)){
+        printf("Chunks data is not equal!\n");
+        return -1;
+    }
 
-    /*StegModule module;
+    StegModule module;
     vector<uint8_t> frame(WIDTH * HEIGHT, 127);
     vector<uint8_t> qrCode(qrWidth * qrWidth, 0);
 
@@ -94,7 +128,7 @@ int32_t main(){
     //std::random_shuffle(qrCode.begin(),qrCode.end());
 
     cout << "init\n";
-    int32_t res = module.Init(WIDTH, HEIGHT, QR_WIDTH, THRESHOLD, KEY_PRESENTED);
+    int32_t res = module.Init(WIDTH, HEIGHT, THRESHOLD, qrWidth, RANDOM_PATH);
     int i = 0;
 
     cout << "hide\n";
@@ -102,7 +136,10 @@ int32_t main(){
 
     string fName("stegaDump.yuv");
     cout << fName << endl;
-    dump(const_cast<char*>(fName.c_str()), frame.data(), frame.size());*/
+    dump(const_cast<char*>(fName.c_str()), frame.data(), frame.size());
 
+    //module.Reveal(, );
+
+    printf("Successfully decoded!\n");
     return 0;
 }

@@ -329,10 +329,11 @@ uint32_t Decode::DecodeDataSteg(uint8_t* qrCode, int32_t size){
 	 * where i = (y * size) + x.
 	 */
     for(int i = 0; i < size*size; i++){
-        if(qrCode[i] == 0){
-            quircCode.cell_bitmap[i >> 3] & (1 << (i & 7));//where i = (y * size) + x
+        if((0x01 & qrCode[i])){
+            quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
         }
     }
+
     quirc_decode_error_t err = quirc_decode(&quircCode, &data);
     if (err){
         LOG("Quick decode failed: %s\n", quirc_strerror(err));
