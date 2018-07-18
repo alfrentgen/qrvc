@@ -9,11 +9,15 @@ extern "C" {
     #include <qrinput.h>
 }
 
-#define WIDTH 640//1280
-#define HEIGHT 480//720
+#define WIDTH 1280//640//1280
+#define HEIGHT 720//480//720
 #define QR_WIDTH 177
 #define QR_SCALE 4
 #define THRESHOLD 8
+
+int32_t frame_sizes[5][2]={
+{100, 100}, {320, 240}, {640, 480}, {800, 600},  {1280, 720}
+};
 
 void dump(char* fName, uint8_t* signal, uint32_t size) {
 	FILE* dumpFile = fopen(fName, "wb");
@@ -51,13 +55,33 @@ uint32_t getChunkSize(uint32_t frameWidth, uint32_t frameHeight, QRecLevel eccLe
     return size;
 }
 
+int32_t test(int32_t width, int32_t height);
+
 int32_t main(){
+    for(int i = 0; i < 5; i++){
+        LOG("\nStegEncDec test# %d\n", i);
+        int32_t res = test(frame_sizes[i][0], frame_sizes[i][1]);
+        CHECK_FAIL(res);
+    }
+    return 0;
+}
+
+int32_t test(int32_t width, int32_t height){
     //setting up
+    StegModule module;
+    int32_t res = module.Init(width, height, THRESHOLD);
+    if(res){
+        LOG("Init failed!\n");
+        return FAIL;
+    }
+    int32_t qrWidth = module.GetQRWidth();
     QRecLevel eccLevel = ECC_LEVEL_L;
-    uint32_t version = 0;
-    uint32_t chunkSize = getChunkSize(WIDTH, HEIGHT, eccLevel, QR_SCALE, &version);
+    int32_t version = 0;
+    uint32_t chunkSize = getChunkSize(qrWidth, qrWidth, eccLevel, 1, &version);
     LOG("Chunk size = %d\n", chunkSize);
-    int32_t qrWidth = QRspec_getWidth(version);
+    if(!chunkSize || !version){
+        return FAIL;
+    }
     //generating chunk
     vector<uint8_t> chunk(chunkSize);
     vector<uint8_t> decChunk(chunkSize);
@@ -98,38 +122,43 @@ int32_t main(){
     quircCode.size = qrWidth;
     for(int i = 0; i < qrWidth*qrWidth; i++){
         if((0x01 & pQRData[i])){
+        //if(pQRData[i] != 0){
             quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
         }
     }
     quirc_decode_error_t err = quirc_decode(&quircCode, &data);
     if (err){
-        LOG("Quick decode failed: %s\n", quirc_strerror(err));
+        LOG("Dec1: Quick decode failed: %s\n", quirc_strerror(err));
         return FAIL;
     }else{
         decChunk.assign(data.payload, data.payload + data.payload_len);
+        LOG("Dec1: Quick decode: %s\n", quirc_strerror(err));
     }
 
     if(decChunk.size() != chunk.size()){
-        printf("Chunks sizes are not equal!\n");
+        printf("Dec1: Chunks sizes are not equal!\n");
         return -1;
     }
-    if(memcmp(decChunk.data(), chunk.data(), decChunk.size() != 0)){
-        printf("Chunks data is not equal!\n");
+    if(memcmp(decChunk.data(), chunk.data(), decChunk.size()) != 0){
+        printf("Dec1: Chunks data is not equal!\n");
         return -1;
+    }else{
+        printf("Dec1: Chunks data is equal!\n");
     }
 
-    StegModule module;
-    vector<uint8_t> frame(WIDTH * HEIGHT, 127);
-    vector<uint8_t> qrCode(qrWidth * qrWidth, 0);
+    //steganography test
+    LOG("\nTesting steganography:\n");
+    vector<uint8_t> frame(width * height, 127);
+    vector<uint8_t> qrCode(qrWidth * qrWidth, 255);
 
     for(int i = 0; i < qrCode.size(); i++){
-        qrCode[i] = (i%2) * 255;
+        if((0x01 & pQRData[i])){
+            qrCode[i] = 0;
+        }
     }
-    //std::random_shuffle(qrCode.begin(),qrCode.end());
+    dump("CodeBeforeHide.yuv", qrCode.data(), qrCode.size());
 
     cout << "init\n";
-    int32_t res = module.Init(WIDTH, HEIGHT, THRESHOLD, qrWidth, RANDOM_PATH);
-    int i = 0;
 
     cout << "hide\n";
     module.Hide(frame.data(), qrCode.data());
@@ -138,7 +167,54 @@ int32_t main(){
     cout << fName << endl;
     dump(const_cast<char*>(fName.c_str()), frame.data(), frame.size());
 
-    //module.Reveal(, );
+    //revealing the code
+    vector<uint8_t> qrCodeRev(qrWidth * qrWidth, 255);
+    LOG("qrCodeRev.size() = %d\n", qrCodeRev.size());
+    LOG("frame.size() = %d\n", frame.size());
+    LOG("revealing...\n");
+    module.Reveal(frame.data(), qrCodeRev.data());
+    dump("CodeRevealed.yuv", qrCodeRev.data(), qrCode.size());
+    LOG("revealed!\n");
+    if(qrCode.size() != qrCodeRev.size()){
+        printf("Codes sizes are not equal!\n");
+        return -1;
+    }
+    if(memcmp(qrCode.data(), qrCodeRev.data(), qrCode.size()) != 0){
+        printf("Reveal: Codes are not equal!\n");
+        return -1;
+    }else{
+        printf("Reveal: Codes are equal!\n");
+    }
+
+    //decode
+    decChunk.resize(0);
+    memset(&quircCode, 0, sizeof(quircCode));
+    memset(&data, 0, sizeof(data));
+    pQRData = qrCodeRev.data();
+    quircCode.size = qrWidth;
+    for(int i = 0; i < qrWidth*qrWidth; i++){
+        if(pQRData[i] == 0){
+            quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
+        }
+    }
+    err = quirc_decode(&quircCode, &data);
+    if (err){
+        LOG("Quick decode failed: %s\n", quirc_strerror(err));
+        return FAIL;
+    }else{
+        decChunk.assign(data.payload, data.payload + data.payload_len);
+    }
+
+    if(decChunk.size() != chunk.size()){
+        printf("Dec2: Chunks sizes are not equal!\n");
+        return -1;
+    }
+    if(memcmp(decChunk.data(), chunk.data(), decChunk.size() != 0)){
+        printf("Dec2: Chunks data is not equal!\n");
+        return -1;
+    }else{
+        printf("Dec2: Chunks data is equal!\n");
+    }
 
     printf("Successfully decoded!\n");
     return 0;

@@ -79,24 +79,10 @@ int32_t MTEncoder::Init(Config& config){
         return FAIL;
     }
 
-    //Init2
+    int32_t chunkSize(0);
     uint32_t version = 0;
-    int32_t chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment,
-                                        config.m_eccLevel, config.m_qrScale, &version);
-    if(!chunkSize || version > 40 || version <= 0){
-        LOG("version: %d, chunkSize: %d\n", version, chunkSize);
-        LOG("Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n");
-        return FAIL;
-    }
 
-    config.m_qrVersion = version;
-    int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
-    if(nBytesToRead <= 0){
-        LOG("In the codec ECC levels 2 and 3 are deprecated for QR code version %d.\n", version);
-        return FAIL;
-    }
-
-    //configurign steganography module
+    //configureing steganography module
     StegModule* pStegModule = nullptr;
     if(config.m_stegModeOn){
         if(inputStream == &cin){//can't treat cin as main data input, due to using it for steg data
@@ -106,41 +92,42 @@ int32_t MTEncoder::Init(Config& config){
         if(config.m_stegThreshold == 0){
             config.m_stegThreshold = 8;
         }
-        config.m_qrScale = 4;
-        int32_t qrWidth = QRspec_getWidth(version);
-        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold, qrWidth, RANDOM_PATH);
-        if(res == FAIL){
-            return FAIL;
-        }
+        int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold, RANDOM_PATH);
+        CHECK_FAIL(res);
+
         pStegModule = &m_stegModule;
         //if file exists and can be read, try to read frame path from it and give it to steg module
         if(config.m_keyFileName.size()){
-            if(m_stegModule.ReadFramePath(config.m_keyFileName, CHECK_PATH_LENGTH) == FAIL){
+            if(m_stegModule.ReadFramePath(config.m_keyFileName) == FAIL){
                 return FAIL;
             }
-            /*ifstream ifs(config.m_keyFileName, ios_base::in | ios_base::binary);
-            vector<uint8_t> framePath(0);
-            if(ifs.good()){
-                while (ifs.good()) {
-                    framePath.push_back((uint8_t)ifs.get());
-                }
-                uint32_t minFramePathLength = 2 * qrWidth * qrWidth;
-                if(m_stegModule.SetCustomFramePath(framePath.data(), framePath.size()) != OK){
-                    LOG("Not enough length of frame path: %d, should be %d!\n", framePath.size(), minFramePathLength);
-                    return FAIL;
-                }
-            }else{
-                LOG("Cannot read steganography key file!\n");
-                return FAIL;
-            }*/
         }else{
-            LOG("Using generated steganography key file.\n");
+            LOG("Generating steganography key file.\n");
             string keyFileName = m_config.m_ifName + ".stg";
             if(m_stegModule.WriteFramePath(keyFileName) == FAIL){
                 return FAIL;
             }
         }
+        int32_t qrWidth = m_stegModule.GetQRWidth();
+        chunkSize = getChunkSize(qrWidth, qrWidth, config.m_eccLevel, 1, &version);
         m_stegModule.SetUnitPattern(config.m_unitPattern);
+    }else{
+        //Init2
+        chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment,
+                                            config.m_eccLevel, config.m_qrScale, &version);
+    }
+
+    if(!chunkSize || version > 40 || version <= 0){
+            LOG("version: %d, chunkSize: %d\n", version, chunkSize);
+            LOG("Frame size does not fit any possible qr code. Try smaller scale, ECC  level, bigger frame or changing alignment.\n");
+            return FAIL;
+        }
+    config.m_qrVersion = version;
+
+    int32_t nBytesToRead = chunkSize - COUNTER_SIZE - HASHSUM_SIZE;
+    if(nBytesToRead <= 0){
+        LOG("In the codec ECC levels 2 and 3 are deprecated for QR code version %d.\n", version);
+        return FAIL;
     }
 
     m_config = config;//accept config, as it is counted valid from now

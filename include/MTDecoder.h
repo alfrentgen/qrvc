@@ -10,6 +10,7 @@
 #include "ArgsParser.h"
 #include "Chunk.h"
 #include "Config.h"
+#include "steganography.h"
 
 //using namespace std;
 class MTDecoder

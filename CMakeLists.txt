@@ -11,6 +11,7 @@ set(CMAKE_SKIP_RPATH TRUE)
 option(USE_X86_32 "Build for x86 32 bits" OFF)
 option(USE_MUSL "Build using musl-cross-make" OFF)
 #option(USE_NATIVE "Build using native GCC toolset" OFF)
+option(DEBUG_INFO "Include debugging info" OFF)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
@@ -46,6 +47,11 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
     set(TARBALL_ARCH "x86_64")
+endif()
+
+if(DEBUG_INFO)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O1")
 endif()
 
 message(STATUS "CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH}")
@@ -101,7 +107,7 @@ src/steganography.cpp
 add_executable(qrvd ${DEC_HDR} ${DEC_SRC})
 target_include_directories(qrvd PUBLIC include)
 set_target_properties(qrvd PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(qrvd decquirc deczbar)
+target_link_libraries(qrvd decquirc deczbar qrenc)
 if(MINGW)
     set_target_properties(qrvd PROPERTIES LINK_FLAGS "-Wl,--allow-multiple-definition")
 elseif(USE_MUSL)
@@ -147,7 +153,7 @@ target_link_libraries(qrve qrenc)
 if(USE_MUSL)
     set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
     add_dependencies(qrve libc)
-else()#NATIVE
+elseif(NOT MINGW)#NATIVE
     set_target_properties(qrve PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
 endif()
 
@@ -162,6 +168,7 @@ else()
     set(TARBALL_NAME qrvc_linux)
     set(LIBS_TO_TAR *.so)
 endif()
+
 set(TARBALL_NAME "${TARBALL_NAME}_${TARBALL_ARCH}")
 message(STATUS "TARBALL_NAME= ${TARBALL_NAME}")
 

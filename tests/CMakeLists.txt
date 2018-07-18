@@ -18,6 +18,8 @@ target_include_directories(steg_module_test PRIVATE ${INC_DIR})
 if(USE_MUSL)
     add_dependencies(steg_module_test libc)
     set_target_properties(steg_module_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+elseif(NOT MINGW)#NATIVE
+    set_target_properties(steg_module_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
 endif()
 				
 add_test(NAME steg_module_test COMMAND steg_module_test WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
@@ -36,6 +38,8 @@ target_link_libraries(stegencdec_test decquirc deczbar qrenc)
 if(USE_MUSL)
     add_dependencies(stegencdec_test libc)
     set_target_properties(stegencdec_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+elseif(NOT MINGW)#NATIVE
+    set_target_properties(stegencdec_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
 endif()
 				
 add_test(NAME stegencdec_test COMMAND stegencdec_test WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)

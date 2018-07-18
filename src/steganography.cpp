@@ -1,5 +1,11 @@
 #include "steganography.h"
 
+extern "C" {
+    #include <qrencode.h>
+    #include <qrspec.h>
+    #include <qrinput.h>
+}
+
 vector<int32_t> Matrix2D(int32_t qrWidth){
     vector<int32_t> indeces(0);
     for(int i = 0; i < qrWidth; i++){
@@ -40,8 +46,8 @@ vector<int32_t> spiralMatrix(int32_t qrWidth){
 }
 
 vector<int32_t> generateDefaultQRPath(int32_t qrWidth){
-    //return Matrix2D(qrWidth);
-    return spiralMatrix(qrWidth);
+    return Matrix2D(qrWidth);
+    //return spiralMatrix(qrWidth);
 }
 
 vector<int32_t> generateQRPath(int32_t qrWidth, function<vector<int32_t>(int32_t)>* customAlg){
@@ -155,8 +161,9 @@ vector<int32_t> generateFramePath(int32_t frameWidth, int32_t frameHeight, bool 
 
 int32_t calc_mean(uint8_t** pixels, int32_t size){
     int32_t sum = 0;
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < size; i++){
         sum += *pixels[i];
+    }
     return sum/size;
 }
 
@@ -193,16 +200,11 @@ void renderUnit(StegUnit& unit, bool hide = true){
         }
     }else{
         if(meanCore - meanNeigh > 0){
-            unit.bit = 1;
+            unit.bit = 255;
         }else{
             unit.bit = 0;
         }
     }
-
-    return;
-}
-
-void getQRDot(StegUnit& unit){
 
     return;
 }
@@ -258,68 +260,122 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
     unit.threshold = m_threshold;
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
+
     for(int i = 0; i < qrSize; i++){
-        //LOG("%d\n",i);
         int32_t qrIdx = m_qrPath[i];
-        int32_t unitPosX = m_framePath[2 * i];
-        int32_t unitPosY = m_framePath[2 * i + 1];
+        int32_t x = m_framePath[2*i];
+        int32_t y = m_framePath[2*i+1];
+        unit.bit = qrCode[qrIdx];
+        unit.pUnit = frame + y * unitSize * stride + x * unitSize;
 
-        uint8_t* pUnit = &frame[unitPosY * unitSize * stride + unitPosX * unitSize];
-        uint8_t qrDot = qrCode[qrIdx];
-        unit.bit = qrDot;
-        unit.pUnit = pUnit;
-
-        for(int32_t i = 0; i < m_coreIndeces.size(); i++){
-            unit.corePels[i] = unit.pUnit + m_coreIndeces[i];
+        for(int32_t j = 0; j < m_coreIndeces.size(); j++){
+            unit.corePels[j] = unit.pUnit + m_coreIndeces[j];
         }
 
-        for(int32_t i = 0; i < m_neighIndeces.size(); i++){
-            unit.neighPels[i] = unit.pUnit + m_neighIndeces[i];
+        for(int32_t j = 0; j < m_neighIndeces.size(); j++){
+            unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
-
         renderUnit(unit);
-    }
-}
-
-int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
-    StegUnit unit;
-    unit.corePels.resize(m_coreIndeces.size(), nullptr);
-    unit.neighPels.resize(m_neighIndeces.size(), nullptr);
-    uint32_t size = m_framePath.size()/2;
-    for(int i = 0; i < size; i++){
-        int8_t x = m_framePath[2*i];
-        int8_t y = m_framePath[2*i+1];
-        unit.pUnit = frame + y * DEF_STEG_UNIT_SIZE * m_frameWidth + x * DEF_STEG_UNIT_SIZE;
-        for(int32_t i = 0; i < m_coreIndeces.size(); i++){
-            unit.corePels[i] = unit.pUnit + m_coreIndeces[i];
-        }
-        for(int32_t i = 0; i < m_neighIndeces.size(); i++){
-            unit.neighPels[i] = unit.pUnit + m_neighIndeces[i];
-        }
-        renderUnit(unit, false);
-        qrCode[m_qrPath[i]] = unit.bit;
     }
     return OK;
 }
 
+int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
+    int32_t qrSize = m_qrWidth * m_qrWidth;
+    int32_t stride = m_frameWidth;
+    int32_t unitSize = DEF_STEG_UNIT_SIZE;
+    StegUnit unit;
+    unit.corePels.resize(m_coreIndeces.size(), nullptr);
+    unit.neighPels.resize(m_neighIndeces.size(), nullptr);
+
+    for(int i = 0; i < qrSize; i++){
+        int32_t qrIdx = m_qrPath[i];
+        int32_t x = m_framePath[2*i];
+        int32_t y = m_framePath[2*i+1];
+        unit.pUnit = frame + y * unitSize * stride + x * unitSize;
+
+        for(int32_t j = 0; j < m_coreIndeces.size(); j++){
+            unit.corePels[j] = unit.pUnit + m_coreIndeces[j];
+        }
+        for(int32_t j = 0; j < m_neighIndeces.size(); j++){
+            unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
+        }
+
+        renderUnit(unit, false);
+        qrCode[qrIdx] = unit.bit;
+    }
+    return OK;
+}
+
+//return 0 if no versions can fit current frame path length
+int32_t calcMaxQRWidth(int32_t dotsAvailable){
+    int32_t maxWidth = floor(sqrt(dotsAvailable));
+    int32_t version = QRSPEC_VERSION_MAX;
+    int32_t width;
+
+    do{
+        width = QRspec_getWidth(version--);
+    }while(width > maxWidth);
+
+    return width;
+}
+
 //returns -1 if qrPath is longer than framePath,
 //because there are not enough units in a frame to hide each dot of QR code
-int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t threshold, int32_t qrWidth, bool keyFlag){
+int32_t StegModule::Init(int32_t frameWidth, int32_t frameHeight, int32_t threshold, bool keyFlag){
     m_frameWidth = frameWidth;
     m_frameHeight = frameHeight;
-    m_qrWidth = qrWidth;
     m_keyFlag = keyFlag;
     m_threshold = threshold;
 
-    function<vector<int32_t>(int32_t, int32_t, bool)> defFramePathGen(generateDefaultFramePath);
-    m_framePath = generateFramePath(m_frameWidth, m_frameHeight, m_keyFlag, &defFramePathGen, nullptr);
-    m_qrPath = generateQRPath(m_qrWidth, nullptr);
-
-    if(2 * m_qrPath.size() > m_framePath.size()){
+    m_maxQRWidth = calcMaxQRWidth((m_frameHeight / DEF_STEG_UNIT_SIZE) * (m_frameWidth / DEF_STEG_UNIT_SIZE));
+    if(m_maxQRWidth == 0){
         return FAIL;
     }
+
+    function<vector<int32_t>(int32_t, int32_t, bool)> defFramePathGen(generateDefaultFramePath);
+    m_framePath = generateFramePath(m_frameWidth, m_frameHeight, m_keyFlag, &defFramePathGen, nullptr);
+    m_qrWidth = calcMaxQRWidth(m_framePath.size()/2);
+    m_qrPath = generateQRPath(m_qrWidth, nullptr);
+
     if(SetUnitPattern(m_unitPat) != OK){
         return FAIL;
+    }
+    return OK;
+}
+
+int32_t StegModule::GetQRWidth(){
+    return m_qrWidth;
+}
+
+int32_t StegModule::ReadFramePath(string fileName){
+    ifstream ifs(fileName, ios_base::in | ios_base::binary);
+    vector<uint8_t> framePath(0);
+    if(ifs.bad()){
+        LOG("Cannot read steganography key file!\n");
+        return FAIL;
+    }
+    while (ifs.good()) {
+        framePath.push_back((uint8_t)ifs.get());
+    }
+
+    int32_t dotsRead = framePath.size()/2;
+    int32_t qrWidth = calcMaxQRWidth(dotsRead);
+    if(qrWidth == 0){
+        LOG("Steganography key file is too small!\n");
+        return FAIL;
+    }
+
+    SetCustomFramePath(framePath.data(), framePath.size());
+    m_qrWidth = qrWidth;
+    m_qrPath = generateQRPath(m_qrWidth, nullptr);
+    return OK;
+}
+
+int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
+    m_framePath.resize(0);
+    for(uint32_t i = 0; i < size; i++){
+        m_framePath.push_back((int32_t)path[i]);
     }
     return OK;
 }
@@ -339,37 +395,6 @@ int32_t StegModule::WriteFramePath(string fileName){
         framePath8bit.push_back((uint8_t)m_framePath[i]);
     }
     ofs.write(framePath8bit.data(), framePath8bit.size());
-    return OK;
-}
-
-int32_t StegModule::ReadFramePath(string fileName, bool checkLength){
-    ifstream ifs(fileName, ios_base::in | ios_base::binary);
-    vector<uint8_t> framePath(0);
-    if(ifs.bad()){
-        LOG("Cannot read steganography key file!\n");
-        return FAIL;
-    }
-    while (ifs.good()) {
-        framePath.push_back((uint8_t)ifs.get());
-    }
-    if(checkLength){//this check is currently for encoder!
-                    //Has to be removed when encoder become able to adjust qr width accroding to read key size
-        uint32_t minFramePathLength = 2 * (m_qrWidth * m_qrWidth);
-        if(framePath.size() < minFramePathLength){
-            LOG("Not enough length of frame path: %d, must be at least %d!\n", framePath.size(), minFramePathLength);
-            return FAIL;
-        }
-    }
-    return SetCustomFramePath(framePath.data(), framePath.size());
-}
-
-int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
-    m_framePath.resize(0);
-    for(uint32_t i = 0; i < size; i++){
-        m_framePath.push_back((int32_t)path[i]);
-    }
-    m_qrWidth = sqrt(size/2);
-    m_qrPath = generateQRPath(m_qrWidth, nullptr);
     return OK;
 }
 

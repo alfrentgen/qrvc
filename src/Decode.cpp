@@ -329,7 +329,8 @@ uint32_t Decode::DecodeDataSteg(uint8_t* qrCode, int32_t size){
 	 * where i = (y * size) + x.
 	 */
     for(int i = 0; i < size*size; i++){
-        if((0x01 & qrCode[i])){
+        //if((0x01 & qrCode[i])){
+        if(qrCode[i]){
             quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
         }
     }

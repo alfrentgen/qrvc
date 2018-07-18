@@ -10,6 +10,7 @@
 #include "ArgsParser.h"
 #include "Chunk.h"
 #include "Config.h"
+#include "steganography.h"
 
 #define MAX_BIN_CHUNKSIZE 2953
 #define NOT_MQR 0

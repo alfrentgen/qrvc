@@ -25,3 +25,8 @@
 
 #define OK 0
 #define FAIL -1
+
+#define CHECK_FAIL(val)\
+if(val == FAIL){\
+    return FAIL;\
+}\
