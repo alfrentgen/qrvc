@@ -259,7 +259,8 @@ uint32_t Encode::EncodeStegData(){
     frameSize += frameSize/2;//YUV420, add 1/4 for U and 1/4 for V planes
     uint8_t* pRawFrame = m_data.m_outBuffer.data();
     for(int i = 0; i < m_frameRepeats; i++){
-        m_stegModule->Hide(pRawFrame, pQRData);
+        //m_stegModule->Hide(pRawFrame, pQRData);
+        m_stegModule->Process(pRawFrame, pQRData, STEG_HIDE);
         pRawFrame += frameSize;
     }
     QRcode_free(pQR);

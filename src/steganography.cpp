@@ -307,6 +307,35 @@ int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
     return OK;
 }
 
+int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
+    int32_t qrSize = m_qrWidth * m_qrWidth;
+    int32_t stride = m_frameWidth;
+    int32_t unitSize = DEF_STEG_UNIT_SIZE;
+    StegUnit unit;
+    unit.threshold = m_threshold;//for HIDE
+    unit.corePels.resize(m_coreIndeces.size(), nullptr);
+    unit.neighPels.resize(m_neighIndeces.size(), nullptr);
+
+    for(int i = 0; i < qrSize; i++){
+        int32_t qrIdx = m_qrPath[i];
+        int32_t x = m_framePath[2*i];
+        int32_t y = m_framePath[2*i+1];
+        unit.bit = qrCode[qrIdx];//for HIDE
+        unit.pUnit = frame + y * unitSize * stride + x * unitSize;
+
+        for(int32_t j = 0; j < m_coreIndeces.size(); j++){
+            unit.corePels[j] = unit.pUnit + m_coreIndeces[j];
+        }
+
+        for(int32_t j = 0; j < m_neighIndeces.size(); j++){
+            unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
+        }
+        renderUnit(unit, action);
+        qrCode[qrIdx] = unit.bit;//for REVEAL
+    }
+    return OK;
+}
+
 //return 0 if no versions can fit current frame path length
 int32_t calcMaxQRWidth(int32_t dotsAvailable){
     int32_t maxWidth = floor(sqrt(dotsAvailable));

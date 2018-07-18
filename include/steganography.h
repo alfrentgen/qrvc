@@ -6,7 +6,8 @@ using namespace std;
 
 #define RANDOM_PATH true
 #define DEF_STEG_UNIT_SIZE 4
-#define CHECK_PATH_LENGTH true
+#define STEG_HIDE true
+#define STEG_REVEAL false
 
 typedef struct StegUnit{
     uint8_t bit;
@@ -25,6 +26,7 @@ public:
     StegModule();
     int32_t Hide(uint8_t* frame, uint8_t* qrCode);
     int32_t Reveal(uint8_t* frame, uint8_t* qrCode);
+    int32_t Process(uint8_t* frame, uint8_t* qrCode, bool action);
     int32_t Init(int32_t frameWidth, int32_t frameHeight, int32_t threshold, bool keyFlag = RANDOM_PATH);
     int32_t SetUnitPattern(char up);
     int32_t ReadFramePath(string fileName);

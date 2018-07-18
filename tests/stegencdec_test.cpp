@@ -161,7 +161,8 @@ int32_t test(int32_t width, int32_t height){
     cout << "init\n";
 
     cout << "hide\n";
-    module.Hide(frame.data(), qrCode.data());
+    //module.Hide(frame.data(), qrCode.data());
+    module.Process(frame.data(), qrCode.data(), STEG_HIDE);
 
     string fName("stegaDump.yuv");
     cout << fName << endl;
@@ -172,7 +173,8 @@ int32_t test(int32_t width, int32_t height){
     LOG("qrCodeRev.size() = %d\n", qrCodeRev.size());
     LOG("frame.size() = %d\n", frame.size());
     LOG("revealing...\n");
-    module.Reveal(frame.data(), qrCodeRev.data());
+    //module.Reveal(frame.data(), qrCodeRev.data());
+    module.Process(frame.data(), qrCodeRev.data(), STEG_REVEAL);
     dump("CodeRevealed.yuv", qrCodeRev.data(), qrCode.size());
     LOG("revealed!\n");
     if(qrCode.size() != qrCodeRev.size()){
