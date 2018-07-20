@@ -255,6 +255,17 @@ uint32_t Encode::EncodeStegData(){
     uint8_t* pQRData = pQR->data;
     int32_t qrWidth = pQR->width;
 
+    //make QR code
+    for(int i = 0; i < qrWidth*qrWidth; i++){
+        pQRData[i] = (0x01 & pQRData[i]) ? 0 : 255;
+    }
+
+    //debug dump
+    /*vector<uint8_t> qrCode(pQRData, pQRData + qrWidth*qrWidth);
+    FILE* dumpFile = fopen("qrDump_enc.yuv", "ab");
+    fwrite((void*)qrCode.data(), sizeof(uint8_t), qrCode.size(), dumpFile);
+    fclose(dumpFile);*/
+
     int32_t frameSize = m_frameWidth * m_frameHeight;
     frameSize += frameSize/2;//YUV420, add 1/4 for U and 1/4 for V planes
     uint8_t* pRawFrame = m_data.m_outBuffer.data();

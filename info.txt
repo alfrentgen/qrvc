@@ -1,8 +1,35 @@
-working on the steganography options:
+Main steganography flow:
+1) ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -o 1M_stg.yuv --stg th=24
+2) ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i 1M_stg.yuv -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+3) PUT TO YOUTUBE
+4) ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
+5) ./qrvd -i 1M_stg.mp4.yuv --stg kf=1M.in.stg -o 1M_stg.dec
+6) sha512sum 1M.in 1M_stg.dec
 
-ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -o 1M_stg.yuv --stg th=8 up=x
+#script
+rm 1M_stg.yuv 1M.in.stg 1M_stg.mp4 1M_stg.mp4.yuv 1M_stg.dec
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -o 1M_stg.yuv --stg th=24
+ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i 1M_stg.yuv -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
+./qrvd -i 1M_stg.mp4.yuv --stg kf=1M.in.stg -o 1M_stg.dec
+sha512sum 1M.in 1M_stg.dec
 
-ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg th=8 up=x | ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i - -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+date
+ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrvd --stg kf=1M.in.stg -o 1M_stg.dec
+sha512sum 1M.in 1M_stg.dec
+date
+
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg th=2 | ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i - -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+
+ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
+
+ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrvd --stg kf=1M.in.stg
 
 --stg option cancels out -c option, and --stg kf="filename" param cancels out -c "filename" param
 
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -o 1M_stg.yuv --stg th=32
+ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i 1M_stg.yuv -c:v libx264 -pix_fmt yuv420p 1M_stg.mp4 2>/dev/null
+PUT TO YOUTUBE
+ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
+./qrvd -i 1M_stg.mp4.yuv --stg kf=1M.in.stg -o 1M_stg.dec
+sha512sum 1M.in 1M_stg.dec

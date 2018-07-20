@@ -46,8 +46,8 @@ vector<int32_t> spiralMatrix(int32_t qrWidth){
 }
 
 vector<int32_t> generateDefaultQRPath(int32_t qrWidth){
-    return Matrix2D(qrWidth);
-    //return spiralMatrix(qrWidth);
+    //return Matrix2D(qrWidth);
+    return spiralMatrix(qrWidth);
 }
 
 vector<int32_t> generateQRPath(int32_t qrWidth, function<vector<int32_t>(int32_t)>* customAlg){
@@ -377,53 +377,81 @@ int32_t StegModule::GetQRWidth(){
     return m_qrWidth;
 }
 
+#define TO_BYTES true
+#define TO_INT false
+
+void getLEInt(uint32_t& intVal, uint8_t leInt[4], bool conv){
+    if(conv == TO_BYTES){
+        for(int i = 0; i < 4; i++){
+            leInt[i] = (uint8_t)((intVal >> i*8) & 0xff);
+        }
+    }else{
+        intVal = 0;
+        for(int i = 0; i < 4; i++){
+            intVal |= ((uint32_t)leInt[i] << i*8);
+        }
+    }
+}
+
+#define COORD_SIZE sizeof(uint32_t)
+
 int32_t StegModule::ReadFramePath(string fileName){
     ifstream ifs(fileName, ios_base::in | ios_base::binary);
-    vector<uint8_t> framePath(0);
+    vector<uint8_t> framePathBytes(0);
     if(ifs.bad()){
         LOG("Cannot read steganography key file!\n");
         return FAIL;
     }
     while (ifs.good()) {
-        framePath.push_back((uint8_t)ifs.get());
+        framePathBytes.push_back((uint8_t)ifs.get());
     }
 
-    int32_t dotsRead = framePath.size()/2;
-    int32_t qrWidth = calcMaxQRWidth(dotsRead);
+    int32_t nPositions = framePathBytes.size()/(COORD_SIZE * 2);
+    int32_t qrWidth = calcMaxQRWidth(nPositions);
     if(qrWidth == 0){
         LOG("Steganography key file is too small!\n");
         return FAIL;
+    }else{
+        LOG("Steg key file reading results: %d dots read, QR width = %d\n", nPositions, qrWidth);
     }
 
-    SetCustomFramePath(framePath.data(), framePath.size());
+    SetCustomFramePath(framePathBytes.data(), nPositions * (2 * COORD_SIZE));
     m_qrWidth = qrWidth;
     m_qrPath = generateQRPath(m_qrWidth, nullptr);
     return OK;
 }
 
-int32_t StegModule::SetCustomFramePath(uint8_t* path, uint32_t size){
+int32_t StegModule::SetCustomFramePath(uint8_t* pathBytes, uint32_t size){
+    int32_t nValues = size / COORD_SIZE;
     m_framePath.resize(0);
-    for(uint32_t i = 0; i < size; i++){
-        m_framePath.push_back((int32_t)path[i]);
+    uint32_t val;
+    for(uint32_t i = 0; i < nValues; i++){
+        getLEInt(val, pathBytes + i * COORD_SIZE, TO_INT);
+        m_framePath.push_back(val);
     }
     return OK;
 }
 
 int32_t StegModule::WriteFramePath(string fileName){
-    string keyFileName = fileName + ".stg";
+    string keyFileName = fileName;
     ofstream ofs(keyFileName, ios_base::out | ios_base::binary);
     if(ofs.bad()){
         LOG("Cannot write steganography key file \"%s\"! Terminate!\n", keyFileName.c_str());
+        ofs.close();
         return FAIL;
     }
-    vector<uint8_t> framePath8bit(0);
+    vector<uint8_t> framePathSerialized(0);
     uint32_t qrSize = m_qrWidth * m_qrWidth;
-    uint32_t bytesToWrite = 2 * qrSize;
-    bytesToWrite = bytesToWrite > m_framePath.size() ? m_framePath.size() : bytesToWrite;
-    for(int32_t i = 0; i < bytesToWrite; i++){
-        framePath8bit.push_back((uint8_t)m_framePath[i]);
+    uint32_t coordsToWrite = 2 * qrSize;
+    coordsToWrite = coordsToWrite > m_framePath.size() ? m_framePath.size() : coordsToWrite;
+    uint8_t leInt[4] = {0};
+    for(int32_t i = 0; i < coordsToWrite; i++){
+        uint32_t intVal = m_framePath[i];
+        getLEInt(intVal, leInt, TO_BYTES);
+        framePathSerialized.insert(framePathSerialized.end(), leInt, leInt + 4);
     }
-    ofs.write(framePath8bit.data(), framePath8bit.size());
+    ofs.write(framePathSerialized.data(), framePathSerialized.size());
+    ofs.close();
     return OK;
 }
 

@@ -162,11 +162,19 @@ skipDecyph:
             if(m_stegModule){
                 vector<uint8_t>& frame = m_data.m_inBuffer;
                 int32_t qrWidth = m_stegModule->m_qrWidth;
-                vector<uint8_t> qrCode(qrWidth * qrWidth);
-                m_stegModule->Reveal(frame.data(), qrCode.data());
-                DecodeDataSteg(qrCode.data(), qrWidth);
+                vector<uint8_t> qrCode(qrWidth * qrWidth, 255);
+                //m_stegModule->Reveal(frame.data(), qrCode.data());
+                m_stegModule->Process(frame.data(), qrCode.data(), STEG_REVEAL);
+
+                //debug dump
+                /*FILE* dumpFile = fopen("qrDump_dec.yuv", "ab");
+                fwrite((void*)qrCode.data(), sizeof(uint8_t), qrCode.size(), dumpFile);
+                fclose(dumpFile);*/
+
+                decRes = DecodeDataSteg(qrCode.data(), qrWidth);
             }else
 #endif
+#undef STEG_DECODE
             if(m_decMode == MODE_QUICK){
                 decRes = DecodeDataQuick();
             }else if(m_decMode == MODE_SLOW){
@@ -329,8 +337,7 @@ uint32_t Decode::DecodeDataSteg(uint8_t* qrCode, int32_t size){
 	 * where i = (y * size) + x.
 	 */
     for(int i = 0; i < size*size; i++){
-        //if((0x01 & qrCode[i])){
-        if(qrCode[i]){
+        if(qrCode[i] == 0){
             quircCode.cell_bitmap[i >> 3] |= (1 << (i & 7));
         }
     }
@@ -338,6 +345,7 @@ uint32_t Decode::DecodeDataSteg(uint8_t* qrCode, int32_t size){
     quirc_decode_error_t err = quirc_decode(&quircCode, &data);
     if (err){
         LOG("Quick decode failed: %s\n", quirc_strerror(err));
+        m_data.m_rendered = false;
         return FAIL;
     }else{
         int32_t outBufferSize = m_data.m_outBuffer.size();

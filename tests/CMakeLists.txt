@@ -15,6 +15,7 @@ add_executable(steg_module_test
 				${STEG_SRCS}
                 )
 target_include_directories(steg_module_test PRIVATE ${INC_DIR})
+target_link_libraries(steg_module_test decquirc deczbar qrenc)
 if(USE_MUSL)
     add_dependencies(steg_module_test libc)
     set_target_properties(steg_module_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")

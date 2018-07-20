@@ -24,8 +24,8 @@ int32_t main(){
 
     cout << "init\n";
     int32_t res = module.Init(WIDTH, HEIGHT, THRESHOLD, !KEY_PRESENTED);
-    int i = 0;
-    /*for(int32_t idx : module.m_qrPath){
+    /*int i = 0;
+    for(int32_t idx : module.m_qrPath){
         i++;
         LOG("%d,", idx);
         if(!(i%QR_WIDTH)){

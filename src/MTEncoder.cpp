@@ -98,12 +98,13 @@ int32_t MTEncoder::Init(Config& config){
         pStegModule = &m_stegModule;
         //if file exists and can be read, try to read frame path from it and give it to steg module
         if(config.m_keyFileName.size()){
+            LOG("Reading steganography key file: %s...\n", config.m_keyFileName.c_str());
             if(m_stegModule.ReadFramePath(config.m_keyFileName) == FAIL){
                 return FAIL;
             }
         }else{
-            LOG("Generating steganography key file.\n");
-            string keyFileName = m_config.m_ifName + ".stg";
+            string keyFileName = config.m_ifName + ".stg";
+            LOG("Generating steganography key file: %s...\n", keyFileName.c_str());
             if(m_stegModule.WriteFramePath(keyFileName) == FAIL){
                 return FAIL;
             }
