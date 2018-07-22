@@ -39,6 +39,7 @@ map<const char*, const char*> g_stegOpts({ { "th", "\\d{1,3}$"} , {"kf", ".*$" }
 string stgThOpt("th");
 string stgKeyFileOpt("kf");
 string stgUnitPatOpt("up");
+string stgUnitPatOpt("gen");
 
 ArgsParser::ArgsParser()
 {
@@ -52,12 +53,12 @@ ArgsParser::~ArgsParser()
 
 int32_t ArgsParser::ParseStegParams(vector<string>& params){
     if(params.size() == 0){
-        return;
+        return FAIL;
     }
 
     for(string param : params){
         bool found = false;
-        for (/*map<const char*, const char*>::iterator*/auto it = g_stegOpts.begin(); it != g_stegOpts.end(); ++it){
+        for (auto it = g_stegOpts.begin(); it != g_stegOpts.end(); ++it){
             string leftPat = string("^(") + string(it->first) + string("=)");
             string rightPat = string("(") + string(it->second) + string(")$");
             string strPat = leftPat + rightPat;

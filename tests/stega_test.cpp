@@ -39,7 +39,7 @@ int32_t main(){
         return -1;
     }*/
     cout << "hide\n";
-    module.Hide(frame.data(), qrCode.data());
+    module.Process(frame.data(), qrCode.data(), STEG_HIDE);
     /*for(int32_t idx : module.m_qrPath){
         i++;
         LOG("qrCode[%d] = %d,\n", idx, qrCode[idx]);
