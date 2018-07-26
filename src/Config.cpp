@@ -18,6 +18,9 @@ void printEncCfg(Config cfg){
         string s = keyFileName.size() ? keyFileName : inFileName + string(".stg");
         LOG("kf=\"%s\" ", s.c_str());
         LOG("up=\"%c\" ", cfg.m_unitPattern);
+        if(cfg.m_stegGen != -1){
+            LOG("up=\"%d\" ", cfg.m_stegGen);
+        }
     }else if(cfg.m_cipheringOn){
         LOG("-c %s ", keyFileName.c_str());
     }

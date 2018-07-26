@@ -35,11 +35,18 @@ string& skipOpt = g_options[12];//skip duplicated frames in decoder
 string& alignOpt = g_options[13];//alignment of left top corner
 string& stegOpt = g_options[14];//steganography option
 
-map<const char*, const char*> g_stegOpts({ { "th", "\\d{1,3}$"} , {"kf", ".*$" },  {"up", "[oxj]$"} });
 string stgThOpt("th");
 string stgKeyFileOpt("kf");
 string stgUnitPatOpt("up");
-string stgUnitPatOpt("gen");
+string stgGenOpt("gen");
+
+map<const char*, const char*> g_stegOpts(
+{
+    {stgThOpt.c_str(), "\\d{1,3}"} ,
+    {stgKeyFileOpt.c_str(), ".*" },
+    {stgUnitPatOpt.c_str(), "[oxj]"},
+    {stgGenOpt.c_str(), "\\d{1,3}"}
+});
 
 ArgsParser::ArgsParser()
 {
@@ -67,7 +74,7 @@ int32_t ArgsParser::ParseStegParams(vector<string>& params){
             //LOG("%s\n", param.c_str());
             //LOG("%s\n", strPat.c_str());
             if(regex_search(param, m, pattern)){
-                //LOG("For param \"%s\" parsed: \"%s\"\n", param.c_str(), m[2]);
+                LOG("For param \"%s\" parsed: \"%s\"\n", param.c_str(), m[2]);
                 m_parsedOptions[string(it->first)] = m[2];
                 found = true;
                 break;
@@ -437,7 +444,13 @@ Config* ArgsParser::GetConfig(){
             config.m_unitPattern = 'o';
         }else{
             config.m_unitPattern = it->second[0];
-            //LOG("up=\"%c\"\n", config.m_unitPattern);
+        }
+
+        it = optionsMap.find(stgGenOpt);
+        if(it == optionsMap.end()){
+            config.m_stegGen = -1;
+        }else{
+            config.m_stegGen = abs(stoi(it->second));
         }
     }
 

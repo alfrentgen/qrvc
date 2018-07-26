@@ -93,25 +93,24 @@ int32_t MTEncoder::Init(Config& config){
             config.m_stegThreshold = 8;
         }
         int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold, RANDOM_PATH);
+        res |= m_stegModule.SetUnitPattern(config.m_unitPattern);
+        res |= m_stegModule.SetGenerator(config.m_stegGen);
         CHECK_FAIL(res);
 
         pStegModule = &m_stegModule;
         //if file exists and can be read, try to read frame path from it and give it to steg module
         if(config.m_keyFileName.size()){
             LOG("Reading steganography key file: %s...\n", config.m_keyFileName.c_str());
-            if(m_stegModule.ReadFramePath(config.m_keyFileName) == FAIL){
-                return FAIL;
-            }
+            res = m_stegModule.ReadFramePath(config.m_keyFileName);
+            CHECK_FAIL(res);
         }else{
             string keyFileName = config.m_ifName + ".stg";
             LOG("Generating steganography key file: %s...\n", keyFileName.c_str());
-            if(m_stegModule.WriteFramePath(keyFileName) == FAIL){
-                return FAIL;
-            }
+            res = m_stegModule.WriteFramePath(keyFileName);
+            CHECK_FAIL(res);
         }
         int32_t qrWidth = m_stegModule.GetQRWidth();
         chunkSize = getChunkSize(qrWidth, qrWidth, config.m_eccLevel, 1, &version);
-        m_stegModule.SetUnitPattern(config.m_unitPattern);
     }else{
         //Init2
         chunkSize = getChunkSize(config.m_frameWidth - config.m_alignment, config.m_frameHeight - config.m_alignment,
@@ -255,6 +254,11 @@ int32_t MTEncoder::ValidateConfig(Config& config){
     /****
     config.m_qrVersion;//must be calculated in Init()
     ****/
+
+    //steg
+    if(config.m_stegGen != -1){
+        LIMIT_VAR(config.m_stegGen, 0, 255);
+    }
 
     //frame sequence
     LIMIT_VAR(config.m_frameRepeats, 1, 9);

@@ -466,6 +466,14 @@ int32_t StegModule::SetUnitPattern(char up){
     return OK;
 }
 
+int32_t StegModule::SetGenerator(int32_t val){
+    if(val < -1 || val > 255){
+        return FAIL;
+    }
+    m_genVal = val;
+    return OK;
+}
+
 StegModule::StegModule() :
 m_unitPat('o')
 {

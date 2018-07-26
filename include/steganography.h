@@ -29,6 +29,7 @@ public:
     int32_t Process(uint8_t* frame, uint8_t* qrCode, bool action);
     int32_t Init(int32_t frameWidth, int32_t frameHeight, int32_t threshold, bool keyFlag = RANDOM_PATH);
     int32_t SetUnitPattern(char up);
+    int32_t SetGenerator(int32_t val);
     int32_t ReadFramePath(string fileName);
     int32_t WriteFramePath(string fileName);
     int32_t GetQRWidth();
@@ -43,6 +44,7 @@ public:
     int32_t m_maxQRWidth;
     int32_t m_threshold;
     char    m_unitPat;
+    int32_t m_genVal;
 
 private:
     vector<int32_t> m_coreIndeces;

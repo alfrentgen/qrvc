@@ -88,11 +88,10 @@ int32_t MTDecoder::Init(Config& config){
         config.m_qrScale = 4;
         int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold);
         res |= m_stegModule.ReadFramePath(config.m_keyFileName);
-        if(res == FAIL){
-            return FAIL;
-        }
+        res |= m_stegModule.SetUnitPattern(config.m_unitPattern);
+        CHECK_FAIL(res);
+
         frameSize += config.m_frameWidth * config.m_frameHeight/2;//YUV420
-        m_stegModule.SetUnitPattern(config.m_unitPattern);
         pStegModule = &m_stegModule;
     }
 
