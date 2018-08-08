@@ -29,4 +29,4 @@
 #define CHECK_FAIL(val)\
 if(val != OK){\
     return FAIL;\
-}\
+}
