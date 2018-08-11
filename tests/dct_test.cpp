@@ -41,7 +41,7 @@ template<typename T, uint32_t dim>
 bool compare_2_arr(T a[dim][dim], T b[dim][dim]){
     for(int row = 0; row < dim; row++){
         for(int col = 0; col < dim; col++){
-            if(a[row][col] != b[row][col]){
+            if(abs(a[row][col] - b[row][col]) > 6){
                 LOG("At [%d][%d]: %d != %d\n\n", row, col, a[row][col], b[row][col]);
                 return false;
             }
@@ -54,7 +54,7 @@ int32_t main(){
     uint8_t in[4][4] = {0};
     int32_t coeffs[4][4] = {0};
     uint8_t out[4][4] = {0};
-    for(int i = 0; i < 1000; i++){
+    for(int i = 0; i < 100000; i++){
         LOG("test#%d\n", i);
         rand_fill_in(in);
         fwd_4x4_dct<int32_t>(in, coeffs);
