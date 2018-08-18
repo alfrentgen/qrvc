@@ -1,4 +1,4 @@
-#include "pch.h"
+#pragma once
 
 #define MUL_2(X) (X << 1)
 #define MUL_4(X) (X << 2)
@@ -91,7 +91,7 @@ void fwd_4x4_dct(uint8_t in[4][4], T out[4][4]){
 
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
-            in_conv[i][j] = (T)(in[i][j] - 128);
+            in_conv[i][j] = (T)(in[i][j] - 128)<<3;
         }
     }
     mul_Cf_M(in_conv, tmp1);
@@ -160,7 +160,7 @@ void inv_4x4_dct(T in[4][4], uint8_t out[4][4]){
 
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
-            out[i][j] = (uint8_t)(tmp1[i][j] + 128);
+            out[i][j] = (uint8_t)((tmp1[i][j]>>3) + 128);
         }
     }
 }
