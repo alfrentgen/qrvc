@@ -6,6 +6,25 @@ set(INC_DIR ${CMAKE_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 include_directories(INC_DIR)
 
+#Wavelet test
+message(STATUS "TESTS_PATH: ${TESTS_PATH}")
+add_executable(wavelet_test
+				${INC_DIR}/wavelet.h
+				${SRC_DIR}/wavelet.cpp
+				wavelet_test.cpp
+                )
+target_include_directories(wavelet_test PRIVATE ${INC_DIR} ${TESTS_PATH})
+#target_link_libraries(wavelet_test decquirc deczbar qrenc)
+if(USE_MUSL)
+    add_dependencies(wavelet_test libc)
+    set_target_properties(wavelet_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN' -Wl,--dynamic-linker,'${LD_MUSL_LINK}'")
+elseif(NOT MINGW)#NATIVE
+    set_target_properties(wavelet_test PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
+endif()
+				
+add_test(NAME wavelet_test COMMAND wavelet_test WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
+set_property(TARGET	wavelet_test PROPERTY FOLDER "Tests")
+
 #DCT test
 message(STATUS "TESTS_PATH: ${TESTS_PATH}")
 add_executable(dct_test
