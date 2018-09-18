@@ -1,4 +1,5 @@
 #include "steganography.h"
+#include "wavelet.h"
 
 extern "C" {
     #include <qrencode.h>
@@ -179,30 +180,46 @@ void changePels(uint8_t** pels, int32_t nPels, int32_t diff){
 }
 
 //4x4 pels unit
-void renderUnit(StegUnit& unit, bool hide = true){
-    int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
-    int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-    if(hide){
-        int8_t diff = 1;
-        int8_t dir = 1;
-        if(unit.bit == 0){
-            dir = -1;
-        }
-        diff *= dir;
-        //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
-        while(dir*(meanCore - meanNeigh) <= unit.threshold){
-                changePels(unit.corePels.data(), unit.corePels.size(), diff);
-                changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
-                meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
-                meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-                //LOG("unit.threshold=%d\n", unit.threshold);
-                //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
-        }
-    }else{
-        if(meanCore - meanNeigh > 0){
-            unit.bit = 255;
+void renderUnit(StegUnit& unit){
+
+    if(unit.useDWT){//discrete wavelet transform
+        unit.corePels;
+        unit.dwt_aux.buffer;
+        //do fwd dwt
+
+        if(unit.hide){
+            ;//hide
+            ;//and do inv dwt
         }else{
-            unit.bit = 0;
+            unit.dwt_aux.std_dev;
+            ;//get bit value
+        }
+    }
+    else{
+        int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+        int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
+        if(unit.hide){
+            int8_t diff = 1;
+            int8_t dir = 1;
+            if(unit.bit == 0){
+                dir = -1;
+            }
+            diff *= dir;
+            //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
+            while(dir*(meanCore - meanNeigh) <= unit.threshold){
+                    changePels(unit.corePels.data(), unit.corePels.size(), diff);
+                    changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
+                    meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+                    meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
+                    //LOG("unit.threshold=%d\n", unit.threshold);
+                    //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
+            }
+        }else{
+            if(meanCore - meanNeigh > 0){
+                unit.bit = 255;
+            }else{
+                unit.bit = 0;
+            }
         }
     }
 
@@ -275,6 +292,7 @@ int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
         for(int32_t j = 0; j < m_neighIndeces.size(); j++){
             unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
+        unit.hide = STEG_HIDE;
         renderUnit(unit);
     }
     return OK;
@@ -300,8 +318,8 @@ int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
         for(int32_t j = 0; j < m_neighIndeces.size(); j++){
             unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
-
-        renderUnit(unit, false);
+        unit.hide = STEG_REVEAL;
+        renderUnit(unit);
         qrCode[qrIdx] = unit.bit;
     }
     return OK;
@@ -315,6 +333,24 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
     unit.threshold = m_threshold;//for HIDE
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
+
+    if(m_useDWT){
+        uint64_t sum = 0;
+        uint32_t nDots = m_frameWidth * m_frameHeight;
+        for(uint32_t i = 0; i < nDots; i++){
+            sum += frame[i];
+        }
+        sum <<= 8; //scale up at 256 times
+        uint32_t mean_val = sum/nDots;
+
+        sum = 0;
+        for(uint32_t i = 0; i < nDots; i++){
+            uint32_t sqr = mean_val - ((uint32_t)frame[i] << 8);
+            sqr *= sqr;
+            sum += sqr;
+        }
+        unit.dwt_aux.std_dev = sqrt((double)sum/(nDots-1));
+    }
 
     for(int i = 0; i < qrSize; i++){
         int32_t qrIdx = m_qrPath[i];
@@ -330,7 +366,8 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
         for(int32_t j = 0; j < m_neighIndeces.size(); j++){
             unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
-        renderUnit(unit, action);
+        unit.hide = action;
+        renderUnit(unit);
         qrCode[qrIdx] = unit.bit;//for REVEAL
     }
     return OK;
@@ -475,6 +512,7 @@ int32_t StegModule::SetGenerator(int32_t val){
 }
 
 StegModule::StegModule() :
-m_unitPat('o')
+m_unitPat('o'),
+m_useDWT(false)
 {
 }

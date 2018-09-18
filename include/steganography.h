@@ -9,7 +9,17 @@ using namespace std;
 #define STEG_HIDE true
 #define STEG_REVEAL false
 
+typedef struct DWT{
+        double std_dev;
+        vector<uint32_t> buffer;
+} DWT;
+
 typedef struct StegUnit{
+
+    bool useDWT;
+    struct DWT dwt_aux;
+
+    bool hide;
     uint8_t bit;
     uint8_t* pUnit;
     int32_t threshold;
@@ -45,6 +55,7 @@ public:
     int32_t m_threshold;
     char    m_unitPat;
     int32_t m_genVal;
+    bool    m_useDWT;
 
 private:
     vector<int32_t> m_coreIndeces;
