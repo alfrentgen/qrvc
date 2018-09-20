@@ -184,12 +184,27 @@ void renderUnit(StegUnit& unit){
 
     if(unit.useDWT){//discrete wavelet transform
         unit.corePels;
-        unit.dwt_aux.buffer;
+        unit.dwt_aux.buffer.resize(0);
+        //copy pels by value
+        for(uint32_t i=0; i < unit.corePels.size(); i++){
+            unit.dwt_aux.buffer.push_back(*unit.corePels[i]);
+        }
         //do fwd dwt
-
+        hwt_fwd(unit.dwt_aux.buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
+        //hide one bit
         if(unit.hide){
-            ;//hide
-            ;//and do inv dwt
+            //hide
+            if(unit.bit){
+                ;
+            }else{
+                ;
+            }
+            //do inv dwt
+            hwt_fwd(unit.dwt_aux.buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
+            for(uint32_t i=0; i < unit.corePels.size(); i++){
+                pPel = ;
+                unit.dwt_aux.buffer.push_back(*pPel);
+            }
         }else{
             unit.dwt_aux.std_dev;
             ;//get bit value
