@@ -190,22 +190,28 @@ void renderUnit(StegUnit& unit){
             unit.dwt_aux.buffer.push_back(*unit.corePels[i]);
         }
         //do fwd dwt
-        hwt_fwd(unit.dwt_aux.buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
+        vector<uint32_t> buffer(0);
+        hwt_fwd(unit.dwt_aux.buffer, buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 0);
         //hide one bit
         if(unit.hide){
             //hide
             if(unit.bit){
-                ;
+                unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] = unit.dwt_aux.std_dev;
             }else{
-                ;
+                unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] = (-unit.dwt_aux.std_dev);
             }
             //do inv dwt
-            hwt_fwd(unit.dwt_aux.buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
+            hwt_inv(unit.dwt_aux.buffer, buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
             for(uint32_t i=0; i < unit.corePels.size(); i++){
-                pPel = ;
-                unit.dwt_aux.buffer.push_back(*pPel);
+                //pPel = ;
+                //unit.dwt_aux.buffer.push_back(*pPel);
             }
         }else{
+            if(unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] > 0){
+                unit.bit = 1;
+            }else{
+                unit.bit = 0;
+            }
             unit.dwt_aux.std_dev;
             ;//get bit value
         }
