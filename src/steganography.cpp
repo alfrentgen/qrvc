@@ -355,7 +355,8 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
 
-    if(m_useDWT){
+    unit.useDWT = m_useDWT;
+    /*if(m_useDWT){//calculate standard deviation on the whole frame?
         uint64_t sum = 0;
         uint32_t nDots = m_frameWidth * m_frameHeight;
         for(uint32_t i = 0; i < nDots; i++){
@@ -371,7 +372,7 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
             sum += sqr;
         }
         unit.dwt_aux.std_dev = sqrt((double)sum/(nDots-1));
-    }
+    }*/
 
     for(int i = 0; i < qrSize; i++){
         int32_t qrIdx = m_qrPath[i];

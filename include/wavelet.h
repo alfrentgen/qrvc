@@ -22,51 +22,68 @@ uint32_t get_max_level(uint32_t width, uint32_t hight){
 }*/
 
 template<typename T>
-int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t height, uint32_t level){
+int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t height, uint32_t& level){
     if(height<2 || width<2){
         return 0;
     }
 
+    level++;
     uint32_t nextWidth = width/2;
     uint32_t nextHeight = height/2;
-    buffer.resize(2 * nextWidth * 2 * nextHeight);
+    T val1 = 0;
+    T val2 = 0;
+    buffer.resize(2 * nextWidth * 2 * nextHeight, 0);
+    image.reserve(image.size() + buffer.size());//reserve additional room for results
 
-    //fold vertically
+    T* pData = image.end() - width*height;
+
     uint64_t offset_vert = nextHeight * 2 * nextWidth;
     uint32_t stride = width;
-    T* pBuffTop = buffer.data();
-    T* pBuffBottom = buffer.data() + offset_vert;
+    T* pDifferences = buffer.data();
+    T* pAverages = buffer.data() + offset_vert;
+    //filtrate verti
     for(uint32_t col = 0; col < 2*nextWidth; col++){
         for(uint32_t row = 0; row < nextHeight; row++){
-            *pBuffTop = (image[stride * (2*row) + col] - image[stride * (2*row+1) + col])/2;//differences in the top half
-            *pBuffBottom = (image[stride * (2*row) + col] + image[stride * (2*row+1) + col])/2;//averages in the bottom half
-            pBuffTop++;
-            pBuffBottom++;
+            val1 = pData[2 * row * stride + col];
+            val2 = pData[(2 * row + 1) * stride + col];
+            *pDifferences = (val1 - val2)/2;
+            *pAverages = (val1 + val2)/2;
+            pDifferences++;
+            pAverages++;
         }
     }
 
-    //append difference to image array
+    //append vertical difference(H coefficients) to image array.
+    //Leaving it unsplitted, as we won't use high freqs for hiding bits.
     image.insert(image.end(), buffer.begin(), buffer.begin() + 2 * nextWidth * nextHeight);
 
-    //fold the bottom half horizontally(HL, LL)
+    //fold the bottom half horizontally and put results into the top half L->HL, LL
     uint64_t offset_horiz = nextHeight * nextWidth;
-    T* pBuffLeft = buffer.data();
-    T* pBuffRight = buffer.data() + offset_horiz;
+    stride = 2 * nextWidth;
+    pDifferences = buffer.data();
+    pAverages = buffer.data() + offset_horiz;
+    pData = buffer.data() + offset_vert;
     for(uint32_t row = 0; row < nextHeight; row++){
         for(uint32_t col = 0; col < nextWidth; col++){
-            *pBuffLeft = (buffer[offset_vert + row * (2 * nextWidth) + col] - buffer[offset_vert + row * (2 * nextWidth) + col + 1])/2;//differences in the left half
-            *pBuffRight = (buffer[offset_vert + row * (2 * nextWidth) + col] + buffer[offset_vert + row * (2 * nextWidth) + col + 1])/2;//averages in the right half
-            pBuffLeft++;
-            pBuffRight++;
+            val1 = pData[row * stride + col];
+            val2 = pData[row * stride + col + 1];
+            *pDifferences = (val1 - val2)/2;//differences in the left half
+            *pAverages = (val1 + val2)/2;//averages in the right half
+            pDifferences++;
+            pAverages++;
         }
     }
 
-    //next level
-    return hwt_fwd(image, buffer, width/2, height/2, level++);
+    //append HL, LL to the image
+    image.insert(image.end(), buffer.begin(), buffer.begin() + 2 * nextWidth * nextHeight);
+    //Having H,HL,LL coefficients appended to image, proceed to next level recursively
+    return hwt_fwd(image, buffer, nextWidth, nextHeight, level);
 }
 
 template<typename T>
-int32_t hwt_inv(vector<T>& decompImg, vector<T>& buffer, uint32_t width, uint32_t hight, uint32_t depth){
+int32_t hwt_inv(vector<T>& decompImg, vector<T>& buffer, uint32_t originalWidth, uint32_t originalHeight){
+
+
     for(uint32_t row = 0; row < hight; row++){
         for(int col = 0; col < width; col++){
             ;
