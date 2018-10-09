@@ -11,6 +11,7 @@
 #else
 #define DIV_10(X) (X / 10)
 #endif
+
 /*
 uint32_t get_max_level(uint32_t width, uint32_t hight){
     uint32_t smallest_size = (width > hight) ? hight : width;
@@ -35,15 +36,15 @@ int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t he
     buffer.resize(2 * nextWidth * 2 * nextHeight, 0);
     image.reserve(image.size() + buffer.size());//reserve additional room for results
 
-    T* pData = image.end() - width*height;
+    T* pData = image.data() + image.size() - width*height;
 
     uint64_t offset_vert = nextHeight * 2 * nextWidth;
     uint32_t stride = width;
     T* pDifferences = buffer.data();
     T* pAverages = buffer.data() + offset_vert;
-    //filtrate verti
-    for(uint32_t col = 0; col < 2*nextWidth; col++){
-        for(uint32_t row = 0; row < nextHeight; row++){
+    //filtrate vertically
+    for(uint32_t row = 0; row < nextHeight; row++){
+        for(uint32_t col = 0; col < 2*nextWidth; col++){
             val1 = pData[2 * row * stride + col];
             val2 = pData[(2 * row + 1) * stride + col];
             *pDifferences = (val1 - val2)/2;
@@ -65,8 +66,8 @@ int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t he
     pData = buffer.data() + offset_vert;
     for(uint32_t row = 0; row < nextHeight; row++){
         for(uint32_t col = 0; col < nextWidth; col++){
-            val1 = pData[row * stride + col];
-            val2 = pData[row * stride + col + 1];
+            val1 = pData[row * stride + 2*col];
+            val2 = pData[row * stride + 2*col + 1];
             *pDifferences = (val1 - val2)/2;//differences in the left half
             *pAverages = (val1 + val2)/2;//averages in the right half
             pDifferences++;
@@ -81,13 +82,35 @@ int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t he
 }
 
 template<typename T>
-int32_t hwt_inv(vector<T>& decompImg, vector<T>& buffer, uint32_t originalWidth, uint32_t originalHeight){
+int32_t hwt_inv(vector<T>& transImage, uint32_t originalWidth, uint32_t originalHeight, uint32_t level){
 
+    uint32_t curWidth = originalWidth >> level;
+    uint32_t curHeight = originalHeight >> level;
+    if(curHeight <= 0 || curWidth <= 0){
+        return -1;
+    }
+    uint32_t imageSize = originalWidth*originalHeight;
 
-    for(uint32_t row = 0; row < hight; row++){
-        for(int col = 0; col < width; col++){
-            ;
+    uint32_t currentLevelSize = curWidth * curHeight;//LL plane size
+    T* pSrc = transImage.data() + transImage.size() - (currentLevelSize << 2);
+    T* pDst = nullptr;
+
+    for(int l = level; l >= 1; l--){
+        uint32_t nextLevelSize = (l == 1) ? imageSize : currentLevelSize << 2;
+        pDst;
+
+        for(uint32_t row = 0; row < originalHeight; row++){
+            for(int col = 0; col < originalWidth; col++){
+                ;
+            }
         }
+
+        if(l == 1){
+            break;
+        }
+
+        curWidth <<= 1;
+        curHeight <<= 1;
     }
     return 0;
 }

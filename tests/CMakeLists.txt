@@ -10,7 +10,7 @@ include_directories(INC_DIR)
 message(STATUS "TESTS_PATH: ${TESTS_PATH}")
 add_executable(wavelet_test
 				${INC_DIR}/wavelet.h
-				${SRC_DIR}/wavelet.cpp
+				#${SRC_DIR}/wavelet.cpp
 				wavelet_test.cpp
                 )
 target_include_directories(wavelet_test PRIVATE ${INC_DIR} ${TESTS_PATH})
