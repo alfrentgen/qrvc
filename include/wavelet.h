@@ -81,36 +81,58 @@ int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t he
     return hwt_fwd(image, buffer, nextWidth, nextHeight, level);
 }
 
-template<typename T>
-int32_t hwt_inv(vector<T>& transImage, uint32_t originalWidth, uint32_t originalHeight, uint32_t level){
+template<T>
+inline void recreateLevel(T* pLevel, T* pTransform, uint32_t levelHeight, uint32_t levelWidth){
+    uint32_t trnHeight = levelHeight >> 1;
+    uint32_t trnWidth = levelWidth >> 1;
+    T* pTransformH = pTransform;
+    T* pTransformHL = pTransform + trnHeight * 2 * trnWidth;
+    T* pTransformLL = pTransformHL + trnHeight*trnWidth;
+    for(uint32_t row = 0; row < trnHeight; row++){
+        for(uint32_t col = 0; col < trnWidth; col++){
+            T H1 = pTransformH[row*(trnWidth<<1) + (col<<1)];
+            T H2 = pTransformH[row*(trnWidth<<1) + (col<<1)+1];
+            T HL = pTransformHL[row*trnWidth + col];
+            T LL = pTransformLL[row*trnWidth + col];
+            T L1 = LL + HL;
+            T L2 = LL - HL;
 
-    uint32_t curWidth = originalWidth >> level;
-    uint32_t curHeight = originalHeight >> level;
-    if(curHeight <= 0 || curWidth <= 0){
+            pLevel[(row<<1)*levelWidth + (col<<1)] = L1 + H1;
+            pLevel[(row<<1)*levelWidth + (col<<1) + 1] = L2 + H2;
+            pLevel[(row<<1 + 1)*levelWidth + (col<<1)] = L1 - H1;
+            pLevel[(row<<1 + 1)*levelWidth + (col<<1) + 1] = L2 - H2;
+        }
+    }
+}
+
+template<typename T>
+int32_t hwt_inv(vector<T>& transform, uint32_t origWidth, uint32_t origHeight, uint32_t level){//level which the transform was applied down to
+
+    uint32_t curWidth = origWidth >> level;
+    uint32_t curHeight = origHeight >> level;
+    if((curHeight|curWidth)==0){
         return -1;
     }
-    uint32_t imageSize = originalWidth*originalHeight;
 
-    uint32_t currentLevelSize = curWidth * curHeight;//LL plane size
-    T* pSrc = transImage.data() + transImage.size() - (currentLevelSize << 2);
-    T* pDst = nullptr;
+    uint32_t origSize = origWidth * origHeight;
+    T* pImage = transform.data();
+    T* pTransform = transform.data();
 
-    for(int l = level; l >= 1; l--){
-        uint32_t nextLevelSize = (l == 1) ? imageSize : currentLevelSize << 2;
-        pDst;
-
-        for(uint32_t row = 0; row < originalHeight; row++){
-            for(int col = 0; col < originalWidth; col++){
-                ;
-            }
+    for(uint32_t curLevel = level-1; curLevel >=0; curLevel--){//curLevel is a level which we restore LL plane for
+        uint32_t size = origSize;
+        uint32_t imgOffset = 0;
+        uint32_t trnOffset = size;
+        for(uint32_t l = 1; l <= curLevel; l++){
+            imgOffset += size;
+            size >>= 2;
+            trnOffset += size * 4
+            imgOffset += size * 3;
         }
-
-        if(l == 1){
-            break;
-        }
-
-        curWidth <<= 1;
-        curHeight <<= 1;
+        pTransform += trnOffset;
+        pImage += imgOffset;
+        levelHeight = origHeight >> curLevel;
+        levelHeight = origWidth >> curLevel;
+        recreateLevel(pImage, pTransform, levelHeight, levelWidth);
     }
     return 0;
 }
