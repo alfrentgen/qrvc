@@ -136,3 +136,13 @@ int32_t hwt_inv(vector<T>& transform, uint32_t origWidth, uint32_t origHeight, u
     }
     return 0;
 }
+
+template<typename T>
+hwt_4x4_fwd(vector<T>& image){
+    ;
+}
+
+template<typename T>
+hwt_4x4_inv(vector<T>& image){
+    ;
+}
