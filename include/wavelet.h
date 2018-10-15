@@ -81,7 +81,7 @@ int32_t hwt_fwd(vector<T>& image, vector<T>& buffer, uint32_t width, uint32_t he
     return hwt_fwd(image, buffer, nextWidth, nextHeight, level);
 }
 
-template<T>
+template<typename T>
 inline void recreateLevel(T* pLevel, T* pTransform, uint32_t levelHeight, uint32_t levelWidth){
     uint32_t trnHeight = levelHeight >> 1;
     uint32_t trnWidth = levelWidth >> 1;
@@ -125,13 +125,13 @@ int32_t hwt_inv(vector<T>& transform, uint32_t origWidth, uint32_t origHeight, u
         for(uint32_t l = 1; l <= curLevel; l++){
             imgOffset += size;
             size >>= 2;
-            trnOffset += size * 4
+            trnOffset += size * 4;
             imgOffset += size * 3;
         }
         pTransform += trnOffset;
         pImage += imgOffset;
-        levelHeight = origHeight >> curLevel;
-        levelHeight = origWidth >> curLevel;
+        uint32_t levelHeight = origHeight >> curLevel;
+        uint32_t levelWidth = origWidth >> curLevel;
         recreateLevel(pImage, pTransform, levelHeight, levelWidth);
     }
     return 0;

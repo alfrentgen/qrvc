@@ -6,14 +6,6 @@ using namespace std;
 #define N_REPEATS 1//77 * 177 * 1000
 
 template<typename T, uint32_t dim>
-void rand_fill_in(T* arr){
-    srand (time(NULL));
-    for(int i = 0; i < dim*dim; i++){
-        arr[i] = rand() % (256*8);;
-    }
-}
-
-template<typename T, uint32_t dim>
 void print_array(T a[dim][dim]){
     LOG("\n");
     for(int row = 0; row < dim; row++){
@@ -57,22 +49,35 @@ T calc_average(vector<T> vec){
     return res/vec.size();
 }
 
+template<typename T>
+void rand_fill_in(T* arr, size_t length, uint32_t range){
+    srand (time(NULL));
+    for(int i = 0; i < length; i++){
+        arr[i] = rand() % range;
+    }
+}
 
 int32_t main(){
     vector<int32_t> image;
     vector<int32_t> buffer;
+    vector<int32_t> transform;
+    vector<int32_t> restored_image;
     int32_t coeffs[4][4] = {0};
     uint8_t out[4][4] = {0};
+
     for(int i = 0; i < N_REPEATS; i++){
         //LOG("test#%d\n", i);
         image.resize(16, 0);
-        buffer.resize(16, 0);
-        rand_fill_in<int32_t, 4>(image.data());
-        int32_t simple_avg = calc_average(image);
+        rand_fill_in<int32_t>(image.data(), image.size(), 256);
+        for(int i=0; i < image.size(); i++){
+            image[i] = image[i]<<8;
+        }
         uint32_t level =0;
         hwt_fwd(image, buffer, 4, 4, level);
-        LOG("Image transform average: %d\n", image.back());
-        LOG("Image simple average: %d\n", simple_avg);
+        transform = image;
+        hwt_inv(transform, 4, 4, level);
+        /*LOG("Image transform average: %d\n", image.back());
+        LOG("Image simple average: %d\n", simple_avg);*/
         /*if(!compare_2_arr<uint8_t, 4>(in, out)){
             LOG("test#%d\n", i);
             LOG("\nInput array:");
