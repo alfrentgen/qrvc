@@ -138,11 +138,66 @@ int32_t hwt_inv(vector<T>& transform, uint32_t origWidth, uint32_t origHeight, u
 }
 
 template<typename T>
-hwt_4x4_fwd(vector<T>& image){
-    ;
+void hwt_2x2_fwd(T x0, T x1, T x2, T x3, T* ll, T* lh, T* hl, T* hh){
+    *ll = ((x0 + x1) + (x2 + x3)) >> 2;
+    *lh = ((x0 + x1) - (x2 + x3)) >> 2;
+    *hl = ((x0 - x1) + (x2 - x3)) >> 2;
+    *hh = ((x0 - x1) - (x2 - x3)) >> 2;
 }
 
 template<typename T>
-hwt_4x4_inv(vector<T>& image){
-    ;
+void hwt_2x2_inv(T ll, T lh, T hl, T hh, T* x0, T* x1, T* x2, T* x3){
+    *x0 = ll + hl + lh + hh;
+    *x1 = ll + lh - (hl + hh);
+    *x2 = ll + hl - (lh + hh);
+    *x3 = ll + hh - (hl + lh);
+}
+
+template<typename T>
+hwt_4x4_fwd(vector<T>& image){
+    image.resize(16 + 16 + 4, 0);
+    T* pImg = image.data();
+    T* phh = pImg + 16;
+    T* phl = phh + 4;
+    T* plh = phl + 4;
+    T* pll = plh + 4;
+    T x0, x1, x2, x3;
+    //level 1
+    for(int i = 0; i < 2; i++){
+        for(int j = 0; j < 2; j++){
+            x0 = pImg[i<<3 + j<<1];
+            x1 = pImg[i<<3 + j<<1 + 1];
+            x2 = pImg[i<<3 + j<<1 + 4];
+            x3 = pImg[i<<3 + j<<1 + 4 + 1];
+            hwt_2x2_fwd(x0, x1, x2, x3, pll++, plh++, phl++, phh++);
+        }
+    }
+    //level 2
+    pImg = pll - 4;
+    phh = pll;
+    phl = phh + 1;
+    plh = phl + 1;
+    pll = plh + 1;
+    x0 = pImg[0]; x1 = pImg[1]; x2 = pImg[2]; x3 = pImg[3];
+    hwt_2x2_fwd(x0, x1, x2, x3, pll, plh, phl, phh);
+}
+
+template<typename T>
+hwt_4x4_inv(vector<T>& transform){
+    T* pTrn = transform.data() + 16 + 16;
+    T* pImg = pTrn - 4;
+    //level 1 reconstruction
+    hwt_2x2_inv(pTrn[3], pTrn[2], pTrn[1], pTrn[0], pImg, pImg+1, pImg+2, pImg+3);
+
+    //level 0 reconstruction
+    pTrn -= 16;
+    pImg = pTrn - 16;
+    T* pBlock;
+    for(int i = 0; i < 2; i++){
+        for(int j = 0; j < 2; j++){
+            pBlock = pImg + i<<3 + j<<1;
+            hwt_2x2_inv(pTrn[12], pTrn[8], pTrn[4], pTrn[0], pBlock, pBlock+1, pBlock+8, pBlock+8+1);
+            pTrn++;
+        }
+    }
 }
