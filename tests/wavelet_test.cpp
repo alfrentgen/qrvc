@@ -3,24 +3,27 @@
 using namespace std;
 #include "wavelet.h"
 #define DCT_THRESHOLD 2
-#define N_REPEATS 1//77 * 177 * 1000
-
-template<typename T, uint32_t dim>
-void print_array(T a[dim][dim]){
-    LOG("\n");
-    for(int row = 0; row < dim; row++){
-        for(int col = 0; col < dim; col++){
-            LOG("%d, ", a[row][col]);
-        }
-        LOG("\n");
-    }
-}
+#define N_REPEATS 10//77 * 177 * 1000
+#define ACCURACY 8
+#define EMBED_POS 2
+#define RANGE 256
 
 void print_array_double(double* a, uint32_t dim){
     LOG("\n");
     for(int row = 0; row < dim; row++){
         for(int col = 0; col < dim; col++){
             LOG("%g, ", *(a + row * dim + col));
+        }
+        LOG("\n");
+    }
+}
+
+template<typename T>
+void print_array(T* a, uint32_t dim){
+    LOG("\n");
+    for(int row = 0; row < dim; row++){
+        for(int col = 0; col < dim; col++){
+            LOG("%d, ", a[dim*row + col]);
         }
         LOG("\n");
     }
@@ -39,55 +42,100 @@ bool compare_2_arr(T a[dim][dim], T b[dim][dim]){
     return true;
 }
 template<typename T>
-T calc_average(vector<T> vec){
+T calc_average(vector<T> vec, size_t n){
     if(vec.size() == 0)
         return 0;
-    T res = 0;
-    for(T v : vec){
-        res += v;
+    if(n == 0){
+        n = vec.size();
     }
-    return res/vec.size();
+    T res = 0;
+    for(int i=0; i < n; i++){
+        res += vec[i];
+    }
+    return res/n;
 }
 
 template<typename T>
 void rand_fill_in(T* arr, size_t length, uint32_t range){
-    srand (time(NULL));
     for(int i = 0; i < length; i++){
-        arr[i] = rand() % range;
+        arr[i] = rand() % RANGE;
     }
+}
+
+template<typename T>
+void increase_accuracy(T* data, uint32_t size, uint32_t shifts){
+    for(int i = 0; i < size; i++){
+        data[i] = (data[i] << shifts);
+    }
+}
+
+template<typename T>
+void decrease_accuracy(T* data, uint32_t size, uint32_t shifts){
+    for(int i = 0; i < size; i++){
+        data[i] = (data[i] >> shifts);
+    }
+}
+
+template<typename T>
+void round_int(T* data, uint32_t size, uint32_t fract_pos){
+    T unit = (1<<fract_pos);
+    T half_unit = DIV_2(unit);
+    if(half_unit == 0){
+        return;
+    }
+    T mantissa;
+    T integral;
+    T mask = (~T(0))<<fract_pos;
+    T value;
+    for(int i = 0; i < size; i++){
+        integral = data[i] & mask;
+        mantissa = abs(data[i] - integral);
+        value = data[i];
+        if(mantissa > half_unit){
+            integral = integral>>(fract_pos);
+            data[i] = (integral > 0) ? integral+1 : integral-1;
+        }else{
+            data[i] = integral>>(fract_pos);
+        }
+    }
+}
+
+template<typename T>
+void embed_bits(T* value, T bits){
+    *value = *value | bits;
 }
 
 int32_t main(){
     vector<int32_t> image;
-    vector<int32_t> buffer;
     vector<int32_t> transform;
     vector<int32_t> restored_image;
-    int32_t coeffs[4][4] = {0};
-    uint8_t out[4][4] = {0};
-
+    srand (time(NULL));
     for(int i = 0; i < N_REPEATS; i++){
         //LOG("test#%d\n", i);
         image.resize(16, 0);
-        rand_fill_in<int32_t>(image.data(), image.size(), 256);
-        for(int i=0; i < image.size(); i++){
-            image[i] = image[i]<<8;
-        }
-        uint32_t level =0;
-        hwt_fwd(image, buffer, 4, 4, level);
-        transform = image;
-        hwt_inv(transform, 4, 4, level);
-        /*LOG("Image transform average: %d\n", image.back());
-        LOG("Image simple average: %d\n", simple_avg);*/
-        /*if(!compare_2_arr<uint8_t, 4>(in, out)){
-            LOG("test#%d\n", i);
-            LOG("\nInput array:");
-            print_array<uint8_t,4>(in);
-            LOG("\nOutput array:");
-            print_array<uint8_t,4>(out);
-            LOG("\nDCT coefficients:");
-            print_array<int32_t,4>(coeffs);
-            exit(0);
-        }*/
+        rand_fill_in(image.data(), image.size(), RANGE);
+        LOG("\nOriginal:");
+        print_array(image.data(), 4);
+        int32_t orig_avg = calc_average(image, 16);
+        LOG("Original avg: %d\n", orig_avg);
+        increase_accuracy(image.data(), 16, ACCURACY);
+        hwt_4x4_fwd(image);
+        transform.assign(image.begin(), image.end());
+
+        int32_t* pVal = transform.data()+transform.size()-1;
+        int32_t& Val = transform.back();
+        uint32_t mask = (uint32_t)(1<<(ACCURACY + EMBED_POS - 1));
+        int32_t embedee = ~(Val);
+        embedee &= mask;
+        LOG("\nEmbedee: %d\n", embedee);
+        embed_bits(pVal, embedee);
+        hwt_4x4_inv(transform);
+        round_int(transform.data(), 16, ACCURACY);
+        //decrease_accuracy(transform.data(), 16, ACCURACY);
+        LOG("\nRestored:");
+        print_array(transform.data(), 4);
+        int32_t trn_avg = calc_average(transform, 16);
+        LOG("Transform avg: %d\n", trn_avg);
     }
 
     return 0;

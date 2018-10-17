@@ -1,10 +1,10 @@
 #pragma once
 
-#define MUL_2(X) (X << 1)
-#define MUL_4(X) (X << 2)
-#define DIV_2(X) (X >> 1)
-#define DIV_4(X) (X >> 2)
-
+#define MUL_2(X) ((X) << 1)
+#define MUL_4(X) ((X) << 2)
+#define MUL_8(X) ((X) << 3)
+#define DIV_2(X) ((X) >> 1)
+#define DIV_4(X) ((X) >> 2)
 //#define ENBALE_OPT_DIV
 #ifdef ENBALE_OPT_DIV
 #define DIV_10(X) ((X * 205)>>11)
@@ -139,10 +139,10 @@ int32_t hwt_inv(vector<T>& transform, uint32_t origWidth, uint32_t origHeight, u
 
 template<typename T>
 void hwt_2x2_fwd(T x0, T x1, T x2, T x3, T* ll, T* lh, T* hl, T* hh){
-    *ll = ((x0 + x1) + (x2 + x3)) >> 2;
-    *lh = ((x0 + x1) - (x2 + x3)) >> 2;
-    *hl = ((x0 - x1) + (x2 - x3)) >> 2;
-    *hh = ((x0 - x1) - (x2 - x3)) >> 2;
+    *ll = DIV_4((x0 + x1) + (x2 + x3));
+    *lh = DIV_4((x0 + x1) - (x2 + x3));
+    *hl = DIV_4((x0 - x1) + (x2 - x3));
+    *hh = DIV_4((x0 - x1) - (x2 - x3));
 }
 
 template<typename T>
@@ -165,10 +165,10 @@ hwt_4x4_fwd(vector<T>& image){
     //level 1
     for(int i = 0; i < 2; i++){
         for(int j = 0; j < 2; j++){
-            x0 = pImg[i<<3 + j<<1];
-            x1 = pImg[i<<3 + j<<1 + 1];
-            x2 = pImg[i<<3 + j<<1 + 4];
-            x3 = pImg[i<<3 + j<<1 + 4 + 1];
+            x0 = pImg[MUL_8(i) + MUL_2(j)];
+            x1 = pImg[MUL_8(i) + MUL_2(j) + 1];
+            x2 = pImg[MUL_8(i) + MUL_2(j) + 4];
+            x3 = pImg[MUL_8(i) + MUL_2(j) + 4 + 1];
             hwt_2x2_fwd(x0, x1, x2, x3, pll++, plh++, phl++, phh++);
         }
     }
@@ -195,7 +195,7 @@ hwt_4x4_inv(vector<T>& transform){
     T* pBlock;
     for(int i = 0; i < 2; i++){
         for(int j = 0; j < 2; j++){
-            pBlock = pImg + i<<3 + j<<1;
+            pBlock = pImg + MUL_8(i) + MUL_2(j);
             hwt_2x2_inv(pTrn[12], pTrn[8], pTrn[4], pTrn[0], pBlock, pBlock+1, pBlock+8, pBlock+8+1);
             pTrn++;
         }
