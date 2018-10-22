@@ -42,13 +42,13 @@ bool compare_2_arr(T a[dim][dim], T b[dim][dim]){
     return true;
 }
 template<typename T>
-T calc_average(vector<T> vec, size_t n){
+double calc_average(vector<T> vec, size_t n){
     if(vec.size() == 0)
         return 0;
     if(n == 0){
         n = vec.size();
     }
-    T res = 0;
+    double res = 0;
     for(int i=0; i < n; i++){
         res += vec[i];
     }
@@ -116,26 +116,24 @@ int32_t main(){
         rand_fill_in(image.data(), image.size(), RANGE);
         LOG("\nOriginal:");
         print_array(image.data(), 4);
-        int32_t orig_avg = calc_average(image, 16);
-        LOG("Original avg: %d\n", orig_avg);
+        double orig_avg = calc_average(image, 16);
+        LOG("Original avg: %g\n", orig_avg);
         increase_accuracy(image.data(), 16, ACCURACY);
         hwt_4x4_fwd(image);
         transform.assign(image.begin(), image.end());
 
-        int32_t* pVal = transform.data()+transform.size()-1;
-        int32_t& Val = transform.back();
-        uint32_t mask = (uint32_t)(1<<(ACCURACY + EMBED_POS - 1));
-        int32_t embedee = ~(Val);
-        embedee &= mask;
-        LOG("\nEmbedee: %d\n", embedee);
-        embed_bits(pVal, embedee);
+        int32_t& val = transform.back();
+        uint32_t bit = (uint32_t)(0x01<<(EMBED_POS + ACCURACY - 1));
+        int32_t mask = 0xffffffff << (EMBED_POS + ACCURACY - 1);
+        val ^= bit;//invert bit to be embedded
+        val &= mask;//nullify less meaning bits
         hwt_4x4_inv(transform);
         round_int(transform.data(), 16, ACCURACY);
         //decrease_accuracy(transform.data(), 16, ACCURACY);
         LOG("\nRestored:");
         print_array(transform.data(), 4);
-        int32_t trn_avg = calc_average(transform, 16);
-        LOG("Transform avg: %d\n", trn_avg);
+        double trn_avg = calc_average(transform, 16);
+        LOG("Transform avg: %g\n", trn_avg);
     }
 
     return 0;
