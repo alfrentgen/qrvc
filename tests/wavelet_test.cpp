@@ -5,7 +5,7 @@ using namespace std;
 #define DCT_THRESHOLD 2
 #define N_REPEATS 10//77 * 177 * 1000
 #define ACCURACY 8
-#define EMBED_POS 2
+#define EMBED_POS 3
 #define RANGE 256
 
 void print_array_double(double* a, uint32_t dim){
@@ -101,9 +101,31 @@ void round_int(T* data, uint32_t size, uint32_t fract_pos){
 }
 
 template<typename T>
-void embed_bits(T* value, T bits){
-    *value = *value | bits;
+inline void decide_new_avg(T old_avg, uint32_t pos){
+    T mask = 0xffffffff;
+    mask <<= pos;
+    T bit = 1;
+    bit <<= pos;
+    T diff = old_avg - (mask&old_avg);
+    T new_avg = 0;
+    return new_avg;
 }
+
+/*new avg algorithm
+{
+    while(){
+        calc current average
+        make up new average
+        check if some counts would get over the boundaries
+            adjust these counts
+        else
+            accept new avg
+            break
+    }
+    replace old_avg with new_avg
+    do inverse transform
+}
+*/
 
 int32_t main(){
     vector<int32_t> image;
@@ -121,12 +143,18 @@ int32_t main(){
         increase_accuracy(image.data(), 16, ACCURACY);
         hwt_4x4_fwd(image);
         transform.assign(image.begin(), image.end());
-
-        int32_t& val = transform.back();
+        int32_t val = transform.back();
+        //val should be analyzed here to decide which new avg is the closest to the current one
+        //if the mean is more than some threshold, e.g. th=255-8, than the only possible is new_val < 250
+        //if the mean is less than some threshold, e.g. th=8, than the only possible is new_val > 8
+        //the choice of new_avg should have more sophisticated algorithm than given above.
+        LOG("avg_old=%d\n", val>>ACCURACY);
         uint32_t bit = (uint32_t)(0x01<<(EMBED_POS + ACCURACY - 1));
         int32_t mask = 0xffffffff << (EMBED_POS + ACCURACY - 1);
         val ^= bit;//invert bit to be embedded
         val &= mask;//nullify less meaning bits
+        LOG("avg_new=%d\n", val>>ACCURACY);
+        transform.back() = val;
         hwt_4x4_inv(transform);
         round_int(transform.data(), 16, ACCURACY);
         //decrease_accuracy(transform.data(), 16, ACCURACY);
