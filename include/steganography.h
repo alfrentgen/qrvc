@@ -9,15 +9,11 @@ using namespace std;
 #define STEG_HIDE true
 #define STEG_REVEAL false
 
-typedef struct DWT{
-        double std_dev;
-        vector<uint32_t> buffer;
-} DWT;
-
 typedef struct StegUnit{
 
-    bool useDWT;
-    struct DWT dwt_aux;
+    bool useAvg;
+    int32_t bitPosition;//0..7 in 8bit pel
+    vector<uint32_t> buffer;
 
     bool hide;
     uint8_t bit;
@@ -28,7 +24,7 @@ typedef struct StegUnit{
     vector<uint8_t*> neighPels;
     vector<uint8_t*> corePels;
     StegUnit():
-        bit(0), pUnit(nullptr), neighInds(0), coreInds(0), neighPels(0), corePels(0){}
+        bitPosition(2), useAvg(false), bit(0), pUnit(nullptr), neighInds(0), coreInds(0), neighPels(0), corePels(0){}
 } StegUnit_t;
 
 class StegModule{
@@ -55,7 +51,10 @@ public:
     int32_t m_threshold;
     char    m_unitPat;
     int32_t m_genVal;
-    bool    m_useDWT;
+
+    //average steganography parameters
+    bool    m_useAvg;
+
 
 private:
     vector<int32_t> m_coreIndeces;

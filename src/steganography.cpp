@@ -181,71 +181,132 @@ void changePels(uint8_t** pels, int32_t nPels, int32_t diff){
 
 //4x4 pels unit
 void renderUnit(StegUnit& unit){
-
-    if(unit.useDWT){//discrete wavelet transform
-        unit.corePels;
-        unit.dwt_aux.buffer.resize(0);
-        //copy pels by value
-        for(uint32_t i=0; i < unit.corePels.size(); i++){
-            unit.dwt_aux.buffer.push_back(*unit.corePels[i]);
+    int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+    int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
+    if(unit.hide){
+        int8_t diff = 1;
+        int8_t dir = 1;
+        if(unit.bit == 0){
+            dir = -1;
         }
-        //do fwd dwt
-        vector<uint32_t> buffer(0);
-        hwt_fwd(unit.dwt_aux.buffer, buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 0);
-        //hide one bit
-        if(unit.hide){
-            //hide
-            if(unit.bit){
-                unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] = unit.dwt_aux.std_dev;
-            }else{
-                unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] = (-unit.dwt_aux.std_dev);
-            }
-            //do inv dwt
-            hwt_inv(unit.dwt_aux.buffer, buffer, DEF_STEG_UNIT_SIZE, DEF_STEG_UNIT_SIZE, 2);
-            for(uint32_t i=0; i < unit.corePels.size(); i++){
-                //pPel = ;
-                //unit.dwt_aux.buffer.push_back(*pPel);
-            }
-        }else{
-            if(unit.dwt_aux.buffer[unit.dwt_aux.buffer.size()-2] > 0){
-                unit.bit = 1;
-            }else{
-                unit.bit = 0;
-            }
-            unit.dwt_aux.std_dev;
-            ;//get bit value
+        diff *= dir;
+        //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
+        while(dir*(meanCore - meanNeigh) <= unit.threshold){
+                changePels(unit.corePels.data(), unit.corePels.size(), diff);
+                changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
+                meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
+                meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
+                //LOG("unit.threshold=%d\n", unit.threshold);
+                //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
         }
-    }
-    else{
-        int32_t meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
-        int32_t meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-        if(unit.hide){
-            int8_t diff = 1;
-            int8_t dir = 1;
-            if(unit.bit == 0){
-                dir = -1;
-            }
-            diff *= dir;
-            //LOG("diff=%d, meanNeigh=%d\n", unit.bit, meanNeigh);
-            while(dir*(meanCore - meanNeigh) <= unit.threshold){
-                    changePels(unit.corePels.data(), unit.corePels.size(), diff);
-                    changePels(unit.neighPels.data(), unit.neighPels.size(), -diff);
-                    meanCore = calc_mean(unit.corePels.data(), unit.corePels.size());
-                    meanNeigh = calc_mean(unit.neighPels.data(), unit.neighPels.size());
-                    //LOG("unit.threshold=%d\n", unit.threshold);
-                    //LOG("meanCore=%d, meanNeigh=%d\n", meanCore, meanNeigh);
-            }
+    }else{
+        if(meanCore - meanNeigh > 0){
+            unit.bit = 255;
         }else{
-            if(meanCore - meanNeigh > 0){
-                unit.bit = 255;
-            }else{
-                unit.bit = 0;
-            }
+            unit.bit = 0;
         }
     }
 
     return;
 }
+
+#define AVG_ACCURACY 8
+inline int32_t getNewAvg(int32_t avg, int32_t bit, int32_t position){
+    bit = bit ? 1 : 0;
+    int32_t mask = 0xffffffff << position;
+    int32_t trunkAvg = mask & avg;
+    bool matched = (bit << position)&(trunkAvg) ? true : false;
+    int32_t newAvg = trunkAvg;
+    if(!matched){//use truncated
+        newAvg = trunkAvg + (1 << position);
+        if(newAvg > (255<<AVG_ACCURACY)){
+            newAvg = trunkAvg - (1 << position);
+        }
+    }
+    return newAvg;
+}
+
+inline void adjustPels(uint8_t** pPels, size_t nPels, int32_t newAvg){
+    return;
+}
+
+void renderUnitAvg(StegUnit& unit){
+    int32_t avg(0);
+    for(uint8_t* pel : unit.corePels){
+        avg+= *pel;
+    }
+    avg = (avg << AVG_ACCURACY)/unit.corePels.size();
+    int32_t position = unit.bitPosition + AVG_ACCURACY;
+    int32_t newAvg = getNewAvg(avg, unit.bit, position);
+    int32_t totalDiff = (newAvg - avg) * unit.corePels.size();
+    int32_t sign = totalDiff < 0 ? -1 : 1;
+    totalDiff = abs(totalDiff);
+    int32_t mask = 0x00000001 << (AVG_ACCURACY - 1);
+    totalDiff += mask;
+    totalDiff >>= AVG_ACCURACY;
+
+    //less first
+    std::sort(unit.corePels.begin(), unit.corePels.end(),
+                [](uint8_t* first, uint8_t* second)-> bool{
+                    return *first < *second;
+                });
+
+    if(sign < 0){//bigger first
+        std::reverse(unit.corePels.begin(), unit.corePels.end());
+    }
+
+    int32_t stopIndex(0);
+    int32_t val(0);
+    for(uint8_t* pel : unit.corePels){
+        val = ((int32_t)*pel) << AVG_ACCURACY;
+        if(sign > 0){
+            if(val < newAvg){
+                ++stopIndex;
+            }
+        }else{
+            if(val > newAvg){
+                ++stopIndex;
+            }
+        }
+    }
+
+    for(;;){
+        ;
+    }
+
+    //check the difference amount
+    int32_t totalRoom(0);
+    int32_t stepsToAvg(0);
+
+    for(uint8_t* pel : unit.corePels){
+
+        if(sign > 0){
+            if(val < newAvg){
+                ++stopIndex;
+            }
+            totalRoom += 255 - val;
+            stepsToAvg += (newAvg - val);
+        }else{
+            if(val > newAvg){
+                ++stopIndex;
+            }
+            totalRoom += val;
+            stepsToAvg += (val - newAvg);
+        }
+    }
+
+    //pixels adjustment
+    //if(stepsToAvg < )
+    totalDiff; stepsToAvg; totalRoom;
+
+
+    for(int32_t i = 0; i < stopIndex; i++){
+        ;
+    }
+
+    return;
+}
+#undef AVG_ACCURACY
 
 void fillUnitIndeces_O(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
         core = vector<int32_t>{stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};
@@ -355,25 +416,7 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
 
-    unit.useDWT = m_useDWT;
-    /*if(m_useDWT){//calculate standard deviation on the whole frame?
-        uint64_t sum = 0;
-        uint32_t nDots = m_frameWidth * m_frameHeight;
-        for(uint32_t i = 0; i < nDots; i++){
-            sum += frame[i];
-        }
-        sum <<= 8; //scale up at 256 times
-        uint32_t mean_val = sum/nDots;
-
-        sum = 0;
-        for(uint32_t i = 0; i < nDots; i++){
-            uint32_t sqr = mean_val - ((uint32_t)frame[i] << 8);
-            sqr *= sqr;
-            sum += sqr;
-        }
-        unit.dwt_aux.std_dev = sqrt((double)sum/(nDots-1));
-    }*/
-
+    unit.useAvg = m_useAvg;
     for(int i = 0; i < qrSize; i++){
         int32_t qrIdx = m_qrPath[i];
         int32_t x = m_framePath[2*i];
@@ -535,6 +578,6 @@ int32_t StegModule::SetGenerator(int32_t val){
 
 StegModule::StegModule() :
 m_unitPat('o'),
-m_useDWT(false)
+m_useAvg(false)
 {
 }
