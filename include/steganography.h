@@ -11,7 +11,6 @@ using namespace std;
 
 typedef struct StegUnit{
 
-    bool useAvg;
     int32_t bitPosition;//0..7 in 8bit pel
     vector<uint32_t> buffer;
 

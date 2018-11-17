@@ -226,10 +226,6 @@ inline int32_t getNewAvg(int32_t avg, int32_t bit, int32_t position){
     return newAvg;
 }
 
-inline void adjustPels(uint8_t** pPels, size_t nPels, int32_t newAvg){
-    return;
-}
-
 void renderUnitAvg(StegUnit& unit){
     int32_t avg(0);
     for(uint8_t* pel : unit.corePels){
@@ -245,65 +241,36 @@ void renderUnitAvg(StegUnit& unit){
     totalDiff += mask;
     totalDiff >>= AVG_ACCURACY;
 
-    //less first
+    //the least first
     std::sort(unit.corePels.begin(), unit.corePels.end(),
                 [](uint8_t* first, uint8_t* second)-> bool{
                     return *first < *second;
                 });
 
-    if(sign < 0){//bigger first
+    if(sign < 0){//the biggest first
         std::reverse(unit.corePels.begin(), unit.corePels.end());
     }
 
-    int32_t stopIndex(0);
-    int32_t val(0);
-    for(uint8_t* pel : unit.corePels){
-        val = ((int32_t)*pel) << AVG_ACCURACY;
-        if(sign > 0){
-            if(val < newAvg){
-                ++stopIndex;
+    uint8_t pel(0);
+    int32_t room(0);
+    int32_t delta(0);
+    for(size_t i = unit.corePels.size() - 1; i >= 0; i--){//starting from the closest
+        if(totalDiff <= 0){
+            break;
+        }
+        pel = *unit.corePels[i];
+        room = (sign > 0) ? 255 - pel : pel;
+        if(room != 0){
+            delta = totalDiff/(i+1);
+            if(delta < totalDiff){//try to add one more
+                delta++;
             }
-        }else{
-            if(val > newAvg){
-                ++stopIndex;
-            }
+            delta = (delta > room) ? room : delta;
+            totalDiff -= delta;
+            pel += sign*delta;
+            *unit.corePels[i] = pel;
         }
     }
-
-    for(;;){
-        ;
-    }
-
-    //check the difference amount
-    int32_t totalRoom(0);
-    int32_t stepsToAvg(0);
-
-    for(uint8_t* pel : unit.corePels){
-
-        if(sign > 0){
-            if(val < newAvg){
-                ++stopIndex;
-            }
-            totalRoom += 255 - val;
-            stepsToAvg += (newAvg - val);
-        }else{
-            if(val > newAvg){
-                ++stopIndex;
-            }
-            totalRoom += val;
-            stepsToAvg += (val - newAvg);
-        }
-    }
-
-    //pixels adjustment
-    //if(stepsToAvg < )
-    totalDiff; stepsToAvg; totalRoom;
-
-
-    for(int32_t i = 0; i < stopIndex; i++){
-        ;
-    }
-
     return;
 }
 #undef AVG_ACCURACY
@@ -432,7 +399,11 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
             unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
         unit.hide = action;
-        renderUnit(unit);
+        if(m_useAvg){
+            renderUnitAvg(unit);
+        }else{
+            renderUnit(unit);
+        }
         qrCode[qrIdx] = unit.bit;//for REVEAL
     }
     return OK;
