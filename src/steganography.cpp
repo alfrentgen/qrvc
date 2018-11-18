@@ -275,6 +275,19 @@ void renderUnitAvg(StegUnit& unit){
 }
 #undef AVG_ACCURACY
 
+void fillUnitIndeces_Dot(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
+        core.resize(0);
+        neigh.resize(0);
+        int32_t position(0);
+        for(int row = 0; row < DEF_STEG_UNIT_SIZE; row++){
+            for(int col = 0; col < DEF_STEG_UNIT_SIZE; col++){
+                position = row * stride + col;
+                core.push_back(position);
+                neigh.push_back(position);
+            }
+        }
+}
+
 void fillUnitIndeces_O(int32_t stride, vector<int32_t>& core, vector<int32_t>& neigh){
         core = vector<int32_t>{stride + 1, stride + 2, 2*stride + 1, 2*stride + 2};
         neigh = vector<int32_t>{
@@ -315,7 +328,8 @@ void fillUnitIndeces_J(int32_t stride, vector<int32_t>& core, vector<int32_t>& n
 map<char, function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>> unitIdxFill ={
 {char('o'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_O)},
 {char('x'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_X)},
-{char('j'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_J)}
+{char('j'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_J)},
+{char('.'), function<void(int32_t, vector<int32_t>&, vector<int32_t>&)>(fillUnitIndeces_Dot)}
 };
 
 int32_t StegModule::Hide(uint8_t* frame, uint8_t* qrCode){
@@ -383,7 +397,6 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
 
-    unit.useAvg = m_useAvg;
     for(int i = 0; i < qrSize; i++){
         int32_t qrIdx = m_qrPath[i];
         int32_t x = m_framePath[2*i];

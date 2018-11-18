@@ -23,7 +23,7 @@ typedef struct StegUnit{
     vector<uint8_t*> neighPels;
     vector<uint8_t*> corePels;
     StegUnit():
-        bitPosition(2), useAvg(false), bit(0), pUnit(nullptr), neighInds(0), coreInds(0), neighPels(0), corePels(0){}
+        bitPosition(0), bit(0), pUnit(nullptr), neighInds(0), coreInds(0), neighPels(0), corePels(0){}
 } StegUnit_t;
 
 class StegModule{

@@ -441,7 +441,7 @@ Config* ArgsParser::GetConfig(){
 
         it = optionsMap.find(stgUnitPatOpt);
         if(it == optionsMap.end()){
-            config.m_unitPattern = 'o';
+            config.m_unitPattern = '.';
         }else{
             config.m_unitPattern = it->second[0];
         }
