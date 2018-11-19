@@ -412,7 +412,8 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
             unit.neighPels[j] = unit.pUnit + m_neighIndeces[j];
         }
         unit.hide = action;
-        if(m_useAvg){
+        //std::cout << "Checkpoint!\n" << m_useAvg << std::endl;
+        if(m_unitPat == '.'){
             renderUnitAvg(unit);
         }else{
             renderUnit(unit);
@@ -561,7 +562,6 @@ int32_t StegModule::SetGenerator(int32_t val){
 }
 
 StegModule::StegModule() :
-m_unitPat('o'),
-m_useAvg(false)
+m_unitPat('.')
 {
 }

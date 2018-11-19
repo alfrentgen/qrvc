@@ -51,10 +51,6 @@ public:
     char    m_unitPat;
     int32_t m_genVal;
 
-    //average steganography parameters
-    bool    m_useAvg;
-
-
 private:
     vector<int32_t> m_coreIndeces;
     vector<int32_t> m_neighIndeces;

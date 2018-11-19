@@ -142,13 +142,11 @@ int32_t MTEncoder::Init(Config& config){
 
     m_keyQR.resize(0);
     vector<uint8_t> * const pKeyFrame = config.m_cipheringOn ? &m_keyQR : NULL;
-
     for(int i =0; i < config.m_nWorkingThreads; i++){
         m_jobs[i] = new Encode(m_config, m_inQ, m_outQ);
         m_jobs[i]->SetCypheringParams(pKeyFrame, m_pKeyFileStream);
         m_jobs[i]->SetStegParams(pStegModule);
     }
-
     return OK;
 }
 
@@ -176,7 +174,6 @@ int32_t MTEncoder::Start(bool join){
         //LOG("Strating thread #%d.\n", i);
             m_threads.push_back(thread(&Encode::Do, m_jobs[i]));
         }
-
         if(join){
             for(int i = 0; i < m_config.m_nWorkingThreads; i++){
                 if(m_threads[i].joinable()){

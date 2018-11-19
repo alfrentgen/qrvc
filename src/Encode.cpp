@@ -39,7 +39,6 @@ int32_t Encode::Do(){
         while(m_inQ->m_waitForFlush){
             m_inQ->m_cv.wait(lckInQ);
         }
-
         result = m_inQ->GetChunk(m_data);
         if(result == 0 && m_inQ->GetState() == INQ_EMPTY_AND_DEPLETED){
             m_frameRepeats += m_tailSize;
@@ -78,7 +77,6 @@ int32_t Encode::Do(){
         if(m_stegModule){
             ReadStegData();
             lckInQ.unlock();
-
             EncodeStegData();
         }else
         if(m_data.m_frameID == 0 && m_pKey){

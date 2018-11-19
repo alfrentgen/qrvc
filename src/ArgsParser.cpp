@@ -44,7 +44,7 @@ map<const char*, const char*> g_stegOpts(
 {
     {stgThOpt.c_str(), "\\d{1,3}"} ,
     {stgKeyFileOpt.c_str(), ".*" },
-    {stgUnitPatOpt.c_str(), "[oxj]"},
+    {stgUnitPatOpt.c_str(), "[oxj.]"},
     {stgGenOpt.c_str(), "\\d{1,3}"}
 });
 
