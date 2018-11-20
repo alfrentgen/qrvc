@@ -11,13 +11,11 @@ using namespace std;
 
 typedef struct StegUnit{
 
-    int32_t bitPosition;//0..7 in 8bit pel
-    vector<uint32_t> buffer;
-
     bool hide;
     uint8_t bit;
     uint8_t* pUnit;
-    int32_t threshold;
+    int32_t threshold;//or bit position
+    int32_t bitPosition;//0..7 in 8bit pel
     vector<int32_t> neighInds;
     vector<int32_t> coreInds;
     vector<uint8_t*> neighPels;

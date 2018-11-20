@@ -172,17 +172,18 @@ skipDecyph:
                 fclose(dumpFile);*/
 
                 decRes = DecodeDataSteg(qrCode.data(), qrWidth);
-            }else
+            }else{
 #endif
 #undef STEG_DECODE
-            if(m_decMode == MODE_QUICK){
-                decRes = DecodeDataQuick();
-            }else if(m_decMode == MODE_SLOW){
-                decRes = DecodeData();
-            }else{
-                decRes = DecodeDataQuick();
-                if(decRes){
+                if(m_decMode == MODE_QUICK){
+                    decRes = DecodeDataQuick();
+                }else if(m_decMode == MODE_SLOW){
                     decRes = DecodeData();
+                }else{
+                    decRes = DecodeDataQuick();
+                    if(decRes){
+                        decRes = DecodeData();
+                    }
                 }
             }
 

@@ -89,7 +89,7 @@ int32_t MTEncoder::Init(Config& config){
             LOG("In steg mode standard input stream can only be used for hiding video input.\n");
             return FAIL;
         }
-        if(config.m_stegThreshold == 0){
+        if(config.m_unitPattern != '.' && config.m_stegThreshold == 0){
             config.m_stegThreshold = 8;
         }
         int32_t res = m_stegModule.Init(config.m_frameWidth, config.m_frameHeight, config.m_stegThreshold, RANDOM_PATH);

@@ -223,6 +223,8 @@ inline int32_t getNewAvg(int32_t avg, int32_t bit, int32_t position){
             newAvg = trunkAvg - (1 << position);
         }
     }
+    //DEBUG
+    //LOG("%d, %d\n", newAvg, bit);
     return newAvg;
 }
 
@@ -233,42 +235,65 @@ void renderUnitAvg(StegUnit& unit){
     }
     avg = (avg << AVG_ACCURACY)/unit.corePels.size();
     int32_t position = unit.bitPosition + AVG_ACCURACY;
-    int32_t newAvg = getNewAvg(avg, unit.bit, position);
-    int32_t totalDiff = (newAvg - avg) * unit.corePels.size();
-    int32_t sign = totalDiff < 0 ? -1 : 1;
-    totalDiff = abs(totalDiff);
-    int32_t mask = 0x00000001 << (AVG_ACCURACY - 1);
-    totalDiff += mask;
-    totalDiff >>= AVG_ACCURACY;
 
-    //the least first
-    std::sort(unit.corePels.begin(), unit.corePels.end(),
-                [](uint8_t* first, uint8_t* second)-> bool{
-                    return *first < *second;
-                });
+    if(unit.hide){
+        int32_t newAvg = getNewAvg(avg, unit.bit, position);
+        int32_t totalDiff = (newAvg - avg) * unit.corePels.size();
+        int32_t sign = totalDiff < 0 ? -1 : 1;
+        totalDiff = abs(totalDiff);
+        //int32_t mask = 0x00000001 << (AVG_ACCURACY - 1);
+        totalDiff += (0x00000001 << (AVG_ACCURACY - 1));
+        totalDiff >>= AVG_ACCURACY;
 
-    if(sign < 0){//the biggest first
-        std::reverse(unit.corePels.begin(), unit.corePels.end());
-    }
+        //the least first
+        std::sort(unit.corePels.begin(), unit.corePels.end(),
+                    [](uint8_t* first, uint8_t* second)-> bool{
+                        return *first < *second;
+                    });
 
-    uint8_t pel(0);
-    int32_t room(0);
-    int32_t delta(0);
-    for(size_t i = unit.corePels.size() - 1; i >= 0; i--){//starting from the closest
-        if(totalDiff <= 0){
-            break;
+        if(sign < 0){//the biggest first
+            std::reverse(unit.corePels.begin(), unit.corePels.end());
         }
-        pel = *unit.corePels[i];
-        room = (sign > 0) ? 255 - pel : pel;
-        if(room != 0){
-            delta = totalDiff/(i+1);
-            if(delta < totalDiff){//try to add one more
-                delta++;
+
+        uint8_t pel(0);
+        int32_t room(0);
+        int32_t delta(0);
+        for(size_t i = unit.corePels.size() - 1; i >= 0; i--){//starting from the closest
+            if(totalDiff <= 0){
+                break;
             }
-            delta = (delta > room) ? room : delta;
-            totalDiff -= delta;
-            pel += sign*delta;
-            *unit.corePels[i] = pel;
+            pel = *unit.corePels[i];
+            room = (sign > 0) ? 255 - pel : pel;
+            if(room != 0){
+                delta = totalDiff/(i+1);
+                if(delta < totalDiff){//try to add one more
+                    delta++;
+                }
+                delta = (delta > room) ? room : delta;
+                totalDiff -= delta;
+                pel += sign*delta;
+                *unit.corePels[i] = pel;
+            }
+        }
+    }else{
+        /*{//DEBUG SECTION
+            int32_t val_avg = avg>>AVG_ACCURACY;
+            if((val_avg > 130 || val_avg < 127)){
+                LOG("avg = %d\n", val_avg);
+                LOG("%d\n", unit.corePels.size());
+                for(uint8_t* pel : unit.corePels){
+                    LOG("%d, ", *pel);
+                }
+                LOG("\n");
+            }
+        }*/
+        /*avg &= (0x00000003 << (position - 1));
+        avg += avg & (0x00000001 << (position - 1));*/
+        avg &= (0x00000001 << position);
+        if(avg){
+            unit.bit = 255;
+        }else{
+            unit.bit = 0;
         }
     }
     return;
@@ -389,11 +414,21 @@ int32_t StegModule::Reveal(uint8_t* frame, uint8_t* qrCode){
 }
 
 int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
+    /*{//DEBUG
+        for(size_t i = 0; i< m_frameWidth * m_frameHeight; i++ ){
+            if(frame[i] > 130){
+                LOG("%d, ", frame[i]);
+            }
+        }
+    }*/
     int32_t qrSize = m_qrWidth * m_qrWidth;
     int32_t stride = m_frameWidth;
     int32_t unitSize = DEF_STEG_UNIT_SIZE;
     StegUnit unit;
     unit.threshold = m_threshold;//for HIDE
+    if(m_unitPat == '.'){
+        unit.bitPosition = m_threshold;
+    }
     unit.corePels.resize(m_coreIndeces.size(), nullptr);
     unit.neighPels.resize(m_neighIndeces.size(), nullptr);
 

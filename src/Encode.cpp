@@ -282,9 +282,9 @@ uint32_t Encode::ReadStegData(){
     frameSize += frameSize/2;//YUV420, add 1/4 for U and 1/4 for V planes
 
     if(m_stegModule->m_genVal != -1){
-        rawFrame.resize(frameSize * m_frameRepeats, (uint8_t)m_stegModule->m_genVal);
+        rawFrame.assign(frameSize * m_frameRepeats, (uint8_t)m_stegModule->m_genVal);//vector::assign() must be used!!!
     }else{
-        rawFrame.resize(frameSize * m_frameRepeats, 128);
+        rawFrame.assign(frameSize * m_frameRepeats, 128);
         cin.read(rawFrame.data(), frameSize * m_frameRepeats);
         if(cin.bad()){
             return FAIL;

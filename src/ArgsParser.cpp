@@ -39,13 +39,15 @@ string stgThOpt("th");
 string stgKeyFileOpt("kf");
 string stgUnitPatOpt("up");
 string stgGenOpt("gen");
+string stgPosOpt("pos");
 
 map<const char*, const char*> g_stegOpts(
 {
     {stgThOpt.c_str(), "\\d{1,3}"} ,
     {stgKeyFileOpt.c_str(), ".*" },
     {stgUnitPatOpt.c_str(), "[oxj.]"},
-    {stgGenOpt.c_str(), "\\d{1,3}"}
+    {stgGenOpt.c_str(), "\\d{1,3}"},
+    {stgPosOpt.c_str(), "[0123]"}
 });
 
 ArgsParser::ArgsParser()
@@ -74,7 +76,7 @@ int32_t ArgsParser::ParseStegParams(vector<string>& params){
             //LOG("%s\n", param.c_str());
             //LOG("%s\n", strPat.c_str());
             if(regex_search(param, m, pattern)){
-                LOG("For param \"%s\" parsed: \"%s\"\n", param.c_str(), m[2]);
+                //LOG("For param \"%s\" parsed: \"%s\"\n", param.c_str(), m[2]);
                 m_parsedOptions[string(it->first)] = m[2];
                 found = true;
                 break;
@@ -425,12 +427,6 @@ Config* ArgsParser::GetConfig(){
         config.m_stegThreshold = 0;
     }else{
         config.m_stegModeOn = true;
-        it = optionsMap.find(stgThOpt);
-        if(it == optionsMap.end()){
-            config.m_stegThreshold = 8;
-        }else{
-            config.m_stegThreshold = stoi(it->second);
-        }
 
         it = optionsMap.find(stgKeyFileOpt);
         if(it == optionsMap.end()){
@@ -439,11 +435,27 @@ Config* ArgsParser::GetConfig(){
             config.m_keyFileName = it->second;
         }
 
+        it = optionsMap.find(stgThOpt);
+        if(it == optionsMap.end()){
+            config.m_stegThreshold = 8;
+        }else{
+            config.m_stegThreshold = stoi(it->second);
+        }
+
         it = optionsMap.find(stgUnitPatOpt);
         if(it == optionsMap.end()){
             config.m_unitPattern = '.';
         }else{
             config.m_unitPattern = it->second[0];
+        }
+
+        if(config.m_unitPattern == '.'){
+            it = optionsMap.find(stgPosOpt);
+            if(it == optionsMap.end()){
+                config.m_stegThreshold = 1;
+            }else{
+                config.m_stegThreshold = stoi(it->second);
+            }
         }
 
         it = optionsMap.find(stgGenOpt);

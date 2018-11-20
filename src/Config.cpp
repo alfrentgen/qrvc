@@ -19,7 +19,7 @@ void printEncCfg(Config cfg){
         LOG("kf=\"%s\" ", s.c_str());
         LOG("up=\"%c\" ", cfg.m_unitPattern);
         if(cfg.m_stegGen != -1){
-            LOG("up=\"%d\" ", cfg.m_stegGen);
+            LOG("gen=\"%d\" ", cfg.m_stegGen);
         }
     }else if(cfg.m_cipheringOn){
         LOG("-c %s ", keyFileName.c_str());

@@ -35,4 +35,6 @@ ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
 sha512sum 1M.in 1M_stg.dec
 
 '.' steg pattern
-ffmpeg -i short.mp4f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in -w 1 --stg up=. -o 1M.yuv
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg up=. pos=0 -o 1M_steg.yuv
+./qrvd -i 1M_steg.yuv --stg kf=1M.in.stg up=. pos=0 -o 1M_stg.dec
+
