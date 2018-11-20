@@ -213,14 +213,15 @@ void renderUnit(StegUnit& unit){
 #define AVG_ACCURACY 8
 inline int32_t getNewAvg(int32_t avg, int32_t bit, int32_t position){
     bit = bit ? 1 : 0;
-    int32_t mask = 0xffffffff << position;
-    int32_t trunkAvg = mask & avg;
-    bool matched = (bit << position)&(trunkAvg) ? true : false;
+    int32_t bitMask = 1<<position;
+    bool matched = (bitMask&avg)^(bit<<position) ? false : true;
+
+    int32_t trunkAvg = avg&(0xffffffff<<position);
     int32_t newAvg = trunkAvg;
     if(!matched){//use truncated
-        newAvg = trunkAvg + (1 << position);
+        newAvg = trunkAvg + bitMask;
         if(newAvg > (255<<AVG_ACCURACY)){
-            newAvg = trunkAvg - (1 << position);
+            newAvg = trunkAvg - bitMask;
         }
     }
     //DEBUG
@@ -287,8 +288,8 @@ void renderUnitAvg(StegUnit& unit){
                 LOG("\n");
             }
         }*/
-        /*avg &= (0x00000003 << (position - 1));
-        avg += avg & (0x00000001 << (position - 1));*/
+        avg &= (0x00000003 << (position - 1));
+        avg += avg & (0x00000001 << (position - 1));
         avg &= (0x00000001 << position);
         if(avg){
             unit.bit = 255;

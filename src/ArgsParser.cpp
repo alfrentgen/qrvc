@@ -47,7 +47,7 @@ map<const char*, const char*> g_stegOpts(
     {stgKeyFileOpt.c_str(), ".*" },
     {stgUnitPatOpt.c_str(), "[oxj.]"},
     {stgGenOpt.c_str(), "\\d{1,3}"},
-    {stgPosOpt.c_str(), "[0123]"}
+    {stgPosOpt.c_str(), "[0123456]"}
 });
 
 ArgsParser::ArgsParser()

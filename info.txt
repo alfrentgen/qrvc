@@ -34,7 +34,25 @@ ffmpeg -i 1M_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M_stg.mp4.yuv 2>/dev/null
 ./qrvd -i 1M_stg.mp4.yuv --stg kf=1M.in.stg -o 1M_stg.dec
 sha512sum 1M.in 1M_stg.dec
 
-'.' steg pattern
+Using '.' steg pattern
 ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg up=. pos=0 -o 1M_steg.yuv
 ./qrvd -i 1M_steg.yuv --stg kf=1M.in.stg up=. pos=0 -o 1M_stg.dec
 
+./qrve -i 1M.in --stg up=. pos=0 gen=128 -o 1M_steg.yuv
+
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg up=. pos=2 | ffmpeg -y -f rawvideo -s:v 1280x720 -i - -c:v libx264 -pix_fmt yuv420p -preset medium -tune ssim -x264-params subme=0:me="dia" 1M.in.mp4
+
+//step by step test
+ffmpeg -i short.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrve -i 1M.in --stg up=. pos=2 -o 1M.in_stg.yuv
+./qrvd -i 1M.in_stg.yuv --stg kf=1M.in.stg up=. pos=2 -o 1M.in.dec
+sha512sum 1M.in.dec 1M.in
+ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i 1M.in_stg.yuv -c:v libx264 -crf 10 1M.in_stg.mp4 2>/dev/null
+ffmpeg -y -i 1M.in_stg.mp4 -f rawvideo -pix_fmt yuv420p 1M.in_stg.mp4.yuv 2>/dev/null
+ffmpeg -y -i 1M.in_stg.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrvd --stg kf=1M.in.stg up=. pos=2 -o 1M.in.dec
+sha512sum 1M.in.dec 1M.in
+
+./qrve -i 1M.in --stg up=. pos=4 gen=128 -o 1M.in_stg.yuv
+./qrvd -i 1M.in_stg.yuv --stg kf=1M.in.stg up=. pos=4 -o 1M.in.dec
+sha512sum 1M.in.dec 1M.in
+ffmpeg -y -f rawvideo -pix_fmt yuv420p -s:v 1280x720 -i 1M.in_stg.yuv -c:v libx264 -crf 25 1M.in_stg.mp4 2>/dev/null
+ffmpeg -y -i 1M.in_stg.mp4 -f rawvideo -pix_fmt yuv420p - 2>/dev/null | ./qrvd --stg kf=1M.in.stg up=. pos=4 -o 1M.in.dec
