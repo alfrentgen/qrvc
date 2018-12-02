@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "dct.h"
-#define DCT_THRESHOLD 2
+#define DCT_THRESHOLD 1
 #define N_REPEATS 177 * 177 * 1000
 
 template<typename T, uint32_t dim>
@@ -51,13 +51,14 @@ int32_t main(){
     uint8_t in[4][4] = {0};
     int32_t coeffs[4][4] = {0};
     uint8_t out[4][4] = {0};
+    uint64_t nFails(0);
     for(int i = 0; i < N_REPEATS; i++){
         //LOG("test#%d\n", i);
         rand_fill_in(in);
         fwd_4x4_dct<int32_t>(in, coeffs);
         inv_4x4_dct<int32_t>(coeffs, out);
 
-        /*if(!compare_2_arr<uint8_t, 4>(in, out)){
+        if(!compare_2_arr<uint8_t, 4>(in, out)){
             LOG("test#%d\n", i);
             LOG("\nInput array:");
             print_array<uint8_t,4>(in);
@@ -65,8 +66,10 @@ int32_t main(){
             print_array<uint8_t,4>(out);
             LOG("\nDCT coefficients:");
             print_array<int32_t,4>(coeffs);
-            exit(0);
-        }*/
+            nFails++;
+            //exit(0);
+        }
     }
+    LOG("\nThe test has failed %d out of %d times. \n", nFails, N_REPEATS);
     return 0;
 }

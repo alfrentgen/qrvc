@@ -1,5 +1,6 @@
 #include "steganography.h"
-#include "wavelet.h"
+//#include "wavelet.h"
+#include "dct.h"
 
 extern "C" {
     #include <qrencode.h>
@@ -229,6 +230,55 @@ inline int32_t getNewAvg(int32_t avg, int32_t bit, int32_t position){
     return newAvg;
 }
 
+void renderUnitDCT(StegUnit& unit){
+    uint8_t pels[DEF_STEG_UNIT_SIZE][DEF_STEG_UNIT_SIZE];
+    int32_t coeffs[DEF_STEG_UNIT_SIZE][DEF_STEG_UNIT_SIZE];
+    uint8_t* pPels = (uint8_t*)pels;
+    int32_t* pCoeffs = (int32_t*)coeffs;
+    for(int i = 0; i < 16; i++){
+        pPels[i]= *(unit.corePels[i]);
+    }
+    fwd_4x4_dct(pels, coeffs);
+
+    if(unit.hide){
+        int32_t avgCoeff(0);
+        for(int i = 0; i < 16; i++){
+            avgCoeff+= pCoeffs[i];
+        }
+        avgCoeff = unit.threshold * abs(avgCoeff>>4);//divide by 16
+        if(avgCoeff == 0){
+            avgCoeff = 256;
+        }
+        if(unit.bit){
+            /*if(coeffs[1][1] < avgCoeff){
+                coeffs[1][1] = avgCoeff;
+            }*/
+            /*if(coeffs[1][1] < 0){
+                coeffs[1][1] = -coeffs[1][1];//avgCoeff;
+            }*/
+            coeffs[2][2] = avgCoeff;
+        }else{
+            /*if(coeffs[1][1] > -avgCoeff){
+                coeffs[1][1] = -avgCoeff;
+            }*/
+            /*if(coeffs[1][1] >= 0){
+                coeffs[1][1] = -coeffs[1][1];
+            }*/
+            coeffs[1][1] = -avgCoeff;
+        }
+        inv_4x4_dct(coeffs, pels);
+        for(int i = 0; i < 16; i++){
+            *unit.corePels[i] = pPels[i];
+        }
+    }else{
+        if(coeffs[1][1] >= 0){
+            unit.bit = 255;
+        }else{
+            unit.bit = 0;
+        }
+    }
+}
+
 void renderUnitAvg(StegUnit& unit){
     int32_t avg(0);
     for(uint8_t* pel : unit.corePels){
@@ -451,6 +501,7 @@ int32_t StegModule::Process(uint8_t* frame, uint8_t* qrCode, bool action){
         //std::cout << "Checkpoint!\n" << m_useAvg << std::endl;
         if(m_unitPat == '.'){
             renderUnitAvg(unit);
+            //renderUnitDCT(unit);
         }else{
             renderUnit(unit);
         }

@@ -91,7 +91,7 @@ void fwd_4x4_dct(uint8_t in[4][4], T out[4][4]){
 
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
-            in_conv[i][j] = (T)(in[i][j] - 128)<<3;
+            in_conv[i][j] = ((T)in[i][j] - 128)<<3;
         }
     }
     mul_Cf_M(in_conv, tmp1);
