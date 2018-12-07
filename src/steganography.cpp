@@ -288,6 +288,15 @@ void renderUnitAvg(StegUnit& unit){
     int32_t position = unit.bitPosition + AVG_ACCURACY;
 
     if(unit.hide){
+//#define AVG_FOR_ALL
+#ifdef AVG_FOR_ALL
+        avg >>= AVG_ACCURACY;
+        for(uint8_t* pel : unit.corePels){
+            *pel=avg;
+        }
+        avg <<= AVG_ACCURACY;
+#endif
+
         int32_t newAvg = getNewAvg(avg, unit.bit, position);
         int32_t totalDiff = (newAvg - avg) * unit.corePels.size();
         int32_t sign = totalDiff < 0 ? -1 : 1;

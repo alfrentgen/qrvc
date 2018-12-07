@@ -175,6 +175,14 @@ skipDecyph:
             }else{
 #endif
 #undef STEG_DECODE
+
+//#define SHARPENER
+#ifdef SHARPENER
+                for(size_t i = 0; i < m_data.m_inBuffer.size(); i++) {
+                    m_data.m_inBuffer[i] = m_data.m_inBuffer[i] > 127 ? 255 : 0;
+                }
+#endif
+
                 if(m_decMode == MODE_QUICK){
                     decRes = DecodeDataQuick();
                 }else if(m_decMode == MODE_SLOW){
